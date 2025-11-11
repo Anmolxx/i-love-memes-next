@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useRef, useState, useCallback } from "react";
-import { Canvas, FabricImage, Textbox, FabricText, FabricObject } from "fabric";
+import { Canvas, FabricImage, Textbox, FabricText, FabricObject, Shadow } from "fabric";
 import ImageSelector from "@/components/memes/ImageSelector";
 import TextStyles from "@/components/memes/TextStyles";
 import ImageControls from "@/components/memes/ImageControls";
@@ -9,7 +9,7 @@ import Stickers from "@/components/memes/Stickers";
 import Header from "@/components/layout/Header";
 import { Footer } from "@/sections/Footer";
 import { useParams, useRouter } from "next/navigation";
-import { loadCanvasObjects, getTemplateBySlug } from "@/utils/templateUtils";
+import { useGetTemplateByIdOrSlugQuery } from "@/redux/services/template";
 import { v4 as uuidv4 } from "uuid";
 
 interface LayoutProps {
@@ -39,8 +39,10 @@ export default function MemeLayout({ children }: LayoutProps) {
 
   const router = useRouter();
   const params = useParams();
-  const currentSlug = (params as any)?.slug as string | undefined;
-
+  const currentSlug = (params as any)?.slug as string;
+  const { data: templateData, isLoading, error } = useGetTemplateByIdOrSlugQuery(currentSlug, {
+    skip: !currentSlug, 
+  });
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
@@ -136,31 +138,21 @@ export default function MemeLayout({ children }: LayoutProps) {
     }
   }, [selectedImage, zoom, rotation, loadBackgroundImage]);
 
-  // --- Template Loading ---
   useEffect(() => {
     const canvas = canvasRef.current;
-    if (!currentSlug || !canvasReady || !canvas) return;
-
-    const templateData = getTemplateBySlug(currentSlug);
-    if (templateData) {
-      canvas.getObjects().forEach((obj) => {
-        if (obj !== canvas.backgroundImage) canvas.remove(obj);
-      });
-      canvas.renderAll();
-
-      setSelectedImage(templateData.previewUrl);
-      setSelectedImageId(templateData.id);
-      setTemplateObjects(templateData.config?.objects || null);
-    }
-  }, [currentSlug, canvasReady]);
-
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas || !templateObjects || !backgroundImageLoaded) return;
-    loadCanvasObjects(canvas, templateObjects);
-    setTemplateObjects(null);
-    setBackgroundImageLoaded(false);
-  }, [templateObjects, backgroundImageLoaded]);
+    if (!currentSlug || !canvasReady || !canvas || !templateData) return;
+  
+    console.log("Template data loaded:", templateData);
+  
+    canvas.getObjects().forEach((obj) => {
+      if (obj !== canvas.backgroundImage) canvas.remove(obj);
+    });
+    canvas.renderAll();
+  
+    setSelectedImage(templateData.previewUrl);
+    setSelectedImageId(templateData.id);
+    setTemplateObjects(templateData.config?.objects || null);
+  }, [templateData, canvasReady, currentSlug]);
 
   // --- Layer Utilities (Fabric v6-safe) ---
   const enforceLayerOrder = () => {
@@ -189,17 +181,29 @@ export default function MemeLayout({ children }: LayoutProps) {
     if (!canvas) return;
 
     const text = new Textbox("New Text", {
-      left: 250,
-      top: 250,
-      originX: "center",
-      originY: "center",
-      width: 200,
-      fontSize: 28,
-      fill: "#000",
-      fontFamily: "Arial",
-      editable: true,
-      lockUniScaling: true,
-    });
+        left: 250,
+        top: 250,
+        originX: "center",
+        originY: "center",
+        width: 200,
+        fontSize: 50, 
+        fontWeight: "bold",
+        fontFamily: "Impact",
+        fill: "#FFD700", 
+        stroke: "#FF0000",
+        strokeWidth: 1,
+        shadow: new Shadow({
+          color: "rgba(0, 0, 0, 1)",
+          blur: 2,
+          offsetX: 2,
+          offsetY: 2,
+          affectStroke: true,
+          nonScaling: true,
+        }),
+        editable: true,
+        lockUniScaling: true,
+        textAlign: "center",
+      });
 
     text.set("id", uuidv4());
     text.on("scaling", () => (text.scaleY = text.scaleX));
@@ -326,6 +330,8 @@ export default function MemeLayout({ children }: LayoutProps) {
       return;
     }
     if (template.previewUrl) {
+      console.log("33", );
+      
       setSelectedImage(template.previewUrl);
       setSelectedImageId(template.id);
     }
@@ -372,7 +378,7 @@ export default function MemeLayout({ children }: LayoutProps) {
               />
             </div>
 
-            {!hasCanvasObjects && !selectedImage && (
+            {!hasCanvasObjects && !selectedImage && !backgroundImageLoaded &&(
               <div className="absolute inset-0 flex flex-col items-center justify-center text-gray-500 pointer-events-none p-4 z-20 bg-gray-50/80">
                 <div className="flex flex-col items-center justify-center">
                   <div className="w-32 h-32 sm:w-40 sm:h-40 bg-gray-100 rounded-lg flex items-center justify-center mb-4">

@@ -134,7 +134,7 @@ const ActionCell = ({ row }: { row: any }) => {
       .catch((err) => {
         toast.error(err?.data?.error?.message || "Something went wrong");
       });
-  }, []);
+  }, [template.id, deleteTemplate]);
 
   return (
     <div className="flex justify-end">

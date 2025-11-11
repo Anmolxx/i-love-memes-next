@@ -15,7 +15,7 @@ export const product_columns: ColumnDef<Product>[] = [
     cell: ({ row }) => {
       return (
         <div className="space-x-4 flex items-center">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
+         
           <img src={row.original.img} alt={row.getValue("name")} className="h-8 w-8 rounded-md" />
           <Link href={`products/details`} className="hover:underline">{row.getValue("name")}</Link>
         </div>

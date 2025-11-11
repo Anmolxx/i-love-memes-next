@@ -1,10 +1,10 @@
 "use client";
 
-import React, { useRef, useState } from "react";
+import React, { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { Download, RotateCcw, Share2, X, Save } from "lucide-react";
+import { Download, RotateCcw, Share2, Save } from "lucide-react";
 import { Canvas, FabricImage, FabricText } from "fabric";
 import { useAppDispatch } from "@/redux/store";
 import { useRouter } from "next/navigation";
@@ -44,7 +44,6 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-
 interface HeaderProps {
   canvasRef: React.RefObject<Canvas | null>;
   onReset: () => void;
@@ -69,7 +68,6 @@ const Header: React.FC<HeaderProps> = ({
   const appDispatcher = useAppDispatch();
   const router = useRouter();
   const { isLoggedIn, isAdmin } = useAuthentication();
-
   const [saveAsTemplateTrigger] = useSaveAsTemplateMutation();
   const [postMemeTrigger] = usePostMemeMutation();
 
@@ -309,7 +307,15 @@ const Header: React.FC<HeaderProps> = ({
         file: { id: uploadedFileId },
       }).unwrap();
       
-      toast.success("🎉 Meme saved to gallery successfully!");
+      toast.success(
+        <span>
+          🎉 Meme saved to gallery successfully!{" "}
+          <Link href="/community" className="underline font-medium text-pink-500">View your Meme</Link>
+        </span>,
+        {
+          duration: 5000, 
+        }
+      );
       setIsSaveMemeOpen(false);
       setIsExportOpen(false);
       memeForm.reset();
@@ -580,7 +586,7 @@ const Header: React.FC<HeaderProps> = ({
                       <Button
                         type="submit"
                         disabled={!memeForm.watch("title")?.trim()}
-                        className="rounded-full h-12 px-6 md:px-8 text-white shadow-md text-sm md:text-base flex items-center justify-center cursor-pointer"
+                        className="rounded-full h-12 px-6 md:px-8 text-white shadow-md text-sm md:text-base flex items-center justify-center cursor-progress"
                         style={{
                           backgroundImage: "linear-gradient(90deg,#CD01BA,#E20317)",
                           boxShadow:

@@ -18,11 +18,6 @@ import { useSearchParams } from "next/navigation";
 import { AddTemplateDialog } from "@/components/dialog/add-template";
 import { useGetAllTemplatesQuery } from "@/redux/services/template";
 
-// export const metadata: Metadata = {
-//   title: "Orders",
-//   description: "Manage your orders in the dashboard.",
-// };
-
 function TemplatesContent() {
   const searchParams = useSearchParams();
   const params = Object.fromEntries(searchParams);
@@ -36,7 +31,7 @@ function TemplatesContent() {
 
   const { data } = useGetAllTemplatesQuery(query);
 
-  const tableData = data?.data ?? [];
+  const tableData = data?.items ?? [];
   const pageCount = data?.meta?.totalPages ?? 0;
 
   const tableColumns = useMemo(() => adminTemplateColumns(), []);

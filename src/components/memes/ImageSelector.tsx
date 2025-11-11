@@ -29,7 +29,7 @@ const ImageSelector: React.FC<Props> = ({
     selectFromResult: ({ data }) => {
       return {
         data:
-          data?.data?.map((template: any) => {
+          data?.items?.map((template: any) => {
             
             const backgroundImage = template.config?.backgroundImage;
             let previewUrl = null;
@@ -53,6 +53,8 @@ const ImageSelector: React.FC<Props> = ({
   });
 
   const handleTemplateSelect = (template: any) => {
+    console.log("template", template);
+    
     if (!template.previewUrl) return;
     if (template.previewUrl) {
       if (template.slug && onTemplateSelect) {

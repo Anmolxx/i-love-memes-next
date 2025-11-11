@@ -1,6 +1,9 @@
+"use client";
+
 import { Noto_Serif } from "next/font/google";
 import { AuthHeader, AuthTitle, AuthDescription } from "../layout";
 import { SignInForm } from "@/components/auth/sign-in-form";
+import { Suspense } from "react";
 
 const notoSerif = Noto_Serif({
   weight: "600",
@@ -10,7 +13,7 @@ const notoSerif = Noto_Serif({
 
 export default function SignInPage() {
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-gray-950 text-gray-100 p-4 -mt-8">
+    <div className="min-h-[400px] flex flex-col items-center justify-center bg-gray-950 text-gray-100 p-4 -mt-8">
       <AuthHeader>
         <AuthTitle>
           <span
@@ -29,7 +32,9 @@ export default function SignInPage() {
       </AuthHeader>
 
       <div className="w-full max-w-md mt-6">
-        <SignInForm />
+        <Suspense fallback={<div className="text-gray-400">Loading form...</div>}>
+            <SignInForm />
+          </Suspense>
       </div>
     </div>
   );

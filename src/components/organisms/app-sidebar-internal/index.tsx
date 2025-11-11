@@ -21,10 +21,10 @@ import Link from "next/link";
 
 // Sidebar menu items
 const SIDEBAR_LINKS = [
-  { title: "Home", url: "/admin/home", icon: Home },
-  { title: "Community", url: "/admin/community", icon: Users },
-  { title: "Templates", url: "/admin/templates", icon: FileText },
-  { title: "Meme Merch", url: "/admin/meme-merch", icon: ShoppingBag },
+  { title: "Home", url: "/", icon: Home },
+  { title: "Community", url: "/community", icon: Users },
+  { title: "Templates", url: "/meme", icon: FileText },
+  { title: "Meme Merch", url: "/meme-merch", icon: ShoppingBag },
 ];
 
 const USER = { name: "shadcn", email: "m@example.com", avatar: "/avatars/demo.png" };

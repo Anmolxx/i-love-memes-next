@@ -43,6 +43,16 @@ export const memesApi = iLoveMemesApi.injectEndpoints({
         method: "DELETE",
       }),
     }),
+
+    getTemplateByIdOrSlug: builder.query<any, string>({
+      query: (idOrSlug) => ({
+        url: `/templates/${idOrSlug}`,
+        method: "GET",
+      }),
+      providesTags: (result, error, idOrSlug) => [
+        { type: TAG_GET_TEMPLATES_ADMIN, id: idOrSlug },
+      ],
+    }),
   }),
 });
 
@@ -51,5 +61,6 @@ export const {
   useUploadFileMutation,
   useSaveAsTemplateMutation,
   useGetAllTemplatesQuery,
-  useDeleteTemplateMutation
+  useDeleteTemplateMutation,
+  useGetTemplateByIdOrSlugQuery,
 } = memesApi;

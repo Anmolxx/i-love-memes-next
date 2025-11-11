@@ -106,7 +106,7 @@ const ActionCell = ({ row }: any) => {
       .catch((err) => {
         toast.error(err?.data?.error?.message || "Something went wrong");
       });
-  }, []);
+  }, [deleteUser]);
 
   return (
     <>

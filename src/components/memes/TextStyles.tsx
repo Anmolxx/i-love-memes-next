@@ -26,7 +26,7 @@ import { fontFamilies } from "@/utils/fontFamily";
 
 interface Props {
   activeTextObject: any | null;
-  allTextObjects: { id: string; object: any }[]; 
+  allTextObjects: { id: string; object: any }[];
   onTextStyleChange: (style: any) => void;
   onAddText: () => void;
   onDeleteText?: () => void;
@@ -41,48 +41,30 @@ const TextStyles: React.FC<Props> = ({
 }) => {
   const colorInputRef = useRef<HTMLInputElement>(null);
   const shadowColorInputRef = useRef<HTMLInputElement>(null);
+  const outlineColorInputRef = useRef<HTMLInputElement>(null);
 
-  const [fontSize, setFontSize] = useState<number>(24);
-  const [fontFamily, setFontFamily] = useState<string>("Arial");
-  const [fontStyle, setFontStyle] = useState<string>("normal");
+  const [fontSize, setFontSize] = useState(50);
+  const [fontFamily, setFontFamily] = useState("Impact");
+  const [fontStyle, setFontStyle] = useState("bold");
+  const [textAlign, setTextAlign] = useState<"left" | "center" | "right" | "justify">("center");
+
   const [mode, setMode] = useState<"shadow" | "outline">("shadow");
-  const [globalColor, setGlobalColor] = useState<string>("#000000");
-  const [shadowBlur, setShadowBlur] = useState<number>(0);
-  const [shadowOffsetX, setShadowOffsetX] = useState<number>(0);
-  const [shadowOffsetY, setShadowOffsetY] = useState<number>(0);
-  const [outlineWidth, setOutlineWidth] = useState<number>(0);
-  const [textAlign, setTextAlign] = useState<"left" | "center" | "right" | "justify">("left");
+
+  // Separate states for shadow and outline
+  const [shadowColor, setShadowColor] = useState("#FFD700"); // yellow default
+  const [shadowBlur, setShadowBlur] = useState(2);
+  const [shadowOffsetX, setShadowOffsetX] = useState(2);
+  const [shadowOffsetY, setShadowOffsetY] = useState(2);
+
+  const [outlineColor, setOutlineColor] = useState("#FF0000"); // red default
+  const [outlineWidth, setOutlineWidth] = useState(1);
 
   const [textFields, setTextFields] = useState<{ id: string; text: string }[]>([]);
-
-  <Select
-    value={fontFamily}
-    onValueChange={(value) => {
-      setFontFamily(value);
-      onTextStyleChange({ fontFamily: value });
-    }}
-  >
-    <SelectTrigger className="w-full bg-[#f0f0f0]">
-      <SelectValue placeholder="Select font" />
-    </SelectTrigger>
-    <SelectContent>
-      {fontFamilies.map((font) => (
-        <SelectItem
-          key={font}
-          value={font}
-          style={{ fontFamily: font }}
-          className="cursor-pointer"
-        >
-          {font}
-        </SelectItem>
-      ))}
-    </SelectContent>
-  </Select>
 
   useEffect(() => {
     const newFields = allTextObjects.map(({ id, object }) => ({
       id,
-      text: (object?.text as string) || "",
+      text: object?.text || "",
     }));
     setTextFields(newFields);
   }, [allTextObjects]);
@@ -91,35 +73,30 @@ const TextStyles: React.FC<Props> = ({
     if (!activeTextObject) return;
     const obj = activeTextObject;
 
-    setFontSize(obj.fontSize ?? 24);
-    setFontFamily(obj.fontFamily ?? "Arial");
-    setTextAlign(obj.textAlign ?? "left");
+    setFontSize(obj.fontSize ?? 50);
+    setFontFamily(obj.fontFamily ?? "Impact");
+    setTextAlign(obj.textAlign ?? "center");
 
     if (obj.fontWeight === "bold" && obj.fontStyle === "italic") setFontStyle("bold-italic");
     else if (obj.fontWeight === "bold") setFontStyle("bold");
     else if (obj.fontStyle === "italic") setFontStyle("italic");
     else setFontStyle("normal");
 
-    const shadow = obj.shadow;
-    if (shadow) {
-      setMode("shadow");
-      setGlobalColor(shadow.color ?? "#000000");
-      setShadowBlur(shadow.blur ?? 0);
-      setShadowOffsetX(shadow.offsetX ?? 0);
-      setShadowOffsetY(shadow.offsetY ?? 0);
-    } else if (obj.strokeWidth > 0) {
-      setMode("outline");
-      setGlobalColor(obj.stroke ?? "#000000");
-      setOutlineWidth(obj.strokeWidth ?? 0);
-    } else {
-      // reset to defaults when no effect
-      setMode("shadow");
-      setGlobalColor(obj.fill ?? "#000000");
-      setShadowBlur(0);
-      setShadowOffsetX(0);
-      setShadowOffsetY(0);
-      setOutlineWidth(0);
+    // Load shadow values if exist
+    if (obj.shadow) {
+      setShadowColor(obj.shadow.color ?? "#FFD700");
+      setShadowBlur(obj.shadow.blur ?? 2);
+      setShadowOffsetX(obj.shadow.offsetX ?? 2);
+      setShadowOffsetY(obj.shadow.offsetY ?? 2);
     }
+
+    // Load outline values if exist
+    if (obj.strokeWidth && obj.strokeWidth > 0) {
+      setOutlineColor(obj.stroke ?? "#FF0000");
+      setOutlineWidth(obj.strokeWidth);
+    }
+
+    setMode(obj.shadow ? "shadow" : obj.strokeWidth ? "outline" : "shadow");
   }, [activeTextObject]);
 
   // --- Apply effects to the active object ---
@@ -128,26 +105,24 @@ const TextStyles: React.FC<Props> = ({
 
     if (mode === "shadow") {
       const shadow = new Shadow({
-        color: globalColor,
+        color: shadowColor,
         blur: shadowBlur,
         offsetX: shadowOffsetX,
         offsetY: shadowOffsetY,
-        affectStroke: false,
+        affectStroke: true,
         nonScaling: true,
       });
-      onTextStyleChange({ shadow, strokeWidth: 0, stroke: null });
+      onTextStyleChange({ shadow, strokeWidth: 0 });
     } else {
-      onTextStyleChange({ stroke: globalColor, strokeWidth: outlineWidth, shadow: null });
+      onTextStyleChange({ stroke: outlineColor, strokeWidth: outlineWidth, shadow: null });
     }
   };
 
-  // --- Handle per-input text change; if the field is active, update canvas text too ---
   const handleTextChange = (id: string, value: string) => {
     setTextFields((prev) => prev.map((t) => (t.id === id ? { ...t, text: value } : t)));
     if (activeTextObject?.id === id) {
       onTextStyleChange({ text: value });
     } else {
-      // If it's not active, directly set object's text so sidebar stays in sync.
       const found = allTextObjects.find((t) => t.id === id);
       if (found) {
         found.object.set({ text: value });
@@ -156,7 +131,6 @@ const TextStyles: React.FC<Props> = ({
     }
   };
 
-  // --- When user focuses an input, select that textbox on canvas ---
   const handleFocusSelect = (id: string) => {
     const target = allTextObjects.find((t) => t.id === id);
     if (target && target.object && target.object.canvas) {
@@ -173,18 +147,18 @@ const TextStyles: React.FC<Props> = ({
           {activeTextObject && (
             <Button
               onClick={onDeleteText}
-              size={"icon-sm"}
+              size="icon-sm"
               variant="outline"
-              className="rounded-full border-2 border-red-500 hover:bg-red-50"
+              className="rounded-full border-2 border-red-500 hover:bg-red-50 cursor-pointer"
             >
               <Trash2 className="w-4 h-4 text-red-500" />
             </Button>
           )}
           <Button
             onClick={onAddText}
-            size={"icon-sm"}
+            size="icon-sm"
             variant="outline"
-            className="rounded-full border-2 border-black hover:bg-white"
+            className="rounded-full border-2 border-black hover:bg-white cursor-pointer"
           >
             <Plus className="w-4 h-4" />
           </Button>
@@ -193,7 +167,6 @@ const TextStyles: React.FC<Props> = ({
 
       <Separator />
 
-      {/* --- Textbox Inputs (initially empty until user adds via +) --- */}
       <div className="space-y-3">
         {textFields.length === 0 && (
           <div className="text-sm text-gray-500">No text fields yet — press + to add.</div>
@@ -222,32 +195,87 @@ const TextStyles: React.FC<Props> = ({
         ))}
       </div>
 
-      {/* --- Style panel: only visible when a textbox is selected --- */}
       {activeTextObject && (
         <>
           <Separator className="my-3" />
 
-          {/* Font Family */}
-          <div className="space-y-2">
-            <Label className="text-sm font-medium">Font Family</Label>
-            <Select
-              value={fontFamily}
-              onValueChange={(v) => {
-                setFontFamily(v);
-                onTextStyleChange({ fontFamily: v });
-              }}
-            >
-              <SelectTrigger className="bg-gray-50">
-                <SelectValue placeholder="Select font" />
-              </SelectTrigger>
-              <SelectContent>
-                {fontFamilies.map((font) => (
-                  <SelectItem key={font} value={font} style={{ fontFamily: font }}>
-                    {font}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+          {/* Font Family & Style */}
+          <div className="flex gap-2 items-end">
+            <div className="flex-1 space-y-1">
+              <Label className="text-sm font-medium">Font Family</Label>
+              <Select
+                value={fontFamily}
+                onValueChange={(v) => {
+                  setFontFamily(v);
+                  onTextStyleChange({ fontFamily: v });
+                }}
+              >
+                <SelectTrigger className="bg-gray-50">
+                  <SelectValue placeholder="Select font" />
+                </SelectTrigger>
+                <SelectContent>
+                  {fontFamilies.map((font) => (
+                    <SelectItem key={font} value={font} style={{ fontFamily: font }}>
+                      {font}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="flex-1 space-y-1">
+              <Label className="text-sm font-medium">Style</Label>
+              <Select
+                value={fontStyle}
+                onValueChange={(v) => {
+                  setFontStyle(v);
+                  if (!activeTextObject) return;
+
+                  let updates: any = {};
+
+                  switch (v) {
+                    case "normal":
+                      updates.fontWeight = "normal";
+                      updates.fontStyle = "normal";
+                      updates.text = activeTextObject.text;
+                      break;
+                    case "bold":
+                      updates.fontWeight = "bold";
+                      updates.fontStyle = "normal";
+                      updates.text = activeTextObject.text;
+                      break;
+                    case "italic":
+                      updates.fontWeight = "normal";
+                      updates.fontStyle = "italic";
+                      updates.text = activeTextObject.text;
+                      break;
+                    case "bold-italic":
+                      updates.fontWeight = "bold";
+                      updates.fontStyle = "italic";
+                      updates.text = activeTextObject.text;
+                      break;
+                    case "all-caps":
+                      updates.fontWeight = "normal";
+                      updates.fontStyle = "normal";
+                      updates.text = activeTextObject.text?.toUpperCase();
+                      break;
+                  }
+
+                  onTextStyleChange(updates);
+                }}
+              >
+                <SelectTrigger className="bg-gray-50">
+                  <SelectValue placeholder="Select style" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="normal">Normal</SelectItem>
+                  <SelectItem value="bold">Bold</SelectItem>
+                  <SelectItem value="italic">Italic</SelectItem>
+                  <SelectItem value="bold-italic">Bold Italic</SelectItem>
+                  <SelectItem value="all-caps">All Caps</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
 
           {/* Font Size */}
@@ -285,9 +313,8 @@ const TextStyles: React.FC<Props> = ({
               />
             </div>
           </div>
-          
 
-          {/* Text Alignment (restored as requested) */}
+          {/* Text Alignment */}
           <div className="space-y-2">
             <Label className="text-sm font-medium">Text Alignment</Label>
             <Tabs
@@ -316,7 +343,7 @@ const TextStyles: React.FC<Props> = ({
             </Tabs>
           </div>
 
-          {/* Effect Mode */}
+          {/* Effect Type */}
           <div className="space-y-2">
             <Label className="text-sm font-medium">Effect Type</Label>
             <RadioGroup
@@ -340,21 +367,20 @@ const TextStyles: React.FC<Props> = ({
 
           {/* Effect Color */}
           <div className="space-y-2">
-            <Label className="text-sm font-medium">
-              {mode === "shadow" ? "Shadow" : "Outline"} Color
-            </Label>
+            <Label className="text-sm font-medium">{mode === "shadow" ? "Shadow" : "Outline"} Color</Label>
             <div className="flex items-center space-x-3 relative">
               <div
                 className="w-8 h-8 rounded border cursor-pointer"
-                style={{ background: globalColor }}
-                onClick={() => shadowColorInputRef.current?.click()}
+                style={{ background: mode === "shadow" ? shadowColor : outlineColor }}
+                onClick={() => (mode === "shadow" ? shadowColorInputRef.current?.click() : outlineColorInputRef.current?.click())}
               />
               <input
-                ref={shadowColorInputRef}
+                ref={mode === "shadow" ? shadowColorInputRef : outlineColorInputRef}
                 type="color"
-                value={globalColor}
+                value={mode === "shadow" ? shadowColor : outlineColor}
                 onChange={(e) => {
-                  setGlobalColor(e.target.value);
+                  if (mode === "shadow") setShadowColor(e.target.value);
+                  else setOutlineColor(e.target.value);
                   updateEffects();
                 }}
                 className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
@@ -362,7 +388,7 @@ const TextStyles: React.FC<Props> = ({
             </div>
           </div>
 
-          {/* Shadow Blur / Outline Width */}
+          {/* Shadow / Outline sliders */}
           <div className="space-y-3">
             <div className="flex items-center justify-between">
               <Label className="text-sm font-medium">{mode === "shadow" ? "Shadow Blur" : "Outline Width"}</Label>
@@ -371,12 +397,8 @@ const TextStyles: React.FC<Props> = ({
             <Slider
               value={[mode === "shadow" ? shadowBlur : outlineWidth]}
               onValueChange={(value) => {
-                const newValue = value[0];
-                if (mode === "shadow") {
-                  setShadowBlur(newValue);
-                } else {
-                  setOutlineWidth(newValue);
-                }
+                if (mode === "shadow") setShadowBlur(value[0]);
+                else setOutlineWidth(value[0]);
                 updateEffects();
               }}
               min={0}
@@ -384,7 +406,6 @@ const TextStyles: React.FC<Props> = ({
             />
           </div>
 
-          {/* Shadow Offsets (only when shadow mode) */}
           {mode === "shadow" && (
             <>
               <div className="space-y-3">

@@ -30,7 +30,7 @@ export function Navbar() {
                         Home
                       </Link>
                       <Link 
-                        href="/templates" 
+                        href="/meme" 
                         className="text-[#4b087ea5] hover:text-[#4b087e] transition-colors duration-200"
                       >
                         Templates
@@ -98,7 +98,7 @@ export function Navbar() {
                                 Home
                             </Link>
                             <Link 
-                                href="/templates" 
+                                href="/meme" 
                                 className="hover:text-black/80 text-black/60 py-2"
                                 onClick={() => setIsMenuOpen(false)}
                             >

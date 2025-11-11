@@ -50,7 +50,7 @@ export default function CommunityGallery(): JSX.Element {
   const [flagComment, setFlagComment] = useState<string>("");
 
   useEffect(() => {
-    const memesData: Meme[] = Array.isArray(data) ? data : data?.data ?? [];
+    const memesData: Meme[] = Array.isArray(data) ? data : data?.items ?? [];
     setMemes(memesData);
   }, [data]);
 

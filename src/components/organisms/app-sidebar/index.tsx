@@ -20,8 +20,8 @@ import Link from "next/link";
 // Menu items.
 const SIDEBAR_LINKS = [
   {
-    title: "Media",
-    url: "/admin/media",
+    title: "Meme",
+    url: "/admin/meme",
     icon: ShoppingBag,
   },
   {

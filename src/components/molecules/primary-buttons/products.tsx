@@ -11,7 +11,7 @@ export function ProductsPrimaryButtons() {
       >
         <span>Import</span> <Download size={18} />
       </Button>
-      <Link href='/products/create'>
+      <Link href='/meme'>
         <Button className='space-x-1'>
           <span>Create</span> <Plus size={18} />
         </Button>

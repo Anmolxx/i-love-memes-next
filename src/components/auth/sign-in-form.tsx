@@ -3,7 +3,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 
 import { SignInSchema } from "@/schemas/sign-in-schema";
 
@@ -26,6 +26,9 @@ type SignInFormType = z.infer<typeof SignInSchema>;
 
 export function SignInForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const redirectPath = searchParams.get("redirect") || "/"; // default redirect
+
   const [login] = useLoginMutation();
 
   const form = useForm<SignInFormType>({
@@ -49,7 +52,8 @@ export function SignInForm() {
 
         if (role === "User") {
           setAuthCookie(AUTH_TOKEN, token, 30);
-          router.push("/");
+          // Redirect to the original page if provided
+          router.push(redirectPath);
         }
         if (role === "Admin") {
           setAuthCookie(ADMIN_AUTH_TOKEN, token, 30);
@@ -111,7 +115,8 @@ export function SignInForm() {
           className="rounded-full h-12 px-6 md:px-8 text-white shadow-md text-sm md:text-base flex items-center justify-center"
           style={{
             backgroundImage: "linear-gradient(90deg,#CD01BA,#E20317)",
-            boxShadow: "0 2px 8px rgba(205,1,186,0.5), 0 2px 8px rgba(226,3,23,0.5)",
+            boxShadow:
+              "0 2px 8px rgba(205,1,186,0.5), 0 2px 8px rgba(226,3,23,0.5)",
           }}
         >
           {isSubmitting ? "Signing in..." : "Sign In"}

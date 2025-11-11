@@ -33,6 +33,24 @@ export const authApi = iLoveMemesApi.injectEndpoints({
         body,
       }),
     }),
+
+    updateProfile: builder.mutation<
+        any,
+        {
+          photo?: { id: string };
+          firstName?: string;
+          lastName?: string;
+          email?: string;
+          password?: string;
+          oldPassword?: string;
+        }
+      >({
+        query: (body) => ({
+          url: "/auth/me",
+          method: "PATCH",
+          body,
+        }),
+      }),
   }),
 });
 
@@ -40,4 +58,5 @@ export const {
   useCurrentUserDataQuery,
   useRegisterMutation,
   useLoginMutation,
+  useUpdateProfileMutation,
 } = authApi;

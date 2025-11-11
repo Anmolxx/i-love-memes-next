@@ -24,6 +24,17 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
+import {
   Form,
   FormControl,
   FormField,
@@ -57,7 +68,7 @@ const Header: React.FC<HeaderProps> = ({
 }) => {
   const appDispatcher = useAppDispatch();
   const router = useRouter();
-  const { isAdmin } = useAuthentication();
+  const { isLoggedIn, isAdmin } = useAuthentication();
 
   const [saveAsTemplateTrigger] = useSaveAsTemplateMutation();
   const [postMemeTrigger] = usePostMemeMutation();
@@ -66,6 +77,8 @@ const Header: React.FC<HeaderProps> = ({
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [isSaveTemplateOpen, setIsSaveTemplateOpen] = useState(false);
   const [isSaveMemeOpen, setIsSaveMemeOpen] = useState(false);
+  const [isResetDialogOpen, setIsResetDialogOpen] = useState(false);
+  
 
   const form = useForm<TemplateFormData>({
     defaultValues: {
@@ -252,12 +265,16 @@ const Header: React.FC<HeaderProps> = ({
       toast.error("No canvas found");
       return;
     }
-  
+    
     if (!previewUrl) {
       toast.error("No meme preview available");
       return;
     }
-  
+    if (!isLoggedIn) {
+      toast.error("User not logged in. Please log in.");
+      router.push(`/auth/login?redirect=/meme`);
+      return;
+    }
     try {
 
       const canvasData = canvas.toJSON();
@@ -328,14 +345,40 @@ const Header: React.FC<HeaderProps> = ({
 
       {/* Right: Buttons */}
       <div className="flex items-center space-x-3 w-full md:w-auto justify-center md:justify-end">
-        <Button
-          onClick={onReset}
-          className="rounded-full cursor-pointer h-10 px-4 md:px-6 border-[#1E085C] text-[#1E085C] text-sm md:text-base"
-          variant="outline"
-        >
-          Reset
-          <RotateCcw className="w-4 h-4 ml-2" />
-        </Button>
+        <AlertDialog open={isResetDialogOpen} onOpenChange={setIsResetDialogOpen}>
+          <AlertDialogTrigger asChild>
+            <Button
+              className="rounded-full cursor-pointer h-10 px-4 md:px-6 border-[#1E085C] text-[#1E085C] text-sm md:text-base"
+              variant="outline"
+            >
+              Reset
+              <RotateCcw className="w-4 h-4 ml-2" />
+            </Button>
+          </AlertDialogTrigger>
+        
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Reset your meme?</AlertDialogTitle>
+              <AlertDialogDescription>
+                This will clear all text, images, and edits from your current meme. Are you sure you want to continue?
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={() => {
+                  onReset();
+                  setIsResetDialogOpen(false);
+                  toast.info("Canvas has been reset");
+                }}
+                className="cursor-pointer"
+              >
+                Yes, Reset
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+        {isLoggedIn && (
         <Button
           onClick={() => handleLogout()}
           className="rounded-full cursor-pointer h-10 px-4 md:px-6 border-[#1E085C] text-[#1E085C] text-sm md:text-base"
@@ -343,6 +386,7 @@ const Header: React.FC<HeaderProps> = ({
         >
           Logout
         </Button>
+        )}
 
         {isAdmin && (
           <Dialog
@@ -536,7 +580,7 @@ const Header: React.FC<HeaderProps> = ({
                       <Button
                         type="submit"
                         disabled={!memeForm.watch("title")?.trim()}
-                        className="rounded-full h-12 px-6 md:px-8 text-white shadow-md text-sm md:text-base flex items-center justify-center"
+                        className="rounded-full h-12 px-6 md:px-8 text-white shadow-md text-sm md:text-base flex items-center justify-center cursor-pointer"
                         style={{
                           backgroundImage: "linear-gradient(90deg,#CD01BA,#E20317)",
                           boxShadow:
@@ -556,7 +600,7 @@ const Header: React.FC<HeaderProps> = ({
                   {/* Save to Gallery Button */}
                   <Button
                     onClick={() => setIsSaveMemeOpen(true)}
-                    className="rounded-full h-12 px-6 md:px-8 text-white shadow-md text-sm md:text-base flex items-center justify-center"
+                    className="rounded-full h-12 px-6 md:px-8 text-white shadow-md text-sm md:text-base flex items-center justify-center cursor-pointer"
                     style={{
                       backgroundImage: "linear-gradient(90deg,#CD01BA,#E20317)",
                       boxShadow:
@@ -570,7 +614,7 @@ const Header: React.FC<HeaderProps> = ({
                   {/* Download Button */}
                   <Button
                     onClick={exportMeme}
-                    className="rounded-full h-12 px-6 md:px-8 text-white shadow-md text-sm md:text-base flex items-center justify-center"
+                    className="rounded-full h-12 px-6 md:px-8 text-white shadow-md text-sm md:text-base flex items-center justify-center cursor-pointer"
                     style={{
                       backgroundImage: "linear-gradient(90deg,#CD01BA,#E20317)",
                       boxShadow:

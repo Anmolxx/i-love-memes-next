@@ -22,9 +22,11 @@ import { Slider } from "@/components/ui/slider";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Shadow } from "fabric";
+import { fontFamilies } from "@/utils/fontFamily";
 
 interface Props {
-  activeTextObject: any;
+  activeTextObject: any | null;
+  allTextObjects: { id: string; object: any }[]; 
   onTextStyleChange: (style: any) => void;
   onAddText: () => void;
   onDeleteText?: () => void;
@@ -32,118 +34,140 @@ interface Props {
 
 const TextStyles: React.FC<Props> = ({
   activeTextObject,
+  allTextObjects,
   onTextStyleChange,
   onAddText,
   onDeleteText,
 }) => {
   const colorInputRef = useRef<HTMLInputElement>(null);
   const shadowColorInputRef = useRef<HTMLInputElement>(null);
-  const [localText, setLocalText] = useState("");
-  const [fontSize, setFontSize] = useState(24);
-  const [fontFamily, setFontFamily] = useState("Arial");
-  const [fontStyle, setFontStyle] = useState("normal");
-  const [mode, setMode] = useState<"shadow" | "outline">("shadow");
-  const [shadowBlur, setShadowBlur] = useState(0);
-  const [outlineWidth, setOutlineWidth] = useState(0);
-  const [globalWidth, setGlobalWidth] = useState(0);
-  const [globalColor, setGlobalColor] = useState("#000000");
-  const [shadowOffsetX, setShadowOffsetX] = useState(0);
-  const [shadowOffsetY, setShadowOffsetY] = useState(0);
-  const [textAlign, setTextAlign] = useState<
-    "left" | "center" | "right" | "justify"
-  >("left");
 
-  const fontFamilies = [
-    { value: "Impact", label: "Impact" },
-    { value: "Arial", label: "Arial" },
-    { value: "Comic Sans MS", label: "Comic Sans MS" },
-    { value: "Helvetica", label: "Helvetica" },
-    { value: "Times New Roman", label: "Times New Roman" },
-    { value: "Times", label: "Times" },
-    { value: "Courier New", label: "Courier New" },
-    { value: "Courier", label: "Courier" },
-    { value: "Verdana", label: "Verdana" },
-    { value: "Georgia", label: "Georgia" },
-    { value: "Palatino", label: "Palatino" },
-    { value: "Garamond", label: "Garamond" },
-    { value: "Bookman", label: "Bookman" },
-    { value: "Trebuchet MS", label: "Trebuchet MS" },
-    { value: "Arial Black", label: "Arial Black" },
-  ];
+  const [fontSize, setFontSize] = useState<number>(24);
+  const [fontFamily, setFontFamily] = useState<string>("Arial");
+  const [fontStyle, setFontStyle] = useState<string>("normal");
+  const [mode, setMode] = useState<"shadow" | "outline">("shadow");
+  const [globalColor, setGlobalColor] = useState<string>("#000000");
+  const [shadowBlur, setShadowBlur] = useState<number>(0);
+  const [shadowOffsetX, setShadowOffsetX] = useState<number>(0);
+  const [shadowOffsetY, setShadowOffsetY] = useState<number>(0);
+  const [outlineWidth, setOutlineWidth] = useState<number>(0);
+  const [textAlign, setTextAlign] = useState<"left" | "center" | "right" | "justify">("left");
+
+  const [textFields, setTextFields] = useState<{ id: string; text: string }[]>([]);
+
+  <Select
+    value={fontFamily}
+    onValueChange={(value) => {
+      setFontFamily(value);
+      onTextStyleChange({ fontFamily: value });
+    }}
+  >
+    <SelectTrigger className="w-full bg-[#f0f0f0]">
+      <SelectValue placeholder="Select font" />
+    </SelectTrigger>
+    <SelectContent>
+      {fontFamilies.map((font) => (
+        <SelectItem
+          key={font}
+          value={font}
+          style={{ fontFamily: font }}
+          className="cursor-pointer"
+        >
+          {font}
+        </SelectItem>
+      ))}
+    </SelectContent>
+  </Select>
 
   useEffect(() => {
-    if (activeTextObject?.text !== undefined) {
-      setLocalText(activeTextObject.text);
-      setFontSize(activeTextObject.fontSize || 24);
-      setFontFamily(activeTextObject.fontFamily || "Arial");
-      setTextAlign(activeTextObject.textAlign || "left");
+    const newFields = allTextObjects.map(({ id, object }) => ({
+      id,
+      text: (object?.text as string) || "",
+    }));
+    setTextFields(newFields);
+  }, [allTextObjects]);
 
-      const weight = activeTextObject.fontWeight;
-      const style = activeTextObject.fontStyle;
-      const text = activeTextObject.text || "";
-      const isUppercase =
-        text === text.toUpperCase() && text !== text.toLowerCase();
+  useEffect(() => {
+    if (!activeTextObject) return;
+    const obj = activeTextObject;
 
-      if (weight === "bold" && style === "italic") setFontStyle("bold-italic");
-      else if (weight === "bold") setFontStyle("bold");
-      else if (style === "italic") setFontStyle("italic");
-      else if (isUppercase) setFontStyle("uppercase");
-      else setFontStyle("normal");
+    setFontSize(obj.fontSize ?? 24);
+    setFontFamily(obj.fontFamily ?? "Arial");
+    setTextAlign(obj.textAlign ?? "left");
 
-      const shadow = activeTextObject.shadow;
-      if (shadow) {
-        setMode("shadow");
-        setShadowBlur(shadow.blur || 0);
-        setGlobalWidth(shadow.blur || 0);
-        setGlobalColor(shadow.color || "#000000");
-        setShadowOffsetX(shadow.offsetX || 0);
-        setShadowOffsetY(shadow.offsetY || 0);
-      } else if (activeTextObject.strokeWidth && activeTextObject.strokeWidth > 0) {
-        setMode("outline");
-        setOutlineWidth(activeTextObject.strokeWidth);
-        setGlobalWidth(activeTextObject.strokeWidth);
-        setGlobalColor((activeTextObject.stroke as string) || "#000000");
-      }
+    if (obj.fontWeight === "bold" && obj.fontStyle === "italic") setFontStyle("bold-italic");
+    else if (obj.fontWeight === "bold") setFontStyle("bold");
+    else if (obj.fontStyle === "italic") setFontStyle("italic");
+    else setFontStyle("normal");
+
+    const shadow = obj.shadow;
+    if (shadow) {
+      setMode("shadow");
+      setGlobalColor(shadow.color ?? "#000000");
+      setShadowBlur(shadow.blur ?? 0);
+      setShadowOffsetX(shadow.offsetX ?? 0);
+      setShadowOffsetY(shadow.offsetY ?? 0);
+    } else if (obj.strokeWidth > 0) {
+      setMode("outline");
+      setGlobalColor(obj.stroke ?? "#000000");
+      setOutlineWidth(obj.strokeWidth ?? 0);
+    } else {
+      // reset to defaults when no effect
+      setMode("shadow");
+      setGlobalColor(obj.fill ?? "#000000");
+      setShadowBlur(0);
+      setShadowOffsetX(0);
+      setShadowOffsetY(0);
+      setOutlineWidth(0);
     }
   }, [activeTextObject]);
 
-  useEffect(() => {
-    if (activeTextObject) {
-      setGlobalWidth(mode === "shadow" ? shadowBlur : outlineWidth);
-    }
-  }, [mode, shadowBlur, outlineWidth]);
-
+  // --- Apply effects to the active object ---
   const updateEffects = () => {
     if (!activeTextObject) return;
 
     if (mode === "shadow") {
       const shadow = new Shadow({
         color: globalColor,
-        blur: globalWidth,
+        blur: shadowBlur,
         offsetX: shadowOffsetX,
         offsetY: shadowOffsetY,
         affectStroke: false,
         nonScaling: true,
       });
-      onTextStyleChange({ shadow, strokeWidth: 0 });
+      onTextStyleChange({ shadow, strokeWidth: 0, stroke: null });
     } else {
-      onTextStyleChange({
-        stroke: globalColor,
-        strokeWidth: globalWidth,
-        shadow: null,
-      });
+      onTextStyleChange({ stroke: globalColor, strokeWidth: outlineWidth, shadow: null });
     }
   };
 
-  const handleWidthChange = (value: number) => {
-    setGlobalWidth(value);
-    if (mode === "shadow") setShadowBlur(value);
-    else setOutlineWidth(value);
+  // --- Handle per-input text change; if the field is active, update canvas text too ---
+  const handleTextChange = (id: string, value: string) => {
+    setTextFields((prev) => prev.map((t) => (t.id === id ? { ...t, text: value } : t)));
+    if (activeTextObject?.id === id) {
+      onTextStyleChange({ text: value });
+    } else {
+      // If it's not active, directly set object's text so sidebar stays in sync.
+      const found = allTextObjects.find((t) => t.id === id);
+      if (found) {
+        found.object.set({ text: value });
+        found.object.canvas?.requestRenderAll();
+      }
+    }
+  };
+
+  // --- When user focuses an input, select that textbox on canvas ---
+  const handleFocusSelect = (id: string) => {
+    const target = allTextObjects.find((t) => t.id === id);
+    if (target && target.object && target.object.canvas) {
+      target.object.canvas.setActiveObject(target.object);
+      target.object.canvas.requestRenderAll();
+    }
   };
 
   return (
-    <>
-      <div className="flex items-center justify-between p-1">
+    <div className="p-4 space-y-4">
+      <div className="flex items-center justify-between">
         <h3 className="font-semibold text-gray-800 text-lg">Text Styles</h3>
         <div className="flex items-center space-x-2">
           {activeTextObject && (
@@ -151,8 +175,7 @@ const TextStyles: React.FC<Props> = ({
               onClick={onDeleteText}
               size={"icon-sm"}
               variant="outline"
-              className="rounded-full border-2 border-red-500 hover:bg-red-50 hover:border-red-200 cursor-pointer"
-              title="Delete text"
+              className="rounded-full border-2 border-red-500 hover:bg-red-50"
             >
               <Trash2 className="w-4 h-4 text-red-500" />
             </Button>
@@ -161,8 +184,7 @@ const TextStyles: React.FC<Props> = ({
             onClick={onAddText}
             size={"icon-sm"}
             variant="outline"
-            className="rounded-full border-2 border-black hover:bg-white hover:border-gray-400 cursor-pointer"
-            title="Add new text"
+            className="rounded-full border-2 border-black hover:bg-white"
           >
             <Plus className="w-4 h-4" />
           </Button>
@@ -171,156 +193,87 @@ const TextStyles: React.FC<Props> = ({
 
       <Separator />
 
-      {/* Always show editor UI (no conditional rendering) */}
-      <div className="p-4 space-y-4">
-        {/* Text Content */}
-        <div className="space-y-2">
-          <Label htmlFor="text-content" className="text-sm font-medium">
-            Text Content
-          </Label>
-          <Input
-            id="text-content"
-            type="text"
-            value={localText}
-            onChange={(e) => {
-              const newText = e.target.value;
-              setLocalText(newText);
-              onTextStyleChange({ text: newText });
-            }}
-            placeholder="Edit Text"
-            className="w-full bg-[#f0f0f0]"
-          />
-        </div>
+      {/* --- Textbox Inputs (initially empty until user adds via +) --- */}
+      <div className="space-y-3">
+        {textFields.length === 0 && (
+          <div className="text-sm text-gray-500">No text fields yet — press + to add.</div>
+        )}
 
-        {/* Font Family */}
-        <div className="space-y-2">
-          <Label className="text-sm font-medium">Font Family</Label>
-          <Select
-            value={fontFamily}
-            onValueChange={(value) => {
-              setFontFamily(value);
-              onTextStyleChange({ fontFamily: value });
-            }}
-          >
-            <SelectTrigger className="w-full bg-[#f0f0f0]">
-              <SelectValue placeholder="Select font" />
-            </SelectTrigger>
-            <SelectContent>
-              {fontFamilies.map((font) => (
-                <SelectItem
-                  key={font.value}
-                  value={font.value}
-                  style={{ fontFamily: font.value }}
-                  className="cursor-pointer"
-                >
-                  {font.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+        {textFields.map((field, index) => (
+          <div key={field.id} className="space-y-1">
+            <Label
+              className={`text-sm font-medium ${
+                activeTextObject?.id === field.id ? "text-blue-600" : "text-gray-700"
+              }`}
+            >
+              Text {index + 1}
+            </Label>
 
-        {/* Font Style */}
-        <div className="space-y-2">
-          <Label className="text-sm font-medium">Font Style</Label>
-          <Select
-            value={fontStyle}
-            onValueChange={(value) => {
-              setFontStyle(value);
-              switch (value) {
-                case "normal":
-                  onTextStyleChange({
-                    fontWeight: "normal",
-                    fontStyle: "normal",
-                  });
-                  break;
-                case "bold":
-                  onTextStyleChange({
-                    fontWeight: "bold",
-                    fontStyle: "normal",
-                  });
-                  break;
-                case "italic":
-                  onTextStyleChange({
-                    fontWeight: "normal",
-                    fontStyle: "italic",
-                  });
-                  break;
-                case "bold-italic":
-                  onTextStyleChange({
-                    fontWeight: "bold",
-                    fontStyle: "italic",
-                  });
-                  break;
-                case "uppercase":
-                  const upperText = activeTextObject?.text?.toUpperCase() || "";
-                  setLocalText(upperText);
-                  onTextStyleChange({ text: upperText });
-                  break;
-              }
-            }}
-          >
-            <SelectTrigger className="w-full bg-[#f0f0f0]">
-              <SelectValue placeholder="Select style" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="normal">Normal</SelectItem>
-              <SelectItem value="bold" style={{ fontWeight: "bold" }}>
-                Bold
-              </SelectItem>
-              <SelectItem value="italic" style={{ fontStyle: "italic" }}>
-                Italic
-              </SelectItem>
-              <SelectItem
-                value="bold-italic"
-                style={{ fontWeight: "bold", fontStyle: "italic" }}
-              >
-                Bold Italic
-              </SelectItem>
-              <SelectItem
-                value="uppercase"
-                style={{ textTransform: "uppercase" }}
-              >
-                ALL CAPS
-              </SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-
-        {/* Font Size */}
-        <div className="space-y-3">
-          <div className="flex items-center justify-between">
-            <Label className="text-sm font-medium">Font Size</Label>
-            <span className="text-sm text-gray-600">{fontSize}px</span>
+            <Input
+              value={field.text}
+              onChange={(e) => handleTextChange(field.id, e.target.value)}
+              onFocus={() => handleFocusSelect(field.id)}
+              placeholder="Enter text"
+              className={`w-full ${
+                activeTextObject?.id === field.id ? "border-blue-400 bg-blue-50" : "border-gray-200 bg-gray-50"
+              }`}
+            />
           </div>
-          <Slider
-            value={[fontSize]}
-            onValueChange={(value) => {
-              const newSize = value[0];
-              setFontSize(newSize);
-              onTextStyleChange({ fontSize: newSize });
-            }}
-            min={12}
-            max={120}
-            step={1}
-            className="w-full"
-          />
-          <div className="flex justify-between text-xs text-gray-500">
-            <span>12px</span>
-            <span>120px</span>
-          </div>
-        </div>
+        ))}
+      </div>
 
-        {/* Text Color */}
-        <div className="space-y-2">
-          <Label className="text-sm font-medium">Text Color</Label>
-          <div className="flex items-center space-x-3">
-            <div className="relative">
+      {/* --- Style panel: only visible when a textbox is selected --- */}
+      {activeTextObject && (
+        <>
+          <Separator className="my-3" />
+
+          {/* Font Family */}
+          <div className="space-y-2">
+            <Label className="text-sm font-medium">Font Family</Label>
+            <Select
+              value={fontFamily}
+              onValueChange={(v) => {
+                setFontFamily(v);
+                onTextStyleChange({ fontFamily: v });
+              }}
+            >
+              <SelectTrigger className="bg-gray-50">
+                <SelectValue placeholder="Select font" />
+              </SelectTrigger>
+              <SelectContent>
+                {fontFamilies.map((font) => (
+                  <SelectItem key={font} value={font} style={{ fontFamily: font }}>
+                    {font}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Font Size */}
+          <div className="space-y-3">
+            <div className="flex justify-between">
+              <Label className="text-sm font-medium">Font Size</Label>
+              <span className="text-sm text-gray-500">{fontSize}px</span>
+            </div>
+            <Slider
+              value={[fontSize]}
+              onValueChange={(v) => {
+                setFontSize(v[0]);
+                onTextStyleChange({ fontSize: v[0] });
+              }}
+              min={12}
+              max={120}
+            />
+          </div>
+
+          {/* Text Color */}
+          <div className="space-y-2">
+            <Label className="text-sm font-medium">Text Color</Label>
+            <div className="flex items-center space-x-2 relative">
               <div
-                className="w-8 h-8 rounded border border-gray-300 cursor-pointer hover:border-gray-400 transition-colors"
-                style={{
-                  backgroundColor: activeTextObject?.fill || "#000000",
-                }}
+                className="w-8 h-8 border rounded cursor-pointer"
+                style={{ background: activeTextObject?.fill || "#000" }}
                 onClick={() => colorInputRef.current?.click()}
               />
               <input
@@ -331,48 +284,69 @@ const TextStyles: React.FC<Props> = ({
                 className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
               />
             </div>
-            <span className="text-sm text-gray-600 font-mono">
-              {activeTextObject?.fill || "#000000"}
-            </span>
           </div>
-        </div>
+          
 
-        {/* Effect Type */}
-        <div className="space-y-2">
-          <Label className="text-sm font-medium">Effect Type</Label>
-          <RadioGroup
-            value={mode}
-            onValueChange={(value: "shadow" | "outline") => {
-              setMode(value);
-              updateEffects();
-            }}
-            className="flex gap-4"
-          >
-            <div className="flex items-center space-x-2">
-              <RadioGroupItem value="shadow" id="shadow" />
-              <Label htmlFor="shadow" className="text-sm cursor-pointer">
-                Shadow
-              </Label>
-            </div>
-            <div className="flex items-center space-x-2">
-              <RadioGroupItem value="outline" id="outline" />
-              <Label htmlFor="outline" className="text-sm cursor-pointer">
-                Outline
-              </Label>
-            </div>
-          </RadioGroup>
-        </div>
+          {/* Text Alignment (restored as requested) */}
+          <div className="space-y-2">
+            <Label className="text-sm font-medium">Text Alignment</Label>
+            <Tabs
+              value={textAlign}
+              onValueChange={(value) => {
+                const alignValue = value as "left" | "center" | "right" | "justify";
+                setTextAlign(alignValue);
+                onTextStyleChange({ textAlign: alignValue });
+              }}
+              className="w-full"
+            >
+              <TabsList className="grid w-full grid-cols-4">
+                <TabsTrigger value="left" className="p-2">
+                  <AlignLeft className="w-4 h-4" />
+                </TabsTrigger>
+                <TabsTrigger value="center" className="p-2">
+                  <AlignCenter className="w-4 h-4" />
+                </TabsTrigger>
+                <TabsTrigger value="right" className="p-2">
+                  <AlignRight className="w-4 h-4" />
+                </TabsTrigger>
+                <TabsTrigger value="justify" className="p-2">
+                  <AlignJustify className="w-4 h-4" />
+                </TabsTrigger>
+              </TabsList>
+            </Tabs>
+          </div>
 
-        {/* Effect Color */}
-        <div className="space-y-2">
-          <Label className="text-sm font-medium">
-            {mode === "shadow" ? "Shadow" : "Outline"} Color
-          </Label>
-          <div className="flex items-center space-x-3">
-            <div className="relative">
+          {/* Effect Mode */}
+          <div className="space-y-2">
+            <Label className="text-sm font-medium">Effect Type</Label>
+            <RadioGroup
+              value={mode}
+              onValueChange={(v: "shadow" | "outline") => {
+                setMode(v);
+                updateEffects();
+              }}
+              className="flex gap-4"
+            >
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="shadow" id="shadow" />
+                <Label htmlFor="shadow">Shadow</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="outline" id="outline" />
+                <Label htmlFor="outline">Outline</Label>
+              </div>
+            </RadioGroup>
+          </div>
+
+          {/* Effect Color */}
+          <div className="space-y-2">
+            <Label className="text-sm font-medium">
+              {mode === "shadow" ? "Shadow" : "Outline"} Color
+            </Label>
+            <div className="flex items-center space-x-3 relative">
               <div
-                className="w-8 h-8 rounded border border-gray-300 cursor-pointer hover:border-gray-400 transition-colors"
-                style={{ backgroundColor: globalColor }}
+                className="w-8 h-8 rounded border cursor-pointer"
+                style={{ background: globalColor }}
                 onClick={() => shadowColorInputRef.current?.click()}
               />
               <input
@@ -386,109 +360,70 @@ const TextStyles: React.FC<Props> = ({
                 className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
               />
             </div>
-            <span className="text-sm text-gray-600 font-mono">{globalColor}</span>
           </div>
-        </div>
 
-        {/* Shadow Blur / Outline Width */}
-        <div className="space-y-3">
-          <div className="flex items-center justify-between">
-            <Label className="text-sm font-medium">
-              {mode === "shadow" ? "Shadow Blur" : "Outline Width"}
-            </Label>
-            <span className="text-sm text-gray-600">{globalWidth}px</span>
-          </div>
-          <Slider
-            value={[globalWidth]}
-            onValueChange={(value) => {
-              const newValue = value[0];
-              handleWidthChange(newValue);
-              updateEffects();
-            }}
-            min={0}
-            max={20}
-            step={1}
-            className="w-full"
-          />
-          <div className="flex justify-between text-xs text-gray-500">
-            <span>0</span>
-            <span>20</span>
-          </div>
-        </div>
-
-        {/* Shadow Offsets */}
-        {mode === "shadow" && (
-          <>
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <Label className="text-sm font-medium">Shadow Offset X</Label>
-                <span className="text-sm text-gray-600">{shadowOffsetX}px</span>
-              </div>
-              <Slider
-                value={[shadowOffsetX]}
-                onValueChange={(value) => {
-                  const newValue = value[0];
-                  setShadowOffsetX(newValue);
-                  updateEffects();
-                }}
-                min={-50}
-                max={50}
-                step={1}
-                className="w-full"
-              />
+          {/* Shadow Blur / Outline Width */}
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <Label className="text-sm font-medium">{mode === "shadow" ? "Shadow Blur" : "Outline Width"}</Label>
+              <span className="text-sm text-gray-600">{mode === "shadow" ? shadowBlur : outlineWidth}px</span>
             </div>
+            <Slider
+              value={[mode === "shadow" ? shadowBlur : outlineWidth]}
+              onValueChange={(value) => {
+                const newValue = value[0];
+                if (mode === "shadow") {
+                  setShadowBlur(newValue);
+                } else {
+                  setOutlineWidth(newValue);
+                }
+                updateEffects();
+              }}
+              min={0}
+              max={50}
+            />
+          </div>
 
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <Label className="text-sm font-medium">Shadow Offset Y</Label>
-                <span className="text-sm text-gray-600">{shadowOffsetY}px</span>
+          {/* Shadow Offsets (only when shadow mode) */}
+          {mode === "shadow" && (
+            <>
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <Label className="text-sm font-medium">Shadow Offset X</Label>
+                  <span className="text-sm text-gray-600">{shadowOffsetX}px</span>
+                </div>
+                <Slider
+                  value={[shadowOffsetX]}
+                  onValueChange={(value) => {
+                    setShadowOffsetX(value[0]);
+                    updateEffects();
+                  }}
+                  min={-50}
+                  max={50}
+                />
               </div>
-              <Slider
-                value={[shadowOffsetY]}
-                onValueChange={(value) => {
-                  const newValue = value[0];
-                  setShadowOffsetY(newValue);
-                  updateEffects();
-                }}
-                min={-50}
-                max={50}
-                step={1}
-                className="w-full"
-              />
-            </div>
-          </>
-        )}
 
-        {/* Text Alignment */}
-        <div className="space-y-2">
-          <Label className="text-sm font-medium">Text Alignment</Label>
-          <Tabs
-            value={textAlign}
-            onValueChange={(value) => {
-              const alignValue = value as "left" | "center" | "right" | "justify";
-              setTextAlign(alignValue);
-              onTextStyleChange({ textAlign: alignValue });
-            }}
-            className="w-full"
-          >
-            <TabsList className="grid w-full grid-cols-4">
-              <TabsTrigger value="left" className="p-2">
-                <AlignLeft className="w-4 h-4" />
-              </TabsTrigger>
-              <TabsTrigger value="center" className="p-2">
-                <AlignCenter className="w-4 h-4" />
-              </TabsTrigger>
-              <TabsTrigger value="right" className="p-2">
-                <AlignRight className="w-4 h-4" />
-              </TabsTrigger>
-              <TabsTrigger value="justify" className="p-2">
-                <AlignJustify className="w-4 h-4" />
-              </TabsTrigger>
-            </TabsList>
-          </Tabs>
-        </div>
-      </div>
-    </>
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <Label className="text-sm font-medium">Shadow Offset Y</Label>
+                  <span className="text-sm text-gray-600">{shadowOffsetY}px</span>
+                </div>
+                <Slider
+                  value={[shadowOffsetY]}
+                  onValueChange={(value) => {
+                    setShadowOffsetY(value[0]);
+                    updateEffects();
+                  }}
+                  min={-50}
+                  max={50}
+                />
+              </div>
+            </>
+          )}
+        </>
+      )}
+    </div>
   );
 };
+
 export default TextStyles;

@@ -67,7 +67,7 @@ export function Footer() {
             </h3>
             <ul className="mt-3 space-y-2 text-sm text-black/70">
               <li>
-                <Link href="/templates" className="hover:text-black">
+                <Link href="/meme" className="hover:text-black">
                   Templates
                 </Link>
               </li>
@@ -77,7 +77,7 @@ export function Footer() {
                 </Link>
               </li>
               <li>
-                <Link href="/generate" className="hover:text-black">
+                <Link href="/meme" className="hover:text-black">
                   Generate Meme
                 </Link>
               </li>

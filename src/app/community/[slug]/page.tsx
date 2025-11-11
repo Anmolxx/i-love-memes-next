@@ -61,7 +61,7 @@ export default function MemePage() {
   const [newComment, setNewComment] = useState("");
 
   useEffect(() => {
-    const memesData: Meme[] = Array.isArray(data) ? data : data?.data ?? [];
+    const memesData: Meme[] = Array.isArray(data) ? data : data?.items ?? [];
     const found = memesData.find((m) => m.slug === slug);
     if (found) setMeme(found);
   }, [data, slug]);

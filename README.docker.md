@@ -24,7 +24,7 @@ Run development with docker-compose (hot-reload):
 
 ```bash
 # Start dev container with bind-mounts (Windows cmd.exe)
-docker compose -f docker-compose.dev.yml up --build
+docker compose -f docker-compose.yml up --build
 ```
 
 Production recommendations:

@@ -86,7 +86,7 @@ export function NavUser({
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
-              <DropdownMenuItem>
+              <DropdownMenuItem onSelect={() => router.push("/admin/settings/account")}>
                 <User />
                 Account
               </DropdownMenuItem>

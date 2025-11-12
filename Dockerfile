@@ -44,9 +44,9 @@ COPY --from=builder /app/public ./public
 COPY --from=builder /app/package.json ./package.json
 COPY --from=deps /app/node_modules ./node_modules
 
-# Ensure correct permissions
-RUN chown -R nextjs:nextjs /app
-USER nextjs
+## Ensure correct permissions
+#RUN chown -R nextjs:nextjs /app
+#USER nextjs
 
 EXPOSE 3000
 

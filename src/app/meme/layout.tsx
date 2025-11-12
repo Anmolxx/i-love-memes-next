@@ -170,7 +170,12 @@ export default function MemeLayout({ children }: LayoutProps) {
    },
    [canvasReady]
  );
- 
+ useEffect(() => {
+     if (selectedImage) {
+       loadBackgroundImage(selectedImage, zoom, rotation);
+     }
+   }, [selectedImage, zoom, rotation, loadBackgroundImage]);
+   
  useEffect(() => {
      const canvas = canvasRef.current;
      if (!currentSlug || !canvasReady || !canvas || !templateData) return;

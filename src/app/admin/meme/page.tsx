@@ -6,7 +6,7 @@ import { DashboardHeader, DashboardLayout, DashboardTitle } from "@/components/l
 import { DataTablePagination } from "@/components/data-table/data-table-pagination";
 import { DataTable } from "@/components/data-table/data-table";
 import { useDataTable } from "@/hooks/use-data-table";
-import { useGetCommunityMemesQuery } from "@/redux/services/meme";
+import { useGetMemesQuery } from "@/redux/services/meme";
 import { adminMemeColumns } from "@/components/data-table/columns/admin-memes-columns";
 import { CreateMemeDialog } from "@/components/dialog/create-meme";
 
@@ -20,7 +20,7 @@ function MemesContent() {
     per_page: parseInt(per_page),
   };
 
-  const { data, isLoading } = useGetCommunityMemesQuery(query);
+  const { data, isLoading } = useGetMemesQuery(query);
 
   const tableData = data?.items ?? [];
   const pageCount = data?.meta?.totalPages ?? 0;

@@ -13,7 +13,7 @@ export function AddTemplateDialog() {
   };
 
   return (
-    <Button onClick={handleAddTemplate} className="space-x-1">
+    <Button onClick={handleAddTemplate} className="space-x-1 cursor-pointer">
       <span>Add Template</span> <ImagePlus size={18} />
     </Button>
   );

@@ -11,7 +11,7 @@ import { useRouter } from "next/navigation";
 import { logout } from "@/redux/slices/auth";
 import { toast } from "sonner";
 import { useSaveAsTemplateMutation, useUploadFileMutation } from "@/redux/services/template";
-import { usePostMemeMutation } from "@/redux/services/community";
+import { usePostMemeMutation } from "@/redux/services/meme";
 import useAuthentication from "@/hooks/use-authentication";
 import { useForm } from "react-hook-form";
 import {
@@ -301,16 +301,17 @@ const Header: React.FC<HeaderProps> = ({
   
       console.log("✅ Meme image uploaded, file ID:", uploadedFileId);
   
-      await postMemeTrigger({
+      const result = await postMemeTrigger({
         title: data.title.trim().slice(0, 20),
         description: data.description.trim() || "No description provided",
         file: { id: uploadedFileId },
       }).unwrap();
-      
+
+      const memeSlug = result.data?.slug;
       toast.success(
         <span>
           🎉 Meme saved to gallery successfully!{" "}
-          <Link href="/community" className="underline font-medium text-pink-500">View your Meme</Link>
+          <Link href={`/community/${memeSlug}`} className="underline font-medium text-pink-500">View your Meme</Link>
         </span>,
         {
           duration: 5000, 

@@ -2,7 +2,7 @@ import { iLoveMemesApi } from ".";
 import {
   InteractionSummary,
   PostInteractionBody,
-} from "@/utils/meme-types";
+} from "@/types/meme-types";
 import { TAG_MEME_INTERACTION_SUMMARY } from "@/contracts/iLoveMemesApiTags"; 
 
 export const memeInteractionsApi = iLoveMemesApi.injectEndpoints({

@@ -131,7 +131,7 @@ export function SignInForm() {
         </Button>
 
         {/* Bottom CTA */}
-        <div className="text-center text-gray-400 text-sm">
+        <div className="text-center text-gray-400 text-sm w-full mx-auto">
           Not a member?{" "}
           <button
             type="button"
@@ -141,6 +141,7 @@ export function SignInForm() {
             Sign Up now
           </button>
         </div>
+        
       </form>
     </Form>
   );

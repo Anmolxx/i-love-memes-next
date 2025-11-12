@@ -22,7 +22,7 @@ import { Slider } from "@/components/ui/slider";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Shadow } from "fabric";
-import { fontFamilies } from "@/utils/fontFamily";
+import { fontFamilies } from "@/types/fontFamily";
 
 interface Props {
   activeTextObject: any | null;

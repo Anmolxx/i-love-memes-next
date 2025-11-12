@@ -1,18 +1,14 @@
 "use client";
 
 import { useMemo, Suspense } from "react";
-import { Metadata } from "next";
 import {
   DashboardHeader,
   DashboardLayout,
   DashboardTitle,
 } from "@/components/layout/dashboard/layout";
-import { OrdersPrimaryButtons } from "@/components/molecules/primary-buttons/orders";
-import OrdersTable from "@/components/organisms/tables/orders-table";
 import { DataTablePagination } from "@/components/data-table/data-table-pagination";
 import { DataTable } from "@/components/data-table/data-table";
 import { useDataTable } from "@/hooks/use-data-table";
-import mockTemplates from "@/mocks/templates";
 import { adminTemplateColumns } from "@/components/data-table/columns/admin-template-columns";
 import { useSearchParams } from "next/navigation";
 import { AddTemplateDialog } from "@/components/dialog/add-template";

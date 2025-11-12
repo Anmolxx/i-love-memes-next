@@ -11,7 +11,15 @@ export const communityApi = iLoveMemesApi.injectEndpoints({
         return { url, method: "GET" };
       },
     }),
-    
+
+    getMemeBySlugOrId: builder.query<any, string>({
+        query: (slugOrId) => ({
+          url: `/memes/${slugOrId}`,
+          method: "GET",
+        }),
+        providesTags: [COMMUNITY_MEMES],
+      }),
+
     postMeme: builder.mutation<any, any>({
       query: (body) => ({
         url: "/memes",
@@ -19,7 +27,15 @@ export const communityApi = iLoveMemesApi.injectEndpoints({
         body,
       }),
     }),
+
+    deleteMeme: builder.mutation<any, string>({
+      query: (slugOrId) => ({
+        url: `/memes/${slugOrId}`,
+        method: "DELETE",
+      }),
+      invalidatesTags: [{ type: COMMUNITY_MEMES, id: "LIST" }],
+    }),
   }),
 });
 
-export const { useGetCommunityMemesQuery, usePostMemeMutation } = communityApi;
+export const { useGetCommunityMemesQuery, useGetMemeBySlugOrIdQuery, usePostMemeMutation, useDeleteMemeMutation, } = communityApi;

@@ -13,13 +13,14 @@ import {
   SidebarTrigger,
   useSidebar,
 } from "@/components/ui/sidebar";
-import { Home, Users, FileText, ShoppingBag, Laugh } from "lucide-react";
+import { Home, Users, FileText, ShoppingBag, Laugh, Shield } from "lucide-react";
 import { NavUser } from "./nav-user";
 import { usePathname } from "next/navigation";
 import { isActivePath } from "@/lib/utils";
 import Link from "next/link";
+import useAuthentication from "@/hooks/use-authentication"; 
 
-// Sidebar menu items
+// Sidebar base links (visible to all)
 const SIDEBAR_LINKS = [
   { title: "Home", url: "/", icon: Home },
   { title: "Community", url: "/community", icon: Users },
@@ -32,13 +33,18 @@ const USER = { name: "shadcn", email: "m@example.com", avatar: "/avatars/demo.pn
 export default function AppSidebar() {
   const pathname = usePathname();
   const { state, setOpenMobile } = useSidebar();
+  const { user, isAdmin } = useAuthentication(); // ✅ from your auth hook
 
-  // Determine if sidebar is expanded based on context state
   const isOpen = state === "expanded";
-
   const toggleSidebar = () => {
     if (setOpenMobile) setOpenMobile(!isOpen);
   };
+
+  // Build final link list conditionally
+  const links = [...SIDEBAR_LINKS];
+  if (isAdmin) {
+    links.push({ title: "Admin", url: "/admin/meme", icon: Shield });
+  }
 
   return (
     <Sidebar collapsible="icon">
@@ -66,7 +72,7 @@ export default function AppSidebar() {
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu>
-              {SIDEBAR_LINKS.map((item) => {
+              {links.map((item) => {
                 const active = isActivePath(item.url, pathname);
                 return (
                   <SidebarMenuItem key={item.url}>
@@ -92,7 +98,7 @@ export default function AppSidebar() {
       {/* Sidebar Footer */}
       <SidebarFooter>
         <SidebarMenuItem>
-          <NavUser user={USER} />
+          <NavUser user={user ?? USER} />
         </SidebarMenuItem>
       </SidebarFooter>
     </Sidebar>

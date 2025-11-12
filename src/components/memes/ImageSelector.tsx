@@ -53,8 +53,6 @@ const ImageSelector: React.FC<Props> = ({
   });
 
   const handleTemplateSelect = (template: any) => {
-    console.log("template", template);
-    
     if (!template.previewUrl) return;
     if (template.previewUrl) {
       if (template.slug && onTemplateSelect) {

@@ -26,7 +26,7 @@ import {
   useGetInteractionSummaryQuery,
 } from "@/redux/services/interaction";
 import { InteractionType } from "@/utils/interaction.dto";
-import { useAuthModal } from "@/hooks/use-auth-modal";
+// import { useAuthModal } from "@/hooks/use-auth-modal";
 
 interface RawMemeData {
   id: string;
@@ -69,7 +69,7 @@ const notoSerif = Noto_Serif({
 export default function CommunityGallery(): JSX.Element {
   const searchParams = useSearchParams();
   const router = useRouter();
-  const { openModal } = useAuthModal();
+  // const { openModal } = useAuthModal();
   const page = parseInt(searchParams.get("page") ?? "1");
   const per_page = parseInt(searchParams.get("per_page") ?? "4");
   const search = searchParams.get("search") ?? "";

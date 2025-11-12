@@ -3,7 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import Providers from "@/redux/Provider";
 import { Toaster } from "@/components/ui/sonner";
-import { AuthModal } from "@/components/ui/extension/auth-modal";
+// import { AuthModal } from "@/components/ui/extension/auth-modal";
 import { ThemeProvider } from "next-themes";
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -32,7 +32,6 @@ export default function RootLayout({
       >
         <Providers>
           {children}
-          <AuthModal/>
         </Providers>
         <Toaster richColors toastOptions={{}} theme="light" />
       </body>

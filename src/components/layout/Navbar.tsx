@@ -22,7 +22,7 @@ export function Navbar() {
                     </button>
 
                     {/* Desktop navigation - left side */}
-                    <div className="hidden md:flex items-center gap-6 text-sm font-medium">
+                    <div className="hidden md:flex items-center gap-6 text-base font-medium font-serif">
                       <Link 
                         href="/" 
                         className="text-[#4b087ea5] hover:text-[#4b087e] transition-colors duration-200"

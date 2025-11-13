@@ -29,7 +29,7 @@ const ImageSelector: React.FC<Props> = ({
     selectFromResult: ({ data }) => {
       return {
         data:
-          data?.data?.map((template: any) => {
+          data?.items?.map((template: any) => {
             
             const backgroundImage = template.config?.backgroundImage;
             let previewUrl = null;

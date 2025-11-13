@@ -1,50 +1,68 @@
 "use client";
 
-import { useMemo, Suspense } from "react";
-import { Metadata } from "next";
+import { useState, useMemo, useEffect, Suspense } from "react";
 import {
   DashboardHeader,
   DashboardLayout,
   DashboardTitle,
 } from "@/components/layout/dashboard/layout";
-import { OrdersPrimaryButtons } from "@/components/molecules/primary-buttons/orders";
-import OrdersTable from "@/components/organisms/tables/orders-table";
 import { DataTablePagination } from "@/components/data-table/data-table-pagination";
 import { DataTable } from "@/components/data-table/data-table";
 import { useDataTable } from "@/hooks/use-data-table";
-import mockTemplates from "@/mocks/templates";
 import { adminTemplateColumns } from "@/components/data-table/columns/admin-template-columns";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import { AddTemplateDialog } from "@/components/dialog/add-template";
-import { useGetAllTemplatesQuery } from "@/redux/services/template";
-
-// export const metadata: Metadata = {
-//   title: "Orders",
-//   description: "Manage your orders in the dashboard.",
-// };
+import { useGetTemplatesQuery } from "@/redux/services/template"; // ✅ updated hook name
+import { AdminSearchBar } from "@/components/molecules/search-bar/search";
+import { TagSelector } from "@/components/community/TagsSelector";
 
 function TemplatesContent() {
   const searchParams = useSearchParams();
-  const params = Object.fromEntries(searchParams);
-  const per_page = searchParams.get("per_page") ?? "5";
-  const page_number = searchParams.get("page") ?? "1";
+  const router = useRouter();
 
-  const query = {
-    page: page_number,
-    per_page: per_page,
-  };
+  // --- Extract URL params ---
+  const per_page = parseInt(searchParams.get("per_page") ?? "10");
+  const page = parseInt(searchParams.get("page") ?? "1");
+  const searchFromUrl = searchParams.get("search") ?? "";
 
-  const { data } = useGetAllTemplatesQuery(query);
+  // --- Local States ---
+  const [searchQuery, setSearchQuery] = useState(searchFromUrl);
+  const [debouncedSearch, setDebouncedSearch] = useState(searchQuery);
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [availableTags, setAvailableTags] = useState<string[]>([]);
 
-  const tableData = data?.data ?? [];
+  // --- Debounce search ---
+  useEffect(() => {
+    const handler = setTimeout(() => setDebouncedSearch(searchQuery), 600);
+    return () => clearTimeout(handler);
+  }, [searchQuery]);
+
+  // --- Update URL when search or pagination changes ---
+  useEffect(() => {
+    const params = new URLSearchParams();
+    params.set("page", page.toString());
+    params.set("per_page", per_page.toString());
+    if (debouncedSearch) params.set("search", debouncedSearch);
+    if (selectedTags.length) params.set("tags", selectedTags.join(","));
+    router.push(`?${params.toString()}`);
+  }, [debouncedSearch, selectedTags, page, per_page, router]);
+
+  // --- API Query ---
+  const { data, isFetching } = useGetTemplatesQuery({
+    page,
+    limit: per_page,
+    orderBy: "createdAt",
+    search: debouncedSearch,
+  });
+
+  // --- Data & Table setup ---
+  const tableData = data?.items ?? [];
   const pageCount = data?.meta?.totalPages ?? 0;
-
   const tableColumns = useMemo(() => adminTemplateColumns(), []);
-
   const { table } = useDataTable({
     data: tableData,
     columns: tableColumns,
-    defaultPerPage: parseInt(per_page),
+    defaultPerPage: per_page,
     pageCount: pageCount,
   });
 
@@ -52,11 +70,27 @@ function TemplatesContent() {
     <DashboardLayout>
       <DashboardHeader>
         <DashboardTitle
-          title="Template"
-          description="Here you can manage all your meme templates."
+          title="Templates"
+          description="Manage all your meme templates here."
         />
-        <AddTemplateDialog />
+
+        {/* --- Search & Actions --- */}
+        <div className="flex items-center gap-3 ml-auto mt-2">
+          <AdminSearchBar
+            searchQuery={searchQuery}
+            setSearchQuery={setSearchQuery}
+            handleSearch={() => {}}
+            isFetching={isFetching}
+            selectedTags={selectedTags}
+            setSelectedTags={setSelectedTags}
+            availableTags={availableTags}
+            inputWidth="w-80"
+          />
+          <TagSelector setAvailableTags={setAvailableTags} />
+          <AddTemplateDialog />
+        </div>
       </DashboardHeader>
+
       <DataTable table={table} />
       <DataTablePagination table={table} />
     </DashboardLayout>

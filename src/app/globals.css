@@ -122,6 +122,13 @@
 }
 
 @layer utilities {
+  .hide-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none; 
+  }
+  .hide-scrollbar::-webkit-scrollbar {
+      display: none;
+  }
   @keyframes carousel-scroll {
     0% {
       transform: translateX(0);

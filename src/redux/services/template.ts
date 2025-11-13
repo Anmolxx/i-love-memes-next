@@ -1,14 +1,23 @@
 import { TAG_GET_TEMPLATES_ADMIN } from "@/contracts/iLoveMemesApiTags";
 import { iLoveMemesApi } from ".";
 
-export const memesApi = iLoveMemesApi.injectEndpoints({
+export const templatesApi = iLoveMemesApi.injectEndpoints({
   endpoints: (builder) => ({
-    getTemplates: builder.query<any, void>({
-      query: () => ({
-        url: "/templates",
-        method: "GET",
-      }),
-    }),
+   getTemplates: builder.query<
+     any,
+     { page?: number; limit?: number; orderBy?: string; search?: string } | void
+   >({
+     query: (params) => {
+       const { page = 1, limit = 10, orderBy = "createdAt", search } = params || {};
+       let url = `/templates?page=${page}&limit=${limit}&orderBy=${orderBy}`;
+       if (search) url += `&search=${encodeURIComponent(search)}`;
+       return {
+         url,
+         method: "GET",
+       };
+     },
+   }),
+   
     uploadFile: builder.mutation<
       { file: { id: string; path: string } },
       FormData
@@ -43,6 +52,16 @@ export const memesApi = iLoveMemesApi.injectEndpoints({
         method: "DELETE",
       }),
     }),
+
+    getTemplateByIdOrSlug: builder.query<any, string>({
+      query: (idOrSlug) => ({
+        url: `/templates/${idOrSlug}`,
+        method: "GET",
+      }),
+      providesTags: (result, error, idOrSlug) => [
+        { type: TAG_GET_TEMPLATES_ADMIN, id: idOrSlug },
+      ],
+    }),
   }),
 });
 
@@ -51,5 +70,6 @@ export const {
   useUploadFileMutation,
   useSaveAsTemplateMutation,
   useGetAllTemplatesQuery,
-  useDeleteTemplateMutation
-} = memesApi;
+  useDeleteTemplateMutation,
+  useGetTemplateByIdOrSlugQuery,
+} = templatesApi;

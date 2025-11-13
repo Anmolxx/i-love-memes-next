@@ -42,22 +42,17 @@ export const ApplicationUserContextProvider = (props: any) => {
     if (isUserDataLoading || !userData) {
       return null;
     }
-
     return userData;
   }, [isUserDataLoading, userData]);
 
   const isAdmin = useMemo(() => {
-    if (userData?.role?.name === "Admin") {
-      return true;
-    } else {
-      return false;
-    }
-  }, [user]);
+    return userData?.role?.name === "Admin";
+  }, [userData?.role?.name]); 
 
   return (
     <ApplicationUserContext.Provider
       value={{
-        user: user,
+        user,
         isLoading: isUserDataLoading,
         isLoggedIn,
         refetch,

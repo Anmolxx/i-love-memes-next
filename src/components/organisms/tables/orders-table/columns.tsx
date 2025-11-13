@@ -20,7 +20,6 @@ export const order_columns: ColumnDef<Order>[] = [
     cell: ({row}) => {
       const order = row.original;
       return <div className="space-x-4 flex items-center">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src={order.product_img} alt={order.product_name} className="h-8 w-8 rounded-md" />
         <span>{order.product_name}</span>
       </div>

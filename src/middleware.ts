@@ -7,7 +7,7 @@ export async function middleware(request: NextRequest) {
   const currentPath = request.nextUrl.pathname;
 
   const loginRoutes = ["/auth/login", "/auth/register"];
-  const openPaths = ["/", "/meme", "/generate", "/admin/users"];
+  const openPaths = ["/", "/meme", "/generate"];
 
   const isPathMatch = (paths: string[]) =>
     paths.some((path) => currentPath.startsWith(path));
@@ -18,10 +18,11 @@ export async function middleware(request: NextRequest) {
   // Admin is authenticated
   if (adminAuthToken) {
     if (isPathMatch(loginRoutes)) {
-      // Redirect admin to /admin/users
       return redirectTo("/admin/users");
     }
-
+    if (currentPath.endsWith("/admin")) {
+        return redirectTo("/admin/users");
+      }
     return NextResponse.next();
   }
 
@@ -31,7 +32,7 @@ export async function middleware(request: NextRequest) {
       return redirectTo("/");
     }
 
-    // Check if authenticated user is trying to access admin paths
+    // Authenticated user accessing admin
     if (currentPath.startsWith("/admin")) {
       return redirectTo("/");
     }
@@ -39,7 +40,7 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // User is not authenticated
+  // Unauthenticated user
   if (isPathMatch(loginRoutes)) {
     return NextResponse.next();
   }
@@ -47,11 +48,11 @@ export async function middleware(request: NextRequest) {
   if (currentPath.startsWith("/admin")) {
     return redirectTo("/auth/login");
   }
+
   if (isPathMatch(openPaths)) {
     return NextResponse.next();
   }
 
-  // Check if unauthenticated user is trying to access admin paths
   return redirectTo("/auth/login");
 }
 

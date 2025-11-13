@@ -26,6 +26,14 @@ const eslintConfig = [
       "prefer-const": "off",
     },
   },
+  {
+    rules: {
+      "@typescript-eslint/no-unused-vars": "off",
+      "react-hooks/exhaustive-deps": "warn",
+      "@next/next/no-img-element": "off",
+      "@next/next/no-html-link-for-pages": "off"
+    }
+  },
 ];
 
 export default eslintConfig;

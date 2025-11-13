@@ -4,10 +4,13 @@ import { setupListeners } from "@reduxjs/toolkit/query";
 import { TypedUseSelectorHook, useDispatch, useSelector } from "react-redux";
 import { iLoveMemesApi } from "./services";
 import authSliceReducer from "./slices/auth/index";
-
+import authModalReducer from "./slices/authModal/index"
+import templateReducer from "./slices/template/index"
 export const store = configureStore({
   reducer: {
     auth: authSliceReducer,
+    authModal: authModalReducer,
+    template: templateReducer,
     [I_lOVE_MEMES_REDUCER_PATH]: iLoveMemesApi.reducer,
   },
   middleware: (getDefaultMiddleware) => {

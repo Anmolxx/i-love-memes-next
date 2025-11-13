@@ -1,4 +1,4 @@
-import CommunityGallery from "@/components/community/Gallery";
+import CommunityGallery from "@/components/community/CommunityGallery";
 import { Suspense } from "react";
 
 export default function CommunityPage() {

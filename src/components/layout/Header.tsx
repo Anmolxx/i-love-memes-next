@@ -14,6 +14,8 @@ import { useSaveAsTemplateMutation, useUploadFileMutation } from "@/redux/servic
 import { usePostMemeMutation } from "@/redux/services/meme";
 import useAuthentication from "@/hooks/use-authentication";
 import { useForm } from "react-hook-form";
+import { useTypedSelector } from "@/redux/store";
+import { Badge } from "../ui/badge";
 import {
   Dialog,
   DialogContent,
@@ -44,6 +46,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { useCreateTagMutation, useGetAllTagsQuery } from "@/redux/services/tag";
 interface HeaderProps {
   canvasRef: React.RefObject<Canvas | null>;
   onReset: () => void;
@@ -76,7 +79,9 @@ const Header: React.FC<HeaderProps> = ({
   const [isSaveTemplateOpen, setIsSaveTemplateOpen] = useState(false);
   const [isSaveMemeOpen, setIsSaveMemeOpen] = useState(false);
   const [isResetDialogOpen, setIsResetDialogOpen] = useState(false);
-  
+  const { selectedTemplateId } = useTypedSelector((state) => state.template);
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [newTag, setNewTag] = useState("");
 
   const form = useForm<TemplateFormData>({
     defaultValues: {
@@ -237,7 +242,6 @@ const Header: React.FC<HeaderProps> = ({
       },
     };
 
-    console.log("Canvas JSON Data for Template:", templateData);
     saveAsTemplateTrigger({
       title: data.title.trim(),
       description: data.description.trim() || "No description provided",
@@ -258,6 +262,7 @@ const Header: React.FC<HeaderProps> = ({
   const [uploadFile] = useUploadFileMutation(); 
   
   const saveMeme = async (data: MemeFormData) => {
+    
     const canvas = canvasRef.current;
     if (!canvas) {
       toast.error("No canvas found");
@@ -268,23 +273,18 @@ const Header: React.FC<HeaderProps> = ({
       toast.error("No meme preview available");
       return;
     }
-    if (!isLoggedIn) {
-      toast.error("User not logged in. Please log in.");
-      router.push(`/auth/login?redirect=/meme`);
-      return;
-    }
     try {
-
+      
       const canvasData = canvas.toJSON();
-      const memeData = {
-        config: {
-          ...canvasData,
-          backgroundImage: canvasData.backgroundImage
-            ? { ...canvasData.backgroundImage, fileId: backgroundImageId }
-            : null,
-        },
-      };
-  
+        const memeData = {
+          config: {
+            ...canvasData,
+            backgroundImage: canvasData.backgroundImage
+              ? { ...canvasData.backgroundImage, fileId: backgroundImageId }
+              : null,
+          },
+        };
+
       const response = await fetch(previewUrl);
       const blob = await response.blob();
       const file = new File([blob], "meme.png", { type: "image/png" });
@@ -300,13 +300,21 @@ const Header: React.FC<HeaderProps> = ({
       }
   
       console.log("✅ Meme image uploaded, file ID:", uploadedFileId);
-  
+      console.log({
+        title: data.title.trim(),
+        templateId: backgroundImageId,
+        fileId: uploadedFileId,
+      });
+      
       const result = await postMemeTrigger({
         title: data.title.trim().slice(0, 20),
         description: data.description.trim() || "No description provided",
         file: { id: uploadedFileId },
+        templateId: selectedTemplateId || "",
+        tags: selectedTags,
+        ...memeData 
       }).unwrap();
-
+      console.log(result);
       const memeSlug = result.data?.slug;
       toast.success(
         <span>
@@ -329,6 +337,36 @@ const Header: React.FC<HeaderProps> = ({
           : "Failed to save meme. Please try again."
       );
     }
+  };
+  
+  const { data: tagsData } = useGetAllTagsQuery();
+  const [createTag] = useCreateTagMutation();
+  
+  const availableTags: string[] = tagsData?.items?.map((t: any) => t.name) ?? [];
+  
+  const addTag = async () => {
+    if (!newTag.trim()) return;
+    if (selectedTags.length >= 2) {
+      toast.error("You can attach a maximum of 2 tags");
+      return;
+    }
+    const tagName = newTag.trim().toLowerCase();
+    if (availableTags.includes(tagName)) {
+      setSelectedTags((prev) => [...new Set([...prev, tagName])]);
+    } else {
+      try {
+        await createTag({ name: tagName }).unwrap();
+        toast.success(`Tag "${tagName}" created`);
+        setSelectedTags((prev) => [...new Set([...prev, tagName])]);
+      } catch (err) {
+        toast.error("Failed to create tag");
+      }
+    }
+    setNewTag("");
+  };
+  
+  const removeTag = (tag: string) => {
+    setSelectedTags(selectedTags.filter((t) => t !== tag));
   };
   
   
@@ -566,7 +604,40 @@ const Header: React.FC<HeaderProps> = ({
                         </FormItem>
                       )}
                     />
-      
+                    {/* Tag Selection */}
+                    <div className="space-y-2">
+                      <FormLabel>Tags (max 2)</FormLabel>
+                      <div className="flex items-center gap-2">
+                        <Input
+                          placeholder="Type or select tag..."
+                          value={newTag}
+                          onChange={(e) => setNewTag(e.target.value)}
+                          className="flex-1"
+                        />
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={addTag}
+                          disabled={!newTag.trim() || selectedTags.length >= 2}
+                        >
+                          Add
+                        </Button>
+                      </div>
+                    
+                      <div className="flex flex-wrap gap-2 mt-2">
+                        {selectedTags.map((tag) => (
+                          <Badge
+                            key={tag}
+                            variant="secondary"
+                            className="cursor-pointer"
+                            onClick={() => removeTag(tag)}
+                          >
+                            #{tag} ✕
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+                    
                     <DialogFooter>
                       <Button
                         type="button"
@@ -606,7 +677,13 @@ const Header: React.FC<HeaderProps> = ({
                 <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
                   {/* Save to Gallery Button */}
                   <Button
-                    onClick={() => setIsSaveMemeOpen(true)}
+                    onClick={() => {
+                      if (!isLoggedIn) {
+                          toast.error("User not logged in. Please log in.");
+                          router.push(`/auth/login?redirect=/meme`);
+                          return;
+                        }
+                      setIsSaveMemeOpen(true)}}
                     className="rounded-full h-12 px-6 md:px-8 text-white shadow-md text-sm md:text-base flex items-center justify-center cursor-pointer"
                     style={{
                       backgroundImage: "linear-gradient(90deg,#CD01BA,#E20317)",

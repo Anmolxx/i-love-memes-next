@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useState } from "react";
-import { useParams } from "next/navigation";
-import { ThumbsUp, ThumbsDown, Flag, Share2, Info } from "lucide-react";
+import React, { useEffect, useState } from "react";
+import { useParams, useRouter } from "next/navigation";
+import { ThumbsUp, ThumbsDown, Flag, Share2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -25,39 +25,10 @@ import { useGetMemeBySlugOrIdQuery } from "@/redux/services/meme";
 import useAuthentication from "@/hooks/use-authentication";
 import { Navbar } from "@/components/ui/extension/navbar-internal";
 import AppSidebar from "@/components/organisms/app-sidebar-internal";
-import {
-  SidebarProvider,
-  SidebarInset,
-} from "@/components/ui/sidebar";
+import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 import Link from "next/link";
 import { Footer } from "@/sections/Footer";
-
-interface Tag {
-  id: string;
-  name: string;
-  slug: string;
-}
-
-interface Meme {
-  id: string;
-  title: string;
-  description: string;
-  slug: string;
-  file: { id: string; path: string };
-  author: { 
-    id: string; 
-    email: string;
-    firstName?: string;
-    lastName?: string;
-  };
-  audience: string;
-  createdAt: string;
-  updatedAt: string;
-  deletedAt: string | null;
-  score?: number;
-  myVote?: number;
-  tags?: Tag[];
-}
+import { Meme } from "@/utils/dtos/meme.dto";
 
 interface Comment {
   id: string;
@@ -68,30 +39,39 @@ interface Comment {
 
 export default function MemePage() {
   const { slug } = useParams();
-  const { data, isLoading, error } = useGetMemeBySlugOrIdQuery(slug as string);
   const { user, isLoggedIn } = useAuthentication();
+  const router = useRouter();
+
+  // Fetch meme data by slug
+  const { data, isLoading, error, refetch } = useGetMemeBySlugOrIdQuery(slug as string, {
+    skip: !slug,
+  });
 
   const meme: Meme | null = data?.data ?? null;
 
+  // Refetch every time slug changes (i.e., when page mounts or route changes)
+  useEffect(() => {
+    if (slug) refetch();
+  }, [slug, refetch]);
+
+  // --- Local States ---
   const [flagMemeId, setFlagMemeId] = useState<string | null>(null);
   const [flagReason, setFlagReason] = useState<string>("");
   const [flagComment, setFlagComment] = useState<string>("");
   const [comments, setComments] = useState<Comment[]>([]);
   const [newComment, setNewComment] = useState("");
 
-  if (isLoading) return <div className="text-center mt-10">Loading...</div>;
-  if (error || !meme) return <div className="text-center mt-10">Meme not found</div>;
-
+  // --- Handlers ---
   const vote = (newVote: number) => {
     toast.success(`Vote: ${newVote === 1 ? "Upvoted" : newVote === -1 ? "Downvoted" : "Cleared"}`);
   };
 
   const shareMeme = async () => {
-    const url = meme.file?.path;
-    const title = meme.title;
+    const url = meme?.file?.path;
+    if (!url) return toast.error("No meme file found");
     try {
-      if (navigator.share) await navigator.share({ title, url });
-      else if (navigator.clipboard) {
+      if (navigator.share) await navigator.share({ title: meme.title, url });
+      else {
         await navigator.clipboard.writeText(url);
         toast.success("Link copied to clipboard!");
       }
@@ -124,9 +104,24 @@ export default function MemePage() {
     toast.success("Comment added!");
   };
 
-  const displayedTags = meme.tags?.slice(0, 3) ?? [];
+  const handleCaptionClick = () => {
+    if (!meme?.template) {
+      toast.error("This meme has no base template.");
+      return;
+    }
+    router.push(`/meme/${meme.template.slug}`);
+  };
+
+  // --- Loading / Error Handling ---
+  if (isLoading) return <div className="text-center mt-10">Loading...</div>;
+  if (error || !meme) return <div className="text-center mt-10">Meme not found</div>;
+
+  // --- Tag Display ---
+  const activeTags = meme.tags?.filter(tag => !tag.deletedAt) ?? [];
+  const displayedTags = activeTags.slice(0, 3) ?? [];
   const hiddenTags = meme.tags?.slice(3) ?? [];
 
+  // --- UI ---
   return (
     <SidebarProvider>
       <div className="group/sidebar-wrapper flex min-h-svh w-full">
@@ -135,7 +130,7 @@ export default function MemePage() {
           <Navbar />
 
           <div className="max-w-6xl mx-auto p-4 flex flex-col md:flex-row gap-6 mt-5">
-            {/* Left Column - Meme Card + Comments */}
+            {/* Meme Section */}
             <div className="flex-1 flex flex-col gap-4 md:flex-[3] min-w-0">
               {/* Meme Card */}
               <div className="bg-gray-200 rounded-2xl shadow-lg p-3 flex flex-col hover:shadow-xl transition-shadow w-full max-w-[700px] mx-auto">
@@ -151,18 +146,18 @@ export default function MemePage() {
                   <div className="text-lg font-semibold text-gray-800 truncate">
                     {meme.title}
                   </div>
-                 <div className="text-sm text-gray-500">
-                   by{" "}
-                   {meme.author
-                     ? (
-                         (meme.author.firstName || meme.author.lastName)
-                           ? `${meme.author.firstName ?? ""} ${meme.author.lastName ?? ""}`.trim()
-                           : meme.author.email
-                       ) || "Anonymous"
-                     : "Anonymous"}
-                 </div>
+                  <div className="text-sm text-gray-500">
+                    by{" "}
+                    {meme.author
+                      ? (
+                          (meme.author.firstName || meme.author.lastName)
+                            ? `${meme.author.firstName ?? ""} ${meme.author.lastName ?? ""}`.trim()
+                            : meme.author.email
+                        ) || "Anonymous"
+                      : "Anonymous"}
+                  </div>
 
-                  {/* Tags Section */}
+                  {/* Tags */}
                   {meme.tags && meme.tags.length > 0 && (
                     <div className="flex flex-wrap items-center gap-2 mt-2">
                       {displayedTags.map((tag) => (
@@ -200,7 +195,7 @@ export default function MemePage() {
                     </div>
                   )}
 
-                  {/* Vote, Share, Flag */}
+                  {/* Actions */}
                   <div className="mt-3 flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <button
@@ -238,8 +233,8 @@ export default function MemePage() {
                 </div>
               </div>
 
-              {/* Comments Section */}
-              <div className="flex flex-col gap-3 bg-white p-3 rounded-xl shadow-md border border-gray-200 md:w-[700px] overflow-y-auto mx-auto">
+              {/* Comments */}
+              <div className="flex flex-col gap-3 bg-white p-3 rounded-xl shadow-md border border-gray-200 md:w-[700px] mx-auto">
                 <h3 className="font-semibold text-lg">Comments</h3>
                 {isLoggedIn && (
                   <div className="flex gap-2 mb-2">
@@ -248,9 +243,7 @@ export default function MemePage() {
                       value={newComment}
                       onChange={(e) => setNewComment(e.target.value)}
                     />
-                    <Button onClick={addComment} className="cursor-pointer">
-                      Post
-                    </Button>
+                    <Button onClick={addComment}>Post</Button>
                   </div>
                 )}
                 {comments.length === 0 ? (
@@ -266,20 +259,19 @@ export default function MemePage() {
               </div>
             </div>
 
-            {/* Right Column - Caption & Description */}
+            {/* Right Column */}
             <div className="flex flex-col gap-4 w-full md:flex-[1]">
-              <Link href="/meme">
-                <div
-                  className="flex items-center justify-center gap-2 px-4 py-3 rounded-full text-sm font-medium text-white shadow-sm cursor-pointer"
-                  style={{
-                    background: "linear-gradient(90deg,#CD01BA,#E20317)",
-                    boxShadow:
-                      "0 2px 8px rgba(205,1,186,0.5), 0 2px 8px rgba(226,3,23,0.5)",
-                  }}
-                >
-                  Caption this Meme
-                </div>
-              </Link>
+              <div
+                onClick={handleCaptionClick}
+                className="flex items-center justify-center gap-2 px-4 py-3 rounded-full text-sm font-medium text-white shadow-sm cursor-pointer"
+                style={{
+                  background: "linear-gradient(90deg,#CD01BA,#E20317)",
+                  boxShadow:
+                    "0 2px 8px rgba(205,1,186,0.5), 0 2px 8px rgba(226,3,23,0.5)",
+                }}
+              >
+                Caption this Meme
+              </div>
 
               <div className="bg-white p-4 rounded-xl shadow-md border border-gray-200 text-sm">
                 <div className="flex flex-col gap-1">
@@ -301,14 +293,12 @@ export default function MemePage() {
             </div>
           </div>
 
-          {/* ---------- FLAG DIALOG BOX ---------- */}
+          {/* Flag Dialog */}
           <Dialog open={flagMemeId === meme.id} onOpenChange={resetFlagDialog}>
             <DialogContent className="sm:max-w-[425px]">
               <DialogHeader>
                 <DialogTitle>Flag Meme</DialogTitle>
-                <DialogDescription>
-                  Reason for flagging this meme
-                </DialogDescription>
+                <DialogDescription>Reason for flagging this meme</DialogDescription>
               </DialogHeader>
               <div className="space-y-4">
                 <Select value={flagReason} onValueChange={setFlagReason}>
@@ -316,16 +306,10 @@ export default function MemePage() {
                     <SelectValue placeholder="Select reason" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="nsfw">
-                      NSFW: Content contains nudity.
-                    </SelectItem>
-                    <SelectItem value="nsfl">
-                      NSFL: Highly disturbing.
-                    </SelectItem>
+                    <SelectItem value="nsfw">NSFW: Content contains nudity.</SelectItem>
+                    <SelectItem value="nsfl">NSFL: Highly disturbing.</SelectItem>
                     <SelectItem value="tw">Trigger Warning.</SelectItem>
-                    <SelectItem value="red_flag">
-                      Red Flag Emoji (🚩).
-                    </SelectItem>
+                    <SelectItem value="red_flag">Red Flag Emoji (🚩).</SelectItem>
                   </SelectContent>
                 </Select>
 

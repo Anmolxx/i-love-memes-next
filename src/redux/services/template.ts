@@ -1,7 +1,7 @@
 import { TAG_GET_TEMPLATES_ADMIN } from "@/contracts/iLoveMemesApiTags";
 import { iLoveMemesApi } from ".";
 
-export const memesApi = iLoveMemesApi.injectEndpoints({
+export const templatesApi = iLoveMemesApi.injectEndpoints({
   endpoints: (builder) => ({
     getTemplates: builder.query<any, void>({
       query: () => ({
@@ -63,4 +63,4 @@ export const {
   useGetAllTemplatesQuery,
   useDeleteTemplateMutation,
   useGetTemplateByIdOrSlugQuery,
-} = memesApi;
+} = templatesApi;

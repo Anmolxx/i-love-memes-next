@@ -1,6 +1,6 @@
 "use client";
 
-import React, { JSX, useState, useEffect, useCallback } from "react";
+import React, { JSX, useState, useEffect, useCallback, useRef } from "react";
 import NextImage from "next/image";
 import Link from "next/link";
 import { Input } from "@/components/ui/input";
@@ -140,6 +140,22 @@ export default function CommunityGallery(): JSX.Element {
   const [isSubmittingFlag, setIsSubmittingFlag] = useState(false);
 
   const [memes, setMemes] = useState<Meme[]>([]);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  
+  useEffect(() => {
+    if (scrollContainerRef.current) {
+      scrollContainerRef.current.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  }, [page]);
+
+  useEffect(() => {
+      if (searchQuery.trim() === "" && search) {
+        const newParams = new URLSearchParams(searchParams.toString());
+        newParams.delete("search");
+        newParams.set("page", "1");
+        router.push(`/community?${newParams.toString()}`);
+      }
+    }, [searchQuery, search, searchParams, router]);
 
   useEffect(() => {
     if (data) {
@@ -158,6 +174,7 @@ export default function CommunityGallery(): JSX.Element {
     }
   }, [data]);
   
+
   const updateMemeState = useCallback((memeId: string, summary: InteractionSummary) => {
     setMemes(prevMemes => 
         prevMemes.map(meme => {
@@ -378,7 +395,7 @@ export default function CommunityGallery(): JSX.Element {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-[3fr_1fr] gap-6 h-[calc(100vh-200px)]">
-          <div className="overflow-y-auto pr-2 hide-scrollbar">
+          <div ref={scrollContainerRef} className="overflow-y-auto pr-2 hide-scrollbar">
             {memes.length === 0 && !isLoading ? (
               <div className="text-center text-gray-500 mt-10">
                 <p className="text-xl mb-2">

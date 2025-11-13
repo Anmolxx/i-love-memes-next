@@ -11,6 +11,8 @@ import { Footer } from "@/sections/Footer";
 import { useParams, useRouter } from "next/navigation";
 import { useGetTemplateByIdOrSlugQuery } from "@/redux/services/template";
 import { v4 as uuidv4 } from "uuid";
+import { useAppDispatch } from "@/redux/store";
+import { setTemplateId } from "@/redux/slices/template";
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -40,6 +42,7 @@ export default function MemeLayout({ children }: LayoutProps) {
   const router = useRouter();
   const params = useParams();
   const currentSlug = (params as any)?.slug as string;
+  const dispatch = useAppDispatch();
   const { data: templateData, isLoading, error } = useGetTemplateByIdOrSlugQuery(currentSlug, {
     skip: !currentSlug, 
   });
@@ -180,8 +183,9 @@ export default function MemeLayout({ children }: LayoutProps) {
      const canvas = canvasRef.current;
      if (!currentSlug || !canvasReady || !canvas || !templateData) return;
   
-     setSelectedImage(templateData.previewUrl);
+     setSelectedImage(templateData.data.config.backgroundImage.src);
      setSelectedImageId(templateData.id);
+     setSelectedTemplate(templateData.data.config || null);
    }, [templateData, canvasReady, currentSlug]);
 
   // --- Layer Utilities (Fabric v6-safe) ---
@@ -354,6 +358,7 @@ export default function MemeLayout({ children }: LayoutProps) {
   };
 
   const handleTemplateSelect = (template: any) => {
+    dispatch(setTemplateId(template.id));
     if (template.previewUrl) {
       setSelectedImage(template.previewUrl);
       setSelectedImageId(template.id);

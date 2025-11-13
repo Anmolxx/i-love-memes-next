@@ -25,6 +25,10 @@ export function AdminSearchBar({
   inputWidth = "w-72", 
 }: AdminNavbarSearchProps) {
   const toggleTag = (tag: string) => {
+    if (tag === "__none__") {
+        setSelectedTags([]);
+        return;
+      }
     if (selectedTags.includes(tag))
       setSelectedTags(selectedTags.filter((t) => t !== tag));
     else setSelectedTags([...selectedTags, tag]);
@@ -50,6 +54,7 @@ export function AdminSearchBar({
           />
         </SelectTrigger>
         <SelectContent>
+          <SelectItem value="__none__">None</SelectItem>
           {availableTags.map((tag) => (
             <SelectItem key={tag} value={tag}>
               {selectedTags.includes(tag) ? `✅ ${tag}` : tag}

@@ -36,7 +36,16 @@ export const memesApi = iLoveMemesApi.injectEndpoints({
       }),
       invalidatesTags: [{ type: COMMUNITY_MEMES, id: "LIST" }],
     }),
+
+    updateMeme: builder.mutation<any, { slugOrId: string; body: Partial<any> }>({
+        query: ({ slugOrId, body }) => ({
+          url: `/memes/${slugOrId}`,
+          method: "PATCH",
+          body,
+        }),
+        invalidatesTags: [{ type: COMMUNITY_MEMES, id: "LIST" }],
+    }),
   }),
 });
 
-export const { useGetMemesQuery, useGetMemeBySlugOrIdQuery, usePostMemeMutation, useDeleteMemeMutation, } = memesApi;
+export const { useGetMemesQuery, useGetMemeBySlugOrIdQuery, usePostMemeMutation, useDeleteMemeMutation,useUpdateMemeMutation } = memesApi;

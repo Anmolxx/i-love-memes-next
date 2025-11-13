@@ -3,6 +3,7 @@ import Link from "next/link";
 import { ThumbsUp, ThumbsDown, Flag, Share2 } from "lucide-react";
 import { InteractionType } from "@/utils/interaction.dto";
 import { toast } from "sonner";
+import { Tag } from "@/utils/dtos/tag.dto"
 
 interface MemeCardProps {
   meme: any;
@@ -14,6 +15,10 @@ interface MemeCardProps {
 }
 
 export function MemeCard({ meme, handleVote, shareMeme, setFlagMemeId, isPosting, isDeleting }: MemeCardProps) {
+  const activeTags: Tag[] = meme.tags?.filter((tag: Tag) => !tag.deletedAt) ?? [];
+  const displayedTags = activeTags.slice(0, 3);
+  const hiddenTags = activeTags.slice(3);
+
   return (
     <article className="bg-gray-200 rounded-2xl shadow-lg p-3 flex flex-col hover:shadow-xl transition-shadow">
       <Link
@@ -35,6 +40,26 @@ export function MemeCard({ meme, handleVote, shareMeme, setFlagMemeId, isPosting
         <div className="text-sm text-gray-500">
           by {meme.author ? ((meme.author.firstName || meme.author.lastName) ? `${meme.author.firstName ?? ""} ${meme.author.lastName ?? ""}`.trim() : meme.author.email) : "Anonymous"}
         </div>
+
+        {/* --- Tags --- */}
+        {activeTags.length > 0 && (
+          <div className="flex flex-wrap items-center gap-2 mt-2">
+            {displayedTags.map(tag => (
+              <span
+                key={tag.id}
+                className="text-xs bg-purple-100 text-purple-800 px-2 py-1 rounded-full font-medium"
+              >
+                #{tag.name}
+              </span>
+            ))}
+
+            {hiddenTags.length > 0 && (
+              <span className="text-xs bg-gray-200 text-gray-700 px-2 py-1 rounded-full font-medium cursor-pointer">
+                +{hiddenTags.length} more
+              </span>
+            )}
+          </div>
+        )}
 
         <div className="mt-3 flex items-center justify-between">
           <div className="flex items-center gap-2">

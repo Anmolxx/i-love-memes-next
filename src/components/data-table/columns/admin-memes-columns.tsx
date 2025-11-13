@@ -9,24 +9,14 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import { EllipsisVertical, Eye, Trash2 } from "lucide-react";
+import { EllipsisVertical, Eye, Trash2, Edit, Tag } from "lucide-react";
 import Link from "next/link";
 import { useState, useCallback } from "react";
 import { DeleteDialog } from "@/components/layout/delete-dialog";
-import { useDeleteMemeMutation } from "@/redux/services/meme"; 
+import { EditDialog } from "@/components/layout/edit-dialog";
+import { useDeleteMemeMutation, useUpdateMemeMutation } from "@/redux/services/meme"; 
 import { toast } from "sonner";
-import Image from "next/image";
-
-export type Meme = {
-  id: string;
-  title: string;
-  slug: string;
-  description: string;
-  file: { id: string; path: string };
-  author: { id: string; email: string };
-  createdAt: string;
-  updatedAt: string;
-};
+import { Meme } from "@/utils/dtos/meme.dto";
 
 export function adminMemeColumns(): ColumnDef<Meme>[] {
   return [
@@ -50,7 +40,7 @@ export function adminMemeColumns(): ColumnDef<Meme>[] {
               className="h-10 w-10 rounded-md object-cover border"
             />
             <Link
-              href={`/admin/memes/${meme.id}`}
+              href={`/community/${meme.slug}`}
               className="hover:underline font-medium"
             >
               {row.getValue("title")}
@@ -75,6 +65,77 @@ export function adminMemeColumns(): ColumnDef<Meme>[] {
       enableHiding: false,
     },
     {
+      accessorKey: "author",
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title="Created By" />
+      ),
+      cell: ({ row }) => {
+        const author = row.original.author;
+        return (
+          <span className="text-sm">
+            {author?.firstName || author?.lastName
+              ? `${author.firstName ?? ""} ${author.lastName ?? ""}`.trim()
+              : "Anonymous"}
+          </span>
+        );
+      },
+      enableSorting: false,
+      enableHiding: false,
+    },
+    {
+      accessorKey: "author.email",
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title="Credentials" />
+      ),
+      cell: ({ row }) => <span className="text-sm">{row.original.author.email}</span>,
+      enableSorting: false,
+      enableHiding: false,
+    },
+    {
+      id: "tags",
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title="Tags" />
+      ),
+      cell: ({ row }) => {
+        const tags = row.original.tags?.filter(tag => !tag.deletedAt) ?? [];
+        const displayedTags = tags.slice(0, 2);
+        const hiddenTags = tags.slice(2);
+
+        return (
+          <div className="flex items-center gap-1">
+            {/* Display first 3 tags */}
+            {displayedTags.map(tag => (
+              <span
+                key={tag.id}
+                className="text-xs bg-purple-100 text-purple-800 px-2 py-1 rounded-full font-medium"
+              >
+                #{tag.name}
+              </span>
+            ))}
+
+            {/* Tooltip for remaining tags */}
+            {hiddenTags.length > 0 && (
+              <div className="relative group">
+                <Tag size={16} className="text-gray-500 cursor-pointer" />
+                <div className="absolute left-1/2 -translate-x-1/2 -top-10 hidden group-hover:flex flex-wrap gap-1 bg-white border border-gray-200 shadow-md rounded-md p-2 z-50 min-w-[150px]">
+                  {hiddenTags.map(tag => (
+                    <span
+                      key={tag.id}
+                      className="text-xs bg-purple-50 text-purple-800 px-2 py-1 rounded-full font-medium"
+                    >
+                      #{tag.name}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        );
+      },
+      enableSorting: false,
+      enableHiding: false,
+    },
+    {
       accessorKey: "createdAt",
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title="Created At" />
@@ -92,12 +153,14 @@ export function adminMemeColumns(): ColumnDef<Meme>[] {
       size: 40,
     },
   ];
-}
+};
 
 const ActionCell = ({ row }: { row: any }) => {
-  const meme = row.original;
+  const meme: Meme = row.original;
   const [deleteMeme] = useDeleteMemeMutation();
+  const [patchMeme] = useUpdateMemeMutation();
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [showEditDialog, setShowEditDialog] = useState(false);
 
   const handleDeleteMeme = useCallback(async () => {
     try {
@@ -109,7 +172,7 @@ const ActionCell = ({ row }: { row: any }) => {
   }, [meme.id, deleteMeme]);
 
   return (
-    <div className="flex justify-end">
+    <div className="flex flex-col items-end gap-1">
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button variant="ghost" className="h-8 w-8 p-0">
@@ -118,15 +181,20 @@ const ActionCell = ({ row }: { row: any }) => {
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
-          <DropdownMenuItem asChild>
-            <Link href={`/admin/memes/${meme.id}`}>
+          <DropdownMenuItem className="cursor-pointer" asChild>
+            <Link href={`/community/${meme.slug}`}>
               <Eye size={16} /> View Details
             </Link>
           </DropdownMenuItem>
 
           <DropdownMenuItem onClick={() => setShowDeleteDialog(true)}>
             <Trash2 className="text-destructive" size={16} />
-            <span className="text-destructive">Delete Meme</span>
+            <span className="text-destructive cursor-pointer">Delete Meme</span>
+          </DropdownMenuItem>
+
+          <DropdownMenuItem onClick={() => setShowEditDialog(true)}>
+            <Edit size={16} />
+            <span className="cursor-pointer">Edit Meme</span>
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
@@ -141,7 +209,16 @@ const ActionCell = ({ row }: { row: any }) => {
           await handleDeleteMeme();
         }}
       />
+
+      <EditDialog
+        meme={meme}
+        open={showEditDialog}
+        onOpenChange={setShowEditDialog}
+        onSave={async (updated) => {
+          await patchMeme({ slugOrId: meme.id, body: updated });
+          toast.success("Meme updated!");
+        }}
+      />
     </div>
   );
 };
-

@@ -18,24 +18,11 @@ import { TopMemeSidebar } from "./TopMemeSidebar";
 import { FlagDialog } from "./FlagDialog";
 import { CommunityPagination } from "@/components/data-table/data-table-community-gallery-pagination";
 import { TagSelector } from "./TagsSelector";
-
-interface RawMemeData {
-  id: string;
-  title: string;
-  description: string;
-  slug: string;
-  file: { id: string; path: string };
-  author: { id: string; email: string; firstName?: string; lastName?: string };
-  audience: string;
-  createdAt: string;
-  updatedAt: string;
-  deletedAt: string | null;
-  score?: number;
-}
+import { Meme } from "@/utils/dtos/meme.dto";
 
 type VoteStatus = InteractionType.UPVOTE | InteractionType.DOWNVOTE | "NONE";
 
-interface Meme extends RawMemeData {
+interface MemeFinal extends Meme {
   netScore: number;
   userVoteType: VoteStatus;
   isVoting: boolean;
@@ -56,7 +43,7 @@ export default function CommunityGallery(): JSX.Element {
   const [searchQuery, setSearchQuery] = useState(initialSearch);
   const [selectedTags, setSelectedTags] = useState<string[]>(initialTags);
   const [availableTags, setAvailableTags] = useState<string[]>([]);
-  const [memes, setMemes] = useState<Meme[]>([]);
+  const [memes, setMemes] = useState<MemeFinal[]>([]);
   const [debouncedSearch, setDebouncedSearch] = useState(searchQuery);
   const { user, isLoggedIn } = useAuthentication();
   const [postInteraction, { isLoading: isPosting }] = usePostInteractionMutation();
@@ -78,11 +65,10 @@ export default function CommunityGallery(): JSX.Element {
     search: debouncedSearch,
     tags: selectedTags.join(","),
   });
-
   // Sync memes when data changes
   useEffect(() => {
     if (data) {
-      const rawMemes: RawMemeData[] = Array.isArray(data) ? data : data?.items ?? [];
+      const rawMemes: Meme[] = Array.isArray(data) ? data : data?.items ?? [];
       setMemes(
         rawMemes.map(m => ({
           ...m,
@@ -94,6 +80,7 @@ export default function CommunityGallery(): JSX.Element {
       );
     }
   }, [data]);
+
 
   // Scroll to top on page change
   useEffect(() => {
@@ -226,7 +213,16 @@ export default function CommunityGallery(): JSX.Element {
     setFlagComment("");
   };
 
-  const topMeme = memes.reduce((top, current) => (current.netScore > (top?.netScore ?? 0) ? current : top), null as Meme | null);
+  const memesWithTags = memes.map((meme) => {
+    const activeTags = meme.tags?.filter(tag => !tag.deletedAt) ?? [];
+    return {
+      ...meme,
+      displayedTags: activeTags.slice(0, 3),
+      hiddenTags: activeTags.slice(3),
+    };
+  });
+  console.log(memesWithTags)
+  const topMeme = memes.reduce((top, current) => (current.netScore > (top?.netScore ?? 0) ? current : top), null as MemeFinal | null);
 
   return (
     <div className="flex flex-col h-full">
@@ -258,7 +254,7 @@ export default function CommunityGallery(): JSX.Element {
       </div>
 
       <div className="max-w-[110rem] mx-auto p-4 flex flex-col gap-6">
-        <div className="grid grid-cols-1 md:grid-cols-[3fr_1fr] gap-6 h-[calc(100vh-200px)]">
+        <div className="grid grid-cols-1 md:grid-cols-[3fr_1fr] gap-6 h-[calc(100vh-150px)]">
           <div ref={scrollContainerRef} className="overflow-y-auto pr-2 hide-scrollbar">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
               {memes.length === 0 ? (
@@ -271,7 +267,7 @@ export default function CommunityGallery(): JSX.Element {
                   <p className="text-sm">Try another search or create your own meme!</p>
                 </div>
               ) : (
-                memes.map(meme => (
+                memesWithTags.map(meme => (
                   <MemeCard
                     key={meme.id}
                     meme={meme}

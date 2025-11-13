@@ -607,6 +607,8 @@ const Header: React.FC<HeaderProps> = ({
                     {/* Tag Selection */}
                     <div className="space-y-2">
                       <FormLabel>Tags (max 2)</FormLabel>
+                    
+                      {/* Input to add new tag */}
                       <div className="flex items-center gap-2">
                         <Input
                           placeholder="Type or select tag..."
@@ -617,6 +619,7 @@ const Header: React.FC<HeaderProps> = ({
                         <Button
                           type="button"
                           variant="outline"
+                          className="cursor-pointer"
                           onClick={addTag}
                           disabled={!newTag.trim() || selectedTags.length >= 2}
                         >
@@ -624,6 +627,7 @@ const Header: React.FC<HeaderProps> = ({
                         </Button>
                       </div>
                     
+                      {/* Selected tags */}
                       <div className="flex flex-wrap gap-2 mt-2">
                         {selectedTags.map((tag) => (
                           <Badge
@@ -636,8 +640,27 @@ const Header: React.FC<HeaderProps> = ({
                           </Badge>
                         ))}
                       </div>
+                    
+                      {/* Available tags */}
+                      <div className="flex flex-wrap gap-2 mt-2">
+                        {availableTags
+                          .filter((tag) => !selectedTags.includes(tag)) // Only show unselected tags
+                          .map((tag) => (
+                            <Badge
+                              key={tag}
+                              variant="outline"
+                              className="cursor-pointer hover:bg-purple-100"
+                              onClick={() => {
+                                if (selectedTags.length < 2) setSelectedTags([...selectedTags, tag]);
+                              }}
+                            >
+                              #{tag}
+                            </Badge>
+                          ))}
+                      </div>
                     </div>
                     
+
                     <DialogFooter>
                       <Button
                         type="button"

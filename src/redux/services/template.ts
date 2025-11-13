@@ -3,12 +3,21 @@ import { iLoveMemesApi } from ".";
 
 export const templatesApi = iLoveMemesApi.injectEndpoints({
   endpoints: (builder) => ({
-    getTemplates: builder.query<any, void>({
-      query: () => ({
-        url: "/templates",
-        method: "GET",
-      }),
-    }),
+   getTemplates: builder.query<
+     any,
+     { page?: number; limit?: number; orderBy?: string; search?: string } | void
+   >({
+     query: (params) => {
+       const { page = 1, limit = 10, orderBy = "createdAt", search } = params || {};
+       let url = `/templates?page=${page}&limit=${limit}&orderBy=${orderBy}`;
+       if (search) url += `&search=${encodeURIComponent(search)}`;
+       return {
+         url,
+         method: "GET",
+       };
+     },
+   }),
+   
     uploadFile: builder.mutation<
       { file: { id: string; path: string } },
       FormData

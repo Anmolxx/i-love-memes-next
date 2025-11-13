@@ -22,6 +22,7 @@ export type Template = {
   id: string;
   title: string;
   img: string;
+  slug: string;
   status: "active" | "inactive";
   description: string;
   createdAt: string;
@@ -48,7 +49,7 @@ export function adminTemplateColumns(): ColumnDef<Template>[] {
               className="h-10 w-10 rounded-md object-cover border"
             />
             <Link
-              href={`/admin/templates/${row.original.id}`}
+              href={`/meme/${row.original.slug}`}
               className="hover:underline font-medium"
             >
               {row.getValue("title")}
@@ -147,7 +148,7 @@ const ActionCell = ({ row }: { row: any }) => {
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
           <DropdownMenuItem asChild>
-            <Link href={`/admin/templates/${template.id}`}>
+            <Link href={`/meme/${template.slug}`}>
               <Eye size={16} />
               View Details
             </Link>

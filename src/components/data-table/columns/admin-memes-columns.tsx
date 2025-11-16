@@ -9,17 +9,46 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import { EllipsisVertical, Eye, Trash2, Edit, Tag } from "lucide-react";
+import { EllipsisVertical, Eye, Trash2, Edit, CircleArrowUp } from "lucide-react";
 import Link from "next/link";
 import { useState, useCallback } from "react";
-import { DeleteDialog } from "@/components/layout/delete-dialog";
-import { EditDialog } from "@/components/layout/edit-dialog";
-import { useDeleteMemeMutation, useUpdateMemeMutation } from "@/redux/services/meme"; 
+import { DeleteDialog } from "@/components/dialog/delete-dialog";
+import { EditDialog } from "@/components/dialog/edit-dialog";
+import { useDeleteMemeMutation, useUpdateMemeMutation } from "@/redux/services/meme";
 import { toast } from "sonner";
 import { Meme } from "@/utils/dtos/meme.dto";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 export function adminMemeColumns(): ColumnDef<Meme>[] {
   return [
+    {
+      id: "select",
+      header: ({ table }) => (
+        <Checkbox
+          aria-label="Select all"
+          checked={
+            table.getIsAllPageRowsSelected() ||
+            (table.getIsSomePageRowsSelected() && "indeterminate")
+          }
+          onCheckedChange={(value: boolean | "indeterminate") =>
+            table.toggleAllPageRowsSelected(!!value)
+          }
+        />
+      ),
+      cell: ({ row }) => (
+        <Checkbox
+          aria-label="Select row"
+          checked={row.getIsSelected()}
+          onCheckedChange={(value: boolean | "indeterminate") =>
+            row.toggleSelected(!!value)
+          }
+        />
+      ),
+      enableSorting: false,
+      enableHiding: false,
+      size: 40,
+    },
     {
       accessorKey: "title",
       header: ({ column }) => (
@@ -48,8 +77,7 @@ export function adminMemeColumns(): ColumnDef<Meme>[] {
           </div>
         );
       },
-      enableSorting: false,
-      enableHiding: false,
+      enableSorting: false, 
     },
     {
       accessorKey: "description",
@@ -61,11 +89,10 @@ export function adminMemeColumns(): ColumnDef<Meme>[] {
           {row.getValue("description")}
         </span>
       ),
-      enableSorting: false,
-      enableHiding: false,
+      enableSorting: false, 
     },
     {
-      accessorKey: "author",
+      accessorKey: "Created By",
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title="Created By" />
       ),
@@ -79,17 +106,14 @@ export function adminMemeColumns(): ColumnDef<Meme>[] {
           </span>
         );
       },
-      enableSorting: false,
-      enableHiding: false,
     },
     {
-      accessorKey: "author.email",
+      accessorKey: "Credentials",
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title="Credentials" />
       ),
       cell: ({ row }) => <span className="text-sm">{row.original.author.email}</span>,
-      enableSorting: false,
-      enableHiding: false,
+      enableSorting: false, 
     },
     {
       id: "tags",
@@ -100,10 +124,9 @@ export function adminMemeColumns(): ColumnDef<Meme>[] {
         const tags = row.original.tags?.filter(tag => !tag.deletedAt) ?? [];
         const displayedTags = tags.slice(0, 2);
         const hiddenTags = tags.slice(2);
-
+    
         return (
           <div className="flex items-center gap-1">
-            {/* Display first 3 tags */}
             {displayedTags.map(tag => (
               <span
                 key={tag.id}
@@ -112,28 +135,30 @@ export function adminMemeColumns(): ColumnDef<Meme>[] {
                 #{tag.name}
               </span>
             ))}
-
-            {/* Tooltip for remaining tags */}
+    
             {hiddenTags.length > 0 && (
-              <div className="relative group">
-                <Tag size={16} className="text-gray-500 cursor-pointer" />
-                <div className="absolute left-1/2 -translate-x-1/2 -top-10 hidden group-hover:flex flex-wrap gap-1 bg-white border border-gray-200 shadow-md rounded-md p-2 z-50 min-w-[150px]">
-                  {hiddenTags.map(tag => (
-                    <span
-                      key={tag.id}
-                      className="text-xs bg-purple-50 text-purple-800 px-2 py-1 rounded-full font-medium"
-                    >
-                      #{tag.name}
-                    </span>
-                  ))}
-                </div>
-              </div>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <CircleArrowUp size={18} className="text-white cursor-pointer" />
+                </TooltipTrigger>
+                <TooltipContent side="top">
+                  <div className="flex flex-wrap gap-1 max-w-[200px]">
+                    {hiddenTags.map(tag => (
+                      <span
+                        key={tag.id}
+                        className="text-xs bg-purple-50 text-purple-800 px-2 py-1 rounded-full font-medium"
+                      >
+                        #{tag.name}
+                      </span>
+                    ))}
+                  </div>
+                </TooltipContent>
+              </Tooltip>
             )}
           </div>
         );
       },
-      enableSorting: false,
-      enableHiding: false,
+      enableSorting: false, 
     },
     {
       accessorKey: "createdAt",
@@ -145,7 +170,6 @@ export function adminMemeColumns(): ColumnDef<Meme>[] {
         return <p>{date.toLocaleString()}</p>;
       },
       enableSorting: false,
-      enableHiding: false,
     },
     {
       id: "actions",
@@ -187,12 +211,12 @@ const ActionCell = ({ row }: { row: any }) => {
             </Link>
           </DropdownMenuItem>
 
-          <DropdownMenuItem onClick={() => setShowDeleteDialog(true)}>
+          <DropdownMenuItem className="cursor-pointer" onClick={() => setShowDeleteDialog(true)}>
             <Trash2 className="text-destructive" size={16} />
             <span className="text-destructive cursor-pointer">Delete Meme</span>
           </DropdownMenuItem>
 
-          <DropdownMenuItem onClick={() => setShowEditDialog(true)}>
+          <DropdownMenuItem className="cursor-pointer" onClick={() => setShowEditDialog(true)}>
             <Edit size={16} />
             <span className="cursor-pointer">Edit Meme</span>
           </DropdownMenuItem>

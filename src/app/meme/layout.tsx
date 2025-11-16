@@ -6,7 +6,7 @@ import ImageSelector from "@/components/memes/ImageSelector";
 import TextStyles from "@/components/memes/TextStyles";
 import ImageControls from "@/components/memes/ImageControls";
 import Stickers from "@/components/memes/Stickers";
-import Header from "@/components/layout/Header";
+import Header from "@/components/ui/extension/Header";
 import { Footer } from "@/sections/Footer";
 import { useParams, useRouter } from "next/navigation";
 import { useGetTemplateByIdOrSlugQuery } from "@/redux/services/template";
@@ -21,6 +21,7 @@ interface LayoutProps {
 interface MemeObject extends FabricObject {
   id?: string;
 }
+type LayerItem = { id: string; type: string; object: any };
 
 export default function MemeLayout({ children }: LayoutProps) {
   const canvasRef = useRef<Canvas | null>(null);
@@ -133,10 +134,12 @@ export default function MemeLayout({ children }: LayoutProps) {
          backgroundImageRef.current = img;
          canvas.backgroundImage = img;
          canvas.backgroundColor = config?.background || "black";
+         const newLayers: { id: string; type: string; object: any }[] = [];
  
          // --- Add template objects immediately ---
          (config?.objects || []).forEach((obj: any) => {
            if (obj.type === "Textbox") {
+             const objectId = uuidv4();
              const text = new Textbox(obj.text || "Text", {
                left: obj.left || canvasWidth / 2,
                top: obj.top || canvasHeight / 2,
@@ -160,18 +163,22 @@ export default function MemeLayout({ children }: LayoutProps) {
              text.set("id", obj.id || uuidv4());
              canvas.add(text);
              canvas.bringObjectToFront(text);
+             newLayers.push({ id: objectId, type: "textbox", object: text });
            }
          });
  
          canvas.renderAll();
          setBackgroundImageLoaded(true);
+         if (newLayers.length > 0) {
+                 setLayers(newLayers);
+          } else { setLayers([]); }
        })
        .catch((error) => {
          console.error("Failed to load Fabric background image:", error);
          setBackgroundImageLoaded(false);
        });
    },
-   [canvasReady]
+   [canvasReady, setLayers]
  );
  useEffect(() => {
      if (selectedImage) {
@@ -182,7 +189,7 @@ export default function MemeLayout({ children }: LayoutProps) {
  useEffect(() => {
      const canvas = canvasRef.current;
      if (!currentSlug || !canvasReady || !canvas || !templateData) return;
-  
+     console.log("2", templateData)
      setSelectedImage(templateData.data.config.backgroundImage.src);
      setSelectedImageId(templateData.id);
      setSelectedTemplate(templateData.data.config || null);
@@ -358,6 +365,7 @@ export default function MemeLayout({ children }: LayoutProps) {
   };
 
   const handleTemplateSelect = (template: any) => {
+    console.log("1",template)
     dispatch(setTemplateId(template.id));
     if (template.previewUrl) {
       setSelectedImage(template.previewUrl);

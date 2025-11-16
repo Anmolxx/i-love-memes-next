@@ -13,6 +13,7 @@ import { Eye, EyeClosed } from "lucide-react";
 const AccountPage = () => {
   const { data: user, isLoading, isError } = useCurrentUserDataQuery();
   const [updateProfile, { isLoading: isUpdating }] = useUpdateProfileMutation();
+  const [showSkeleton, setShowSkeleton] = useState(true);
 
   const [passwords, setPasswords] = useState({
     currentPassword: "",
@@ -62,7 +63,17 @@ const AccountPage = () => {
     }
   };
 
-  if (isLoading) {
+  React.useEffect(() => {
+    if (!isLoading) {
+      const timeout = setTimeout(() => {
+        setShowSkeleton(false);
+      }, 400); 
+  
+      return () => clearTimeout(timeout);
+    }
+  }, [isLoading]);
+
+  if (showSkeleton) {
       return (
         <div className="flex flex-col w-full space-y-10 text-white">
           {/* Skeleton for Profile Section */}

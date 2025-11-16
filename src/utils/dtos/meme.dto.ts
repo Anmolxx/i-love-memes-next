@@ -1,4 +1,5 @@
 import { Tag } from "./tag.dto"
+import { InteractionSummary } from "./interaction.dto";
 
 interface Template {
   id: string;
@@ -26,7 +27,7 @@ export interface Meme {
   createdAt: string;
   updatedAt: string;
   deletedAt: string | null;
-  score?: number;
-  myVote?: number; 
-  tags?: Tag[];    
+  tags?: Tag[];
+  interactionSummary?: InteractionSummary;     
 }
+ 

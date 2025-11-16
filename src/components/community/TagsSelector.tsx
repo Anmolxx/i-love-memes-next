@@ -11,13 +11,13 @@ export function TagSelector({ setAvailableTags }: TagSelectorProps) {
   const { data: tagsData, isLoading, error } = useGetAllTagsQuery();
 
   useEffect(() => {
-    if (tagsData) {
-      const tagNames = tagsData.map((tag: { id: string; name: string }) => tag.name);
+    if (tagsData && Array.isArray(tagsData.items)) {
+      const tagNames = tagsData.items.map((tag: { id: string; name: string }) => tag.name);
       setAvailableTags(tagNames);
     }
   }, [tagsData, setAvailableTags]);
 
   if (error) return <div>Failed to load tags.</div>;
 
-  return null; 
+  return null;
 }

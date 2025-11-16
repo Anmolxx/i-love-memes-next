@@ -1,111 +1,162 @@
 "use client";
 
 import { useMemo, Suspense, useState, useEffect, useCallback } from "react";
-import { useSearchParams, useRouter } from "next/navigation";
-import NextImage from "next/image";
-import Link from "next/link";
+import { useSearchParams, useRouter, usePathname } from "next/navigation";
 
-import { DashboardHeader, DashboardLayout, DashboardTitle } from "@/components/layout/dashboard/layout";
-import { DataTablePagination } from "@/components/data-table/data-table-pagination";
+import {
+  DashboardHeader,
+  DashboardLayout,
+  DashboardTitle,
+} from "@/components/layout/dashboard/layout";
 import { DataTable } from "@/components/data-table/data-table";
 import { useDataTable } from "@/hooks/use-data-table";
 import { useGetMemesQuery } from "@/redux/services/meme";
-import { useGetAllTagsQuery } from "@/redux/services/tag";
 import { adminMemeColumns } from "@/components/data-table/columns/admin-memes-columns";
-import { CreateMemeDialog } from "@/components/dialog/create-meme";
-import { AdminSearchBar } from "@/components/molecules/search-bar/search"
-import { TagSelector } from "@/components/community/TagsSelector";
+import { CreateMemeDialog } from "@/components/molecules/primary-buttons/creation-primary-buttons/create-meme";
+import { Meme } from "@/utils/dtos/meme.dto";
+import {
+  DataTableToolbar,
+  DataTableToolbarFilters,
+} from "@/components/data-table/data-table-toolbar";
+
+const VALID_ORDER_BY = [
+  "createdAt",
+  "updatedAt",
+  "title",
+  "upvotes",
+  "downvotes",
+  "reports",
+  "trending",
+  "score",
+] as const;
+
+type MemeOrderByKey = typeof VALID_ORDER_BY[number];
+type SortOrder = "ASC" | "DESC";
 
 function MemesContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
+  const pathname = usePathname();
 
-  // Existing pagination params
-  const per_page = searchParams.get("per_page") ?? "10";
-  const page_number = searchParams.get("page") ?? "1";
+  const page = Number(searchParams.get("page") ?? "1");
+  const rawLimit = Number(searchParams.get("limit") ?? "10");
+  const limit = rawLimit > 50 ? 10 : rawLimit;
 
-  // New search + tag params
-  const search = searchParams.get("search") ?? "";
-  const tagsParam = searchParams.get("tags") ?? "";
+  const tags = searchParams.getAll("tags");
 
-  // Local state for search UI
-  const [searchQuery, setSearchQuery] = useState(search);
-  const [selectedTags, setSelectedTags] = useState<string[]>(tagsParam ? tagsParam.split(",") : []);
-  const [availableTags, setAvailableTags] = useState<string[]>([]);
+  const rawOrderBy = searchParams.get("orderBy");
+  const orderBy: MemeOrderByKey =
+    rawOrderBy && VALID_ORDER_BY.includes(rawOrderBy as MemeOrderByKey)
+      ? (rawOrderBy as MemeOrderByKey)
+      : "createdAt";
 
-  // Fetch memes (with filters)
-  const { data, isLoading, isFetching } = useGetMemesQuery({
-    page: parseInt(page_number),
-    per_page: parseInt(per_page),
-    search,
-    tags: selectedTags.join(","),
-  });
+  const rawOrder = searchParams.get("order");
+  const order: SortOrder =
+    rawOrder === "ASC" || rawOrder === "DESC" ? rawOrder : "DESC";
 
-  // Fetch all tags for dropdown/autocomplete
-  const { data: tagsData } = useGetAllTagsQuery();
+  const initialSearch = searchParams.get("search") ?? "";
+  const [searchQuery, setSearchQuery] = useState(initialSearch);
+  const [debouncedSearch, setDebouncedSearch] = useState(initialSearch);
 
   useEffect(() => {
-    if (tagsData?.items) setAvailableTags(tagsData.items.map((t: any) => t.name));
-  }, [tagsData]);
+    if (initialSearch !== searchQuery) {
+      setSearchQuery(initialSearch);
+      setDebouncedSearch(initialSearch);
+    }
+  }, [initialSearch,searchQuery]);
 
-  // Handle search + filter param sync
-  const handleSearch = useCallback(() => {
-    const newParams = new URLSearchParams(searchParams.toString());
-    if (searchQuery.trim() === "") newParams.delete("search");
-    else newParams.set("search", searchQuery);
+  const updateUrl = useCallback(
+  (
+    newParams: Partial<{
+      page: number;
+      limit: number;
+      search: string;
+      tags: string[];
+      orderBy: MemeOrderByKey;
+      order: SortOrder;
+    }>,
+    resetPage = true
+  ) => {
+    const params = new URLSearchParams(searchParams.toString());
 
-    if (selectedTags.length) newParams.set("tags", selectedTags.join(","));
-    else newParams.delete("tags");
+    if (resetPage) params.set("page", "1");
 
-    newParams.set("page", "1"); // reset to first page on search
-    router.push(`/admin/meme?${newParams.toString()}`);
-  }, [searchQuery, selectedTags, router, searchParams]);
+    Object.entries(newParams).forEach(([key, value]) => {
+      if (!value || (Array.isArray(value) && value.length === 0)) {
+        params.delete(key);
+      } else if (Array.isArray(value)) {
+        params.delete(key);
+        value.forEach((v) => params.append(key, v as string));
+      } else {
+        params.set(key, String(value));
+      }
+    });
 
-  // Existing table logic
+    router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+  }, [searchParams, pathname, router] )
+
+  useEffect(() => {
+      const timer = setTimeout(() => {
+        setDebouncedSearch(searchQuery);
+        updateUrl({ search: searchQuery }, true);
+      }, 600);
+      return () => clearTimeout(timer);
+    }, [searchQuery, updateUrl]);
+
+  const { data, isLoading } = useGetMemesQuery({
+    page,
+    limit,
+    search: debouncedSearch || undefined,
+    tags: tags.length ? tags : undefined,
+    orderBy,
+    order,
+  });
+
   const tableData = data?.items ?? [];
   const pageCount = data?.meta?.totalPages ?? 0;
-
   const tableColumns = useMemo(() => adminMemeColumns(), []);
-
   const { table } = useDataTable({
     data: tableData,
     columns: tableColumns,
-    defaultPerPage: parseInt(per_page),
-    pageCount: pageCount,
+    defaultPerPage: limit,
+    pageCount,
   });
+
+  const filters: DataTableToolbarFilters[] = [];
+
+  const MemeToolbar = (
+    <DataTableToolbar<Meme, MemeOrderByKey>
+      table={table}
+      searchPlaceholder="Filter Content"
+      filters={filters}
+      serverSearchQuery={searchQuery}
+      setServerSearchQuery={setSearchQuery}
+      selectedTags={tags}
+      setSelectedTags={(newTags) => updateUrl({ tags: newTags })}
+      order={order}
+      setOrder={(o) => updateUrl({ order: o })}
+      orderBy={orderBy}
+      setOrderBy={(ob) => updateUrl({ orderBy: ob })}
+      sortableFields={VALID_ORDER_BY}
+    />
+  );
 
   return (
     <DashboardLayout>
       <DashboardHeader>
-          {/* Title + Description */}
-          <DashboardTitle
-            title="Memes"
-            description="Here you can manage all memes submitted to the community."
-          />
-    
-          <div className="flex items-center justify-end gap-4 mt-4 mr-4">
-            <AdminSearchBar
-              searchQuery={searchQuery}
-              setSearchQuery={setSearchQuery}
-              handleSearch={handleSearch}
-              isFetching={isFetching}
-              selectedTags={selectedTags}
-              setSelectedTags={setSelectedTags}
-              availableTags={availableTags}
-              inputWidth="w-80"
-            />
-    
-            <TagSelector setAvailableTags={setAvailableTags} />
-            <CreateMemeDialog />
-          </div>
+        <DashboardTitle
+          title="Memes"
+          description="Here you can manage all memes submitted to the community."
+        />
+        <CreateMemeDialog />
       </DashboardHeader>
 
       {isLoading ? (
         <div>Loading...</div>
       ) : (
         <>
+          <div className="mb-6">{MemeToolbar}</div>
           <DataTable table={table} />
-          <DataTablePagination table={table} />
         </>
       )}
     </DashboardLayout>

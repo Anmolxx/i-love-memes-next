@@ -13,21 +13,48 @@ import { EllipsisVertical, Eye, Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 import { useCallback, useState } from "react";
-import { DeleteDialog } from "@/components/layout/delete-dialog";
+import { DeleteDialog } from "@/components/dialog/delete-dialog";
 import EditUserDialog from "@/components/dialog/edit-user";
 import { useDeleteUserMutation } from "@/redux/services/user";
 import { toast } from "sonner";
+import { Checkbox } from "@/components/ui/checkbox";
 
 export function adminClientColumns(): ColumnDef<any>[] {
   return [
+    {
+        id: "select",
+        header: ({ table }) => (
+          <Checkbox
+            aria-label="Select all"
+            checked={
+              table.getIsAllPageRowsSelected() ||
+              (table.getIsSomePageRowsSelected() && "indeterminate")
+            }
+            onCheckedChange={(value: boolean | "indeterminate") =>
+              table.toggleAllPageRowsSelected(!!value)
+            }
+          />
+        ),
+        cell: ({ row }) => (
+          <Checkbox
+            aria-label="Select row"
+            checked={row.getIsSelected()}
+            onCheckedChange={(value: boolean | "indeterminate") =>
+              row.toggleSelected(!!value)
+            }
+          />
+        ),
+        enableSorting: false,
+        enableHiding: false,
+        size: 40,
+      },
     {
       accessorKey: "firstName",
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title="First Name" />
       ),
       cell: ({ row }) => <p>{row.getValue("firstName")}</p>,
-      enableSorting: false,
-      enableHiding: false,
+      enableSorting: false, 
     },
     {
       accessorKey: "lastName",
@@ -35,8 +62,7 @@ export function adminClientColumns(): ColumnDef<any>[] {
         <DataTableColumnHeader column={column} title="Last Name" />
       ),
       cell: ({ row }) => <p>{row.getValue("lastName")}</p>,
-      enableSorting: false,
-      enableHiding: false,
+      enableSorting: false, 
     },
     {
       accessorKey: "email",
@@ -44,8 +70,7 @@ export function adminClientColumns(): ColumnDef<any>[] {
         <DataTableColumnHeader column={column} title="Email" />
       ),
       cell: ({ row }) => <p>{row.getValue("email")}</p>,
-      enableSorting: false,
-      enableHiding: false,
+      enableSorting: false, 
     },
     {
       accessorKey: "createdAt",
@@ -57,11 +82,10 @@ export function adminClientColumns(): ColumnDef<any>[] {
         const date = val ? new Date(String(val)) : null;
         return <p>{date ? date.toLocaleString() : "-"}</p>;
       },
-      enableSorting: false,
-      enableHiding: false,
+      enableSorting:false,
     },
     {
-      accessorKey: "active",
+      accessorKey: "status",
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title="Active" />
       ),
@@ -79,8 +103,7 @@ export function adminClientColumns(): ColumnDef<any>[] {
           </Badge>
         );
       },
-      enableSorting: false,
-      enableHiding: false,
+      enableSorting: false, 
     },
     {
       id: "actions",

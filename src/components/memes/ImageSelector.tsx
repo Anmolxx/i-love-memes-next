@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import { toast } from "sonner";
 import useAuthentication from "@/hooks/use-authentication";
+import { skipToken } from "@reduxjs/toolkit/query";
 
 interface Props {
   onSelect: (url: string, id?: string) => void;
@@ -25,7 +26,7 @@ const ImageSelector: React.FC<Props> = ({
   const [uploadFile, { isLoading: isUploading }] = useUploadFileMutation();
   const { isAdmin } = useAuthentication();
 
-  const { data: templates } = useGetTemplatesQuery(undefined, {
+  const { data: templates } = useGetTemplatesQuery(skipToken, {
     selectFromResult: ({ data }) => {
       return {
         data:

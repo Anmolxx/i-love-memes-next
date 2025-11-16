@@ -9,28 +9,44 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { EllipsisVertical, Eye, Trash2, Edit } from "lucide-react";
 import Link from "next/link";
 import { useCallback, useState } from "react";
-import { DeleteDialog } from "@/components/layout/delete-dialog";
+import { DeleteDialog } from "@/components/dialog/delete-dialog";
 import { useDeleteTemplateMutation } from "@/redux/services/template";
 import { toast } from "sonner";
-import Image from "next/image";
-
-export type Template = {
-  id: string;
-  title: string;
-  img: string;
-  slug: string;
-  status: "active" | "inactive";
-  description: string;
-  createdAt: string;
-  config: any;
-};
+import { Template } from "@/utils/dtos/template.dto";
+import { Checkbox } from "@/components/ui/checkbox";
 
 export function adminTemplateColumns(): ColumnDef<Template>[] {
   return [
+    {
+        id: "select",
+        header: ({ table }) => (
+          <Checkbox
+            aria-label="Select all"
+            checked={
+              table.getIsAllPageRowsSelected() ||
+              (table.getIsSomePageRowsSelected() && "indeterminate")
+            }
+            onCheckedChange={(value: boolean | "indeterminate") =>
+              table.toggleAllPageRowsSelected(!!value)
+            }
+          />
+        ),
+        cell: ({ row }) => (
+          <Checkbox
+            aria-label="Select row"
+            checked={row.getIsSelected()}
+            onCheckedChange={(value: boolean | "indeterminate") =>
+              row.toggleSelected(!!value)
+            }
+          />
+        ),
+        enableSorting: false,
+        enableHiding: false,
+        size: 40,
+      },
     {
       accessorKey: "title",
       header: ({ column }) => (
@@ -58,31 +74,7 @@ export function adminTemplateColumns(): ColumnDef<Template>[] {
         );
       },
       enableSorting: false,
-      enableHiding: false,
     },
-    // {
-    //   accessorKey: "status",
-    //   header: ({ column }) => (
-    //     <DataTableColumnHeader column={column} title="Status" />
-    //   ),
-    //   cell: ({ row }) => {
-    //     const status = row.getValue("status") as string;
-    //     const isActive = status === "active";
-
-    //     return (
-    //       <Badge variant={"secondary"} className="capitalize">
-    //         {isActive ? (
-    //           <div className="bg-green-500 size-2 rounded-full dark:bg-green-400 mr-1" />
-    //         ) : (
-    //           <div className="bg-red-500 size-2 rounded-full dark:bg-red-400 mr-1" />
-    //         )}
-    //         <span>{status}</span>
-    //       </Badge>
-    //     );
-    //   },
-    //   enableSorting: false,
-    //   enableHiding: false,
-    // },
     {
       accessorKey: "description",
       header: ({ column }) => (
@@ -96,7 +88,6 @@ export function adminTemplateColumns(): ColumnDef<Template>[] {
         );
       },
       enableSorting: false,
-      enableHiding: false,
     },
     {
       accessorKey: "createdAt",
@@ -108,7 +99,6 @@ export function adminTemplateColumns(): ColumnDef<Template>[] {
         return <p>{date.toLocaleString()}</p>;
       },
       enableSorting: false,
-      enableHiding: false,
     },
     {
       id: "actions",
@@ -147,16 +137,16 @@ const ActionCell = ({ row }: { row: any }) => {
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
-          <DropdownMenuItem asChild>
+          <DropdownMenuItem className="cursor-pointer"asChild>
             <Link href={`/meme/${template.slug}`}>
               <Eye size={16} />
               View Details
             </Link>
           </DropdownMenuItem>
 
-          <DropdownMenuItem onClick={() => setShowDeleteDialog(true)}>
+          <DropdownMenuItem className="cursor-pointer" onClick={() => setShowDeleteDialog(true)}>
             <Trash2 className="text-destructive" size={16} />
-            <span className="text-destructive">Delete Template</span>
+            <span className="text-destructive cursor-pointer">Delete Template</span>
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>

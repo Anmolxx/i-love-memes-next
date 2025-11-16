@@ -211,7 +211,7 @@ export default function MemePage() {
                         <ThumbsDown size={18} /> Down
                       </button>
                       <div className="text-sm font-medium text-gray-700 px-3 py-1 rounded-full border border-gray-200">
-                        {meme.score ?? 0}
+                        {meme.interactionSummary?.netScore ?? 0}
                       </div>
                     </div>
 

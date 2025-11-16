@@ -79,7 +79,7 @@ export function DeleteDialog({
               variant="destructive"
               onClick={onDelete}
               disabled={isDeletePending}
-              className="w-1/2"
+              className="w-1/2 cursor-pointer"
             >
               Yes, Confirm
             </Button>

@@ -55,9 +55,25 @@ export function SignInForm() {
           router.push("/admin/users");
         }
       })
-      .catch((error) => {
-        toast.error(error?.data?.message || "Login failed.");
+      .catch((error: any) => {
+        let message: string | undefined = error?.data?.message;
+        if (error?.data?.errors) {
+          const errors: Record<string, string> = error.data.errors;
+          const ERROR_MESSAGES: Record<string, string> = {
+            notFound: "is not registered",
+            tooShort: "is too short",
+          };
+          const formattedErrors = Object.entries(errors)
+            .map(([field, msg]) => {
+              const fieldName = field.charAt(0).toUpperCase() + field.slice(1);
+                return `${fieldName} ${ERROR_MESSAGES[msg as keyof typeof ERROR_MESSAGES] || msg}`;
+            })
+            .join(", ");
+            message = formattedErrors;
+          }
+        toast.error(message || "Login failed.");
       });
+      
   }
 
   return (

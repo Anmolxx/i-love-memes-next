@@ -3,12 +3,15 @@ import { iLoveMemesApi } from ".";
 
 export const userApi = iLoveMemesApi.injectEndpoints({
   endpoints: (builder) => ({
-    getUsers: builder.query<any, any>({
+    getUsers: builder.query<any, { page?: number; limit?: number }>({
       providesTags: [TAG_GET_USERS],
-      query: ({ page, per_page }) => ({
-        url: `/users?page=${page}&limit=${per_page}`,
-        method: "GET",
-      }),
+      query: ({ page = 1, limit = 10 }) => {
+        const validatedLimit = limit && limit > 0 && limit <= 50 ? limit : 10;
+        return {
+          url: `/users?page=${page}&limit=${validatedLimit}`,
+          method: "GET",
+        };
+      },
     }),
 
     addUser: builder.mutation<any, any>({

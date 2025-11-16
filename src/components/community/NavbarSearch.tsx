@@ -25,9 +25,9 @@ export function NavbarSearch({
 }: NavbarSearchProps) {
   const toggleTag = (tag: string) => {
     if (tag === "__none__") {
-        setSelectedTags([]);
-        return;
-      }
+      setSelectedTags([]);
+      return;
+    }
     if (selectedTags.includes(tag)) setSelectedTags(selectedTags.filter(t => t !== tag));
     else setSelectedTags([...selectedTags, tag]);
   };
@@ -43,12 +43,18 @@ export function NavbarSearch({
         disabled={isFetching}
       />
 
-      <Select value="" onValueChange={toggleTag}>
+      <Select
+        value=""
+        onValueChange={(tag) => {
+          toggleTag(tag);
+          handleSearch();
+        }}
+      >
         <SelectTrigger className="w-36 cursor-pointer">
           <SelectValue placeholder={selectedTags.length ? selectedTags.join(", ") : "Filter Tags"} />
         </SelectTrigger>
         <SelectContent>
-            <SelectItem value="__none__">None</SelectItem>
+          <SelectItem value="__none__">None</SelectItem>
           {availableTags.map(tag => (
             <SelectItem key={tag} value={tag}>
               {selectedTags.includes(tag) ? `✅ ${tag}` : tag}

@@ -88,7 +88,7 @@ export function EditDialog({ meme, open, onOpenChange, onSave }: EditDialogProps
                 onChange={(e) => setNewTag(e.target.value)}
                 className="flex-1"
               />
-              <Button type="button" onClick={addTag} disabled={!newTag.trim() || tags.length >= 2}>
+              <Button className="cursor-pointer" type="button" onClick={addTag} disabled={!newTag.trim() || tags.length >= 2}>
                 Add
               </Button>
             </div>

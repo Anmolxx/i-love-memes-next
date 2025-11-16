@@ -35,7 +35,7 @@ export function AdminSearchBar({
   };
 
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex items-center gap-2 mb-5">
       <Input
         placeholder="Search..."
         value={searchQuery}

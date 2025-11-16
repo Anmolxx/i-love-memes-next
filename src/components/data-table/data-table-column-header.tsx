@@ -1,5 +1,6 @@
-import { type Column } from "@tanstack/react-table";
+"use client";
 
+import { type Column } from "@tanstack/react-table";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
@@ -9,7 +10,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { ArrowDownIcon, ChevronsUpDown, ArrowUpIcon } from "lucide-react";
+import { ChevronsUpDown, EyeOff, X, ChevronUp, ChevronDown } from "lucide-react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
 interface DataTableColumnHeaderProps<TData, TValue>
   extends React.HTMLAttributes<HTMLDivElement> {
@@ -17,14 +19,44 @@ interface DataTableColumnHeaderProps<TData, TValue>
   title: string;
 }
 
+const API_SORTABLE_FIELDS = ["title", "createdAt"];
+
 export function DataTableColumnHeader<TData, TValue>({
   column,
   title,
   className,
 }: DataTableColumnHeaderProps<TData, TValue>) {
-  if (!column.getCanSort() && !column.getCanHide()) {
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
+  const columnId = column.id;
+  const isAPISortable = API_SORTABLE_FIELDS.includes(columnId);
+
+  const currentOrderBy = searchParams.get("orderBy");
+  const currentOrder = searchParams.get("order") as "asc" | "desc" | null;
+
+  const sortState = currentOrderBy === columnId ? (currentOrder?.toLowerCase() as 'asc' | 'desc' | false) : false;
+
+  if (!isAPISortable && !column.getCanHide()) {
     return <div className={cn(className)}>{title}</div>;
   }
+  
+  const updateUrlSort = (order: 'ASC' | 'DESC' | 'RESET') => {
+    if (!isAPISortable) return;
+
+    const params = new URLSearchParams(searchParams.toString());
+
+    if (order === 'RESET') {
+      params.delete("orderBy");
+      params.delete("order");
+    } else {
+      params.set("orderBy", columnId);
+      params.set("order", order);
+    }
+
+    router.push(`${pathname}?${params.toString()}`, { scroll: false });
+  };
 
   return (
     <div className={cn("flex items-center space-x-2", className)}>
@@ -32,67 +64,58 @@ export function DataTableColumnHeader<TData, TValue>({
         <DropdownMenuTrigger asChild>
           <Button
             aria-label={
-              column.getIsSorted() === "desc"
+              sortState === "desc"
                 ? "Sorted descending. Click to sort ascending."
-                : column.getIsSorted() === "asc"
+                : sortState === "asc"
                 ? "Sorted ascending. Click to sort descending."
                 : "Not sorted. Click to sort ascending."
             }
             variant="ghost"
             size="sm"
-            className="-ml-3 h-8 data-[state=open]:bg-primary text-xs"
+            className="-ml-3 h-8 text-xs hover:bg-gray-100"
           >
             <span className="uppercase">{title}</span>
-            {column.getCanSort() && column.getIsSorted() === "desc" ? (
-              <ArrowDownIcon className="ml-2 size-4" aria-hidden="true" />
-            ) : column.getIsSorted() === "asc" ? (
-              <ArrowUpIcon className="ml-2 size-4" aria-hidden="true" />
+            {sortState === "desc" ? (
+              <ChevronDown className="ml-2 size-4" aria-hidden="true" />
+            ) : sortState === "asc" ? (
+              <ChevronUp className="ml-2 size-4" aria-hidden="true" />
             ) : (
               <ChevronsUpDown className="ml-2 size-4" aria-hidden="true" />
             )}
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start">
-          {column.getCanSort() && (
+          {isAPISortable && (
             <>
               <DropdownMenuItem
-                aria-label="Sort ascending"
-                onClick={() => column.toggleSorting(false)}
+                onClick={() => updateUrlSort('ASC')}
               >
-                <ArrowUpIcon
-                  className="mr-2 size-3.5 text-muted-foreground/70"
-                  aria-hidden="true"
-                />
-                Asc
+                <ChevronUp className="mr-2 size-3.5 text-muted-foreground/70" />
+                ASC
               </DropdownMenuItem>
               <DropdownMenuItem
-                aria-label="Sort descending"
-                onClick={() => column.toggleSorting(true)}
+                onClick={() => updateUrlSort('DESC')}
               >
-                <ArrowDownIcon
-                  className="mr-2 size-3.5 text-muted-foreground/70"
-                  aria-hidden="true"
-                />
-                Desc
+                <ChevronDown className="mr-2 size-3.5 text-muted-foreground/70" />
+                DESC
               </DropdownMenuItem>
+              {sortState && (
+                  <DropdownMenuItem onClick={() => updateUrlSort('RESET')}>
+                    <X className="mr-2 size-3.5 text-muted-foreground/70" />
+                    Reset
+                  </DropdownMenuItem>
+                )}
             </>
           )}
-          {/* {column.getCanSort() && column.getCanHide() && (
-            <DropdownMenuSeparator />
-          )} */}
-          {/* -- Hide column not needed for now-- */}
-          {/* {column.getCanHide() && (
+          {isAPISortable && column.getCanHide() && <DropdownMenuSeparator />}
+          {column.getCanHide() && (
             <DropdownMenuItem
-              aria-label="Hide column"
               onClick={() => column.toggleVisibility(false)}
             >
-              <EyeOff 
-                className="mr-2 size-3.5 text-muted-foreground/70"
-                aria-hidden="true"
-              />
+              <EyeOff className="mr-2 size-3.5 text-muted-foreground/70" />
               Hide
             </DropdownMenuItem>
-          )} */}
+          )}
         </DropdownMenuContent>
       </DropdownMenu>
     </div>

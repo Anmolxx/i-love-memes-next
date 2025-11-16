@@ -81,12 +81,11 @@ export function CreateClientDialog() {
             Add a new client to your account
           </DialogDescription>
         </DialogHeader>
-        {/* <RegisterForm variant={"admin"} /> */}
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="grid gap-6">
-            <div className="grid gap-2">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            <div className="grid gap-4 py-2">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <FormField
                   control={form.control}
                   name="firstName"
@@ -147,7 +146,7 @@ export function CreateClientDialog() {
               />
             </div>
 
-            <Button type="submit" disabled={isSubmitting} className="w-fit">
+            <Button type="submit" disabled={isSubmitting} className="w-fit cursor-pointer">
               {isSubmitting ? "Creating account..." : "Create Account"}
             </Button>
           </form>

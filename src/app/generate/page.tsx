@@ -1,5 +1,5 @@
 import { ImageUpload } from '@/sections/ImageUpload'
-import { Navbar } from '@/components/layout/Navbar'
+import { Navbar } from '@/components/ui/extension/Navbar'
 import { ImageCarousel } from '@/sections/ImageCarousel'
 import { Footer } from '@/sections/Footer'
 export default function Page() {

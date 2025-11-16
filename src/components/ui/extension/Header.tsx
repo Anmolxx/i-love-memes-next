@@ -15,7 +15,7 @@ import { usePostMemeMutation } from "@/redux/services/meme";
 import useAuthentication from "@/hooks/use-authentication";
 import { useForm } from "react-hook-form";
 import { useTypedSelector } from "@/redux/store";
-import { Badge } from "../ui/badge";
+import { Badge } from "../badge";
 import {
   Dialog,
   DialogContent,
@@ -82,6 +82,11 @@ const Header: React.FC<HeaderProps> = ({
   const { selectedTemplateId } = useTypedSelector((state) => state.template);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [newTag, setNewTag] = useState("");
+  const [mounted, setMounted] = React.useState(false);
+
+  React.useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const form = useForm<TemplateFormData>({
     defaultValues: {
@@ -423,7 +428,7 @@ const Header: React.FC<HeaderProps> = ({
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
-        {isLoggedIn && (
+        {mounted && isLoggedIn && (
         <Button
           onClick={() => handleLogout()}
           className="rounded-full cursor-pointer h-10 px-4 md:px-6 border-[#1E085C] text-[#1E085C] text-sm md:text-base"

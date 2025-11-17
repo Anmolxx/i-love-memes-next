@@ -8,6 +8,7 @@ export interface GetTemplatesArgs {
   page?: number;
   limit?: number;
   search?: string;
+  tags?: string[];
   order?: SortOrder;
   orderBy?: TemplateOrderBy;
 }
@@ -15,12 +16,14 @@ export interface GetTemplatesArgs {
 export const templatesApi = iLoveMemesApi.injectEndpoints({
   endpoints: (builder) => ({
    getTemplates: builder.query<any, GetTemplatesArgs>({
+    providesTags:[TAG_GET_TEMPLATES_ADMIN],
        query: (params = {}) => {
          const {
            page = 1,
            limit = 10,
            search,
-           orderBy = "createdAt",
+           tags,
+           orderBy,
            order,
          } = params ?? {};
    
@@ -36,7 +39,11 @@ export const templatesApi = iLoveMemesApi.injectEndpoints({
          if (search && search.trim().length > 0) {
            queryParams.set("search", search.trim());
          }
-   
+
+         if (tags && tags.length > 0) {
+             tags.forEach(t => queryParams.append("tags", t));
+          }
+
          if (orderBy) {
            queryParams.set("orderBy", orderBy);
          }
@@ -51,31 +58,12 @@ export const templatesApi = iLoveMemesApi.injectEndpoints({
          };
        },
      }),
-   
-    uploadFile: builder.mutation<
-      { file: { id: string; path: string } },
-      FormData
-    >({
-      query: (formData) => ({
-        url: "/files/upload",
-        method: "POST",
-        body: formData,
-      }),
-    }),
 
     saveAsTemplate: builder.mutation<any, any>({
       query: (body) => ({
         url: "/templates",
         method: "POST",
         body,
-      }),
-    }),
-
-    getAllTemplates: builder.query({
-      providesTags: [TAG_GET_TEMPLATES_ADMIN],
-      query: ({ page, per_page }) => ({
-        url: `/templates?page=${page}&limit=${per_page}`,
-        method: "GET",
       }),
     }),
 
@@ -87,6 +75,15 @@ export const templatesApi = iLoveMemesApi.injectEndpoints({
       }),
     }),
 
+    updateTemplate: builder.mutation<any, { slugOrId: string; body: Partial<any> }>({
+        invalidatesTags:[TAG_GET_TEMPLATES_ADMIN],
+          query: ({ slugOrId, body }) => ({
+            url: `/templates/${slugOrId}`,
+            method: "PATCH",
+            body,
+          }),
+      }),
+
     getTemplateByIdOrSlug: builder.query<any, string>({
       query: (idOrSlug) => ({
         url: `/templates/${idOrSlug}`,
@@ -97,13 +94,13 @@ export const templatesApi = iLoveMemesApi.injectEndpoints({
       ],
     }),
   }),
+  overrideExisting: true
 });
 
 export const {
   useGetTemplatesQuery,
-  useUploadFileMutation,
   useSaveAsTemplateMutation,
-  useGetAllTemplatesQuery,
   useDeleteTemplateMutation,
+  useUpdateTemplateMutation,
   useGetTemplateByIdOrSlugQuery,
 } = templatesApi;

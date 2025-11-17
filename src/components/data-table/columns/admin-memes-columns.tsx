@@ -9,7 +9,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import { EllipsisVertical, Eye, Trash2, Edit, CircleArrowUp } from "lucide-react";
+import { EllipsisVertical, Eye, Trash2, Edit, CirclePlus } from "lucide-react";
 import Link from "next/link";
 import { useState, useCallback } from "react";
 import { DeleteDialog } from "@/components/dialog/delete-dialog";
@@ -68,16 +68,16 @@ export function adminMemeColumns(): ColumnDef<Meme>[] {
               }}
               className="h-10 w-10 rounded-md object-cover border"
             />
-            <Link
-              href={`/community/${meme.slug}`}
-              className="hover:underline font-medium"
+            <button
+              onClick={() => window.open(`/community/${meme.slug}`, "_blank")}
+              className="hover:underline font-medium text-left"
             >
               {row.getValue("title")}
-            </Link>
+            </button>
           </div>
         );
       },
-      enableSorting: false, 
+      enableSorting: false,
     },
     {
       accessorKey: "description",
@@ -130,23 +130,26 @@ export function adminMemeColumns(): ColumnDef<Meme>[] {
             {displayedTags.map(tag => (
               <span
                 key={tag.id}
-                className="text-xs bg-purple-100 text-purple-800 px-2 py-1 rounded-full font-medium"
+                className="text-xs px-2 py-1.5 rounded-lg font-medium dark:bg-[#28282B] dark:text-white border dark:border-gray-200 border-gray-900 bg-gray-200"
               >
                 #{tag.name}
               </span>
             ))}
-    
+          
             {hiddenTags.length > 0 && (
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <CircleArrowUp size={18} className="text-white cursor-pointer" />
+                  <CirclePlus className="cursor-pointer text-black dark:text-white" size={18} />
                 </TooltipTrigger>
-                <TooltipContent side="top">
+                <TooltipContent
+                  side="top"
+                  className="bg-white text-black dark:bg-[#202020] dark:text-white shadow-lg p-2 rounded-md border border-gray-200 dark:border-none"
+                >
                   <div className="flex flex-wrap gap-1 max-w-[200px]">
                     {hiddenTags.map(tag => (
                       <span
                         key={tag.id}
-                        className="text-xs bg-purple-50 text-purple-800 px-2 py-1 rounded-full font-medium"
+                        className="text-xs px-2 py-1 rounded-lg font-medium border border-transparent bg-gray-200 text-gray-800 dark:bg-black dark:text-white"
                       >
                         #{tag.name}
                       </span>
@@ -155,7 +158,7 @@ export function adminMemeColumns(): ColumnDef<Meme>[] {
                 </TooltipContent>
               </Tooltip>
             )}
-          </div>
+          </div>  
         );
       },
       enableSorting: false, 
@@ -178,6 +181,15 @@ export function adminMemeColumns(): ColumnDef<Meme>[] {
     },
   ];
 };
+
+interface UpdateMemePayload {
+  title?: string;
+  description?: string;
+  tags?: string[];
+  templateId?: string;
+  file?: { id: string };
+  audience?: string;
+}
 
 const ActionCell = ({ row }: { row: any }) => {
   const meme: Meme = row.original;
@@ -205,20 +217,17 @@ const ActionCell = ({ row }: { row: any }) => {
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
-          <DropdownMenuItem className="cursor-pointer" asChild>
-            <Link href={`/community/${meme.slug}`}>
-              <Eye size={16} /> View Details
+          <DropdownMenuItem asChild>
+            <Link href={`/community/${meme.slug}`} target="_blank">
+              <Eye size={16} /> View Meme
             </Link>
           </DropdownMenuItem>
-
-          <DropdownMenuItem className="cursor-pointer" onClick={() => setShowDeleteDialog(true)}>
-            <Trash2 className="text-destructive" size={16} />
-            <span className="text-destructive cursor-pointer">Delete Meme</span>
-          </DropdownMenuItem>
-
-          <DropdownMenuItem className="cursor-pointer" onClick={() => setShowEditDialog(true)}>
-            <Edit size={16} />
-            <span className="cursor-pointer">Edit Meme</span>
+          <DropdownMenuItem onClick={() => setShowEditDialog(true)}>
+              <Edit size={16} /> <span>Edit Meme</span>
+            </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => setShowDeleteDialog(true)}>
+            <Trash2 className="text-destructive" size={16} /> 
+            <span className="text-destructive">Delete Meme</span>
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
@@ -229,17 +238,24 @@ const ActionCell = ({ row }: { row: any }) => {
         showTrigger={false}
         deleteTitle="Delete Meme"
         deleteDescription={`Are you sure you want to delete "${meme.title}"? This action cannot be undone.`}
-        action={async () => {
-          await handleDeleteMeme();
-        }}
+        action={handleDeleteMeme}
       />
 
       <EditDialog
-        meme={meme}
+        data={meme}
         open={showEditDialog}
         onOpenChange={setShowEditDialog}
-        onSave={async (updated) => {
-          await patchMeme({ slugOrId: meme.id, body: updated });
+        getTags={(m) => m.tags?.filter((t) => !t.deletedAt).map((t) => t.name) || []}
+        buildPayload={(m, title, description, tags): UpdateMemePayload => ({
+          title,
+          description,
+          tags,
+          templateId: m.template?.id,
+          file: m.file ? { id: m.file.id } : undefined,
+          audience: m.audience,
+        })}
+        onSave={async (payload) => {
+          await patchMeme({ slugOrId: meme.id, body: payload });
           toast.success("Meme updated!");
         }}
       />

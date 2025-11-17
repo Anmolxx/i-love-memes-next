@@ -90,7 +90,7 @@ export function adminClientColumns(): ColumnDef<any>[] {
         <DataTableColumnHeader column={column} title="Active" />
       ),
       cell: ({ row }) => {
-        const isActive = row?.original?.status?.name === "Active";
+        const isActive = row?.original?.status === "active";
 
         return (
           <Badge variant={"secondary"} className="capitalize">

@@ -14,10 +14,12 @@ import { useGetMemesQuery } from "@/redux/services/meme";
 import { adminMemeColumns } from "@/components/data-table/columns/admin-memes-columns";
 import { CreateMemeDialog } from "@/components/molecules/primary-buttons/creation-primary-buttons/create-meme";
 import { Meme } from "@/utils/dtos/meme.dto";
+import { MemesTableSkeleton } from "@/components/data-table/skeletons/meme-skeleton";
 import {
   DataTableToolbar,
   DataTableToolbarFilters,
 } from "@/components/data-table/data-table-toolbar";
+import { useDebounce } from "@/hooks/use-debounce";
 
 const VALID_ORDER_BY = [
   "createdAt",
@@ -56,53 +58,46 @@ function MemesContent() {
 
   const initialSearch = searchParams.get("search") ?? "";
   const [searchQuery, setSearchQuery] = useState(initialSearch);
-  const [debouncedSearch, setDebouncedSearch] = useState(initialSearch);
-
-  useEffect(() => {
-    if (initialSearch !== searchQuery) {
-      setSearchQuery(initialSearch);
-      setDebouncedSearch(initialSearch);
-    }
-  }, [initialSearch,searchQuery]);
+  const debouncedSearch = useDebounce(searchQuery, 600);
 
   const updateUrl = useCallback(
-  (
-    newParams: Partial<{
-      page: number;
-      limit: number;
-      search: string;
-      tags: string[];
-      orderBy: MemeOrderByKey;
-      order: SortOrder;
-    }>,
-    resetPage = true
-  ) => {
-    const params = new URLSearchParams(searchParams.toString());
+    (
+      newParams: Partial<{
+        page: number;
+        limit: number;
+        search: string;
+        tags: string[];
+        orderBy: MemeOrderByKey;
+        order: SortOrder;
+      }>,
+      resetPage = true
+    ) => {
+      const params = new URLSearchParams(searchParams.toString());
 
-    if (resetPage) params.set("page", "1");
+      if (resetPage) params.set("page", "1");
 
-    Object.entries(newParams).forEach(([key, value]) => {
-      if (!value || (Array.isArray(value) && value.length === 0)) {
-        params.delete(key);
-      } else if (Array.isArray(value)) {
-        params.delete(key);
-        value.forEach((v) => params.append(key, v as string));
-      } else {
-        params.set(key, String(value));
-      }
-    });
+      Object.entries(newParams).forEach(([key, value]) => {
+        if (!value || (Array.isArray(value) && value.length === 0)) {
+          params.delete(key);
+        } else if (Array.isArray(value)) {
+          params.delete(key);
+          value.forEach((v) => params.append(key, v as string));
+        } else {
+          params.set(key, String(value));
+        }
+      });
 
-    router.replace(`${pathname}?${params.toString()}`, { scroll: false });
-  }, [searchParams, pathname, router] )
+      router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+    },
+    [searchParams, pathname, router]
+  );
 
   useEffect(() => {
-      const timer = setTimeout(() => {
-        setDebouncedSearch(searchQuery);
-        updateUrl({ search: searchQuery }, true);
-      }, 600);
-      return () => clearTimeout(timer);
-    }, [searchQuery, updateUrl]);
-
+    if (debouncedSearch !== initialSearch) {
+      updateUrl({ search: debouncedSearch });
+    }
+  }, [debouncedSearch]);
+  
   const { data, isLoading } = useGetMemesQuery({
     page,
     limit,
@@ -152,7 +147,7 @@ function MemesContent() {
       </DashboardHeader>
 
       {isLoading ? (
-        <div>Loading...</div>
+        <MemesTableSkeleton/>
       ) : (
         <>
           <div className="mb-6">{MemeToolbar}</div>

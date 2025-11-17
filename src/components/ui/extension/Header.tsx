@@ -10,7 +10,8 @@ import { useAppDispatch } from "@/redux/store";
 import { useRouter } from "next/navigation";
 import { logout } from "@/redux/slices/auth";
 import { toast } from "sonner";
-import { useSaveAsTemplateMutation, useUploadFileMutation } from "@/redux/services/template";
+import { useSaveAsTemplateMutation } from "@/redux/services/template";
+import { useUploadFileMutation } from "@/redux/services/uploadfile"
 import { usePostMemeMutation } from "@/redux/services/meme";
 import useAuthentication from "@/hooks/use-authentication";
 import { useForm } from "react-hook-form";

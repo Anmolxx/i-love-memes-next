@@ -35,6 +35,9 @@ const DEFAULT_FIELD_LABELS = {
   reports: "Reports",
   trending: "Trending",
   score: "Score",
+  firstName: "First Name",
+  lastName: "Last Name",
+  email: "Email",
 } as const;
 
 const ORDER_OPTIONS = [
@@ -179,7 +182,6 @@ export function DataTableSort<TOrderBy extends string>({
 
         <div className="flex justify-start">
           <Button
-            variant="outline"
             size="sm"
             className="rounded-md cursor-pointer"
             onClick={handleResetSort}

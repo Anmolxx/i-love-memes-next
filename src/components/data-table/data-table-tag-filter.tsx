@@ -102,7 +102,7 @@ export function DataTableTagFilter({
   return (
     <Popover>
       <PopoverTrigger asChild>
-        <Button variant="outline" size="sm" className="h-8 border-dashed">
+        <Button variant="outline" size="sm" className="h-8 border-dashed cursor-pointer">
           <PlusCircle className="mr-2 h-4 w-4" />
           Tags
           {selectedTags.length > 0 && (

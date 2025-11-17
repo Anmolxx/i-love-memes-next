@@ -19,7 +19,7 @@ interface DataTableColumnHeaderProps<TData, TValue>
   title: string;
 }
 
-const API_SORTABLE_FIELDS = ["title", "createdAt"];
+const API_SORTABLE_FIELDS = ["title", "createdAt", "lastName", "firstName", "email"];
 
 export function DataTableColumnHeader<TData, TValue>({
   column,

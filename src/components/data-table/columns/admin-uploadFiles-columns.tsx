@@ -46,7 +46,7 @@ export function adminFilesColumns(): ColumnDef<FileItem>[] {
         size: 40,
       },
     {
-      accessorKey: "id",
+      accessorKey: "file ID",
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title="File ID" />
       ),

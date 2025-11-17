@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useEffect, Suspense } from "react";
+import { useMemo, useState, useEffect, Suspense, useCallback } from "react";
 import {
   DashboardHeader,
   DashboardLayout,
@@ -15,8 +15,10 @@ import {
   DataTableToolbar,
   DataTableToolbarFilters,
 } from "@/components/data-table/data-table-toolbar";
+import { TemplatesTableSkeleton } from "@/components/data-table/skeletons/template-skeleton";
 import { useGetTemplatesQuery } from "@/redux/services/template";
 import { Template } from "@/utils/dtos/template.dto";
+import { useDebounce } from "@/hooks/use-debounce";
 
 const VALID_ORDER_BY = ["createdAt", "updatedAt", "title"] as const;
 type TemplateOrderBy = typeof VALID_ORDER_BY[number];
@@ -26,6 +28,7 @@ function TemplatesContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const page = Number(searchParams.get("page") ?? "1");
+  const tags = searchParams.getAll("tags");
   const rawLimit = Number(searchParams.get("limit") ?? "10");
   const limit = rawLimit > 50 ? 10 : rawLimit;
   const initialSearch = searchParams.get("search") ?? "";
@@ -41,18 +44,15 @@ function TemplatesContent() {
     rawOrder === "ASC" || rawOrder === "DESC" ? rawOrder : "DESC";
 
   const [searchQuery, setSearchQuery] = useState(initialSearch);
-  const [debouncedSearch, setDebouncedSearch] = useState(initialSearch);
-  
-  useEffect(() => {
-    const timer = setTimeout(() => setDebouncedSearch(searchQuery), 600);
-    return () => clearTimeout(timer);
-  }, [searchQuery]);
+  const debouncedSearch = useDebounce(searchQuery, 600);
 
-  const updateUrl = (
+  const updateUrl = useCallback(
+    (
     newParams: Partial<{
       page: number;
       limit: number;
       search: string;
+      tags: string[];
       orderBy: TemplateOrderBy;
       order: SortOrder;
     }>
@@ -73,7 +73,14 @@ function TemplatesContent() {
     });
 
     router.replace(`?${params.toString()}`, { scroll: false });
-  };
+  }, [searchParams, router]
+)
+
+useEffect(() => {
+  if (debouncedSearch !== initialSearch) {
+    updateUrl({ search: debouncedSearch });
+  }
+}, [debouncedSearch]);
 
   const { data, isLoading } = useGetTemplatesQuery({
     page,
@@ -102,6 +109,8 @@ function TemplatesContent() {
       filters={filters}
       serverSearchQuery={searchQuery}
       setServerSearchQuery={setSearchQuery}
+      selectedTags={tags}
+      setSelectedTags={(newTags) => updateUrl({ tags: newTags })}
       order={order}
       setOrder={(o) => updateUrl({ order: o })}
       orderBy={orderBy}
@@ -121,7 +130,7 @@ function TemplatesContent() {
       </DashboardHeader>
 
       {isLoading ? (
-        <div>Loading...</div>
+        <TemplatesTableSkeleton/>
       ) : (
         <>
           <div className="mb-6">{TemplateToolbar}</div>

@@ -21,6 +21,17 @@ export const filesApi = iLoveMemesApi.injectEndpoints({
       },
     }),
 
+    uploadFile: builder.mutation<
+        { file: { id: string; path: string } },
+        FormData
+      >({
+        query: (formData) => ({
+          url: "/files/upload",
+          method: "POST",
+          body: formData,
+        }),
+      }),
+
     deleteFile: builder.mutation<any, string>({
       invalidatesTags: [TAG_GET_UPLOADED_FILES],
       query: (fileId) => ({
@@ -28,11 +39,12 @@ export const filesApi = iLoveMemesApi.injectEndpoints({
         method: "DELETE",
       }),
     }),
-
   }),
+  overrideExisting: true
 });
 
 export const {
   useGetFilesQuery,
+  useUploadFileMutation,
   useDeleteFileMutation
 } = filesApi;

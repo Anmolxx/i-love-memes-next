@@ -14,16 +14,6 @@ const settingsSidebarNavItems = [
     href: '/admin/settings/account',
     icon: <Wrench size={18} />,
   },
-  {
-    title: 'Notifications',
-    href: 'admin/settings/notifications',
-    icon: <Bell size={18} />,
-  },
-  {
-    title: 'Display',
-    href: 'admin/settings/display',
-    icon: <Monitor size={18} />,
-  },
 ]
 
 export default function SettingsPageLayout({children}: {children: React.ReactNode}) {

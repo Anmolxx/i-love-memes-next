@@ -3,7 +3,6 @@ import { TAGS_API } from "@/contracts/iLoveMemesApiTags";
 export const tagsApi = iLoveMemesApi.injectEndpoints({
     endpoints: (builder) => ({
 
-        //GET all Tags
         getAllTags: builder.query<any, { search?: string; page?: number; limit?: number } | void>({
           query: (params) => {
             const searchParam = params?.search ? `search=${encodeURIComponent(params.search)}` : "";
@@ -20,7 +19,6 @@ export const tagsApi = iLoveMemesApi.injectEndpoints({
           providesTags: [TAGS_API],
         }),
 
-        //POST Tags
         createTag: builder.mutation<any, { name: string }>({
             query: (body) => ({
               url: "/tags",
@@ -30,7 +28,7 @@ export const tagsApi = iLoveMemesApi.injectEndpoints({
             invalidatesTags: [TAGS_API],
           }),
       }),
-      overrideExisting: false,
+      overrideExisting: true,
     });
     
 export const { useGetAllTagsQuery, useCreateTagMutation } = tagsApi;

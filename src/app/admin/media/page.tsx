@@ -14,13 +14,13 @@ import { useDataTable } from "@/hooks/use-data-table";
 import { adminFilesColumns } from "@/components/data-table/columns/admin-uploadFiles-columns";
 import { useGetFilesQuery } from "@/redux/services/uploadfile"; 
 import { DataTableToolbar } from "@/components/data-table/data-table-toolbar";
+import { FilesTableSkeleton } from "@/components/data-table/skeletons/file-skeleton";
 
 type FileItem = {
   id: string;
   name: string;
   type: string;
   size?: number;
-  status?: string;
   [key: string]: any;
 }
 
@@ -82,7 +82,7 @@ function MediaContent() {
         </div>
       )}
 
-      {isLoading ? <div>Loading...</div> : <DataTable table={filteredTable} />}
+      {isLoading ? <FilesTableSkeleton/> : <DataTable table={filteredTable} />}
     </DashboardLayout>
   );
 }

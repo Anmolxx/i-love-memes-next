@@ -2,8 +2,8 @@
 
 import {
   useGetTemplatesQuery,
-  useUploadFileMutation,
 } from "@/redux/services/template";
+import { useUploadFileMutation } from "@/redux/services/uploadfile"
 import React, { useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
@@ -26,8 +26,16 @@ const ImageSelector: React.FC<Props> = ({
   const [uploadFile, { isLoading: isUploading }] = useUploadFileMutation();
   const { isAdmin } = useAuthentication();
 
-  const { data: templates } = useGetTemplatesQuery(skipToken, {
-    selectFromResult: ({ data }) => {
+  const { data: templates } = useGetTemplatesQuery(
+    {
+      page: 1,
+      limit: 10,
+      search: "",
+      tags: [],  
+      orderBy: "createdAt",
+      order: "DESC",
+    },
+    {selectFromResult: ({ data }) => {
       return {
         data:
           data?.items?.map((template: any) => {

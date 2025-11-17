@@ -60,11 +60,9 @@ export const memesApi = iLoveMemesApi.injectEndpoints({
         if (orderBy) {
           queryParams.set("orderBy", orderBy);
         }
-        
         if (order) {
           queryParams.set("order", order);
         }
-    
         return { 
           url: `/memes?${queryParams.toString()}`, 
           method: "GET" 
@@ -97,6 +95,7 @@ export const memesApi = iLoveMemesApi.injectEndpoints({
     }),
 
     updateMeme: builder.mutation<any, { slugOrId: string; body: Partial<any> }>({
+      invalidatesTags:[TAG_GET_MEMES],
         query: ({ slugOrId, body }) => ({
           url: `/memes/${slugOrId}`,
           method: "PATCH",
@@ -104,6 +103,7 @@ export const memesApi = iLoveMemesApi.injectEndpoints({
         }),
     }),
   }),
+  overrideExisting: true
 });
 
 export const { useGetMemesQuery, useGetMemeBySlugOrIdQuery, usePostMemeMutation, useDeleteMemeMutation,useUpdateMemeMutation } = memesApi;

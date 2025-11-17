@@ -9,7 +9,6 @@ import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import { toast } from "sonner";
 import useAuthentication from "@/hooks/use-authentication";
-import { skipToken } from "@reduxjs/toolkit/query";
 
 interface Props {
   onSelect: (url: string, id?: string) => void;

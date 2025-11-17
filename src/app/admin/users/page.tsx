@@ -52,7 +52,7 @@ function UsersContent() {
   // Client-side search & sorting
   const [searchQuery, setSearchQuery] = useState("");
   const [orderBy, setOrderBy] = useState<UserOrderBy>("createdAt");
-  const [order, setOrder] = useState<"ASC" | "DESC">("ASC");
+  const [order, setOrder] = useState<"ASC" | "DESC">("DESC");
 
   const updateUrl = (
     newParams: Partial<{

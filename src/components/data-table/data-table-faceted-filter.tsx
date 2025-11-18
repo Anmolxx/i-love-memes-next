@@ -21,6 +21,7 @@ interface DataTableFacetedFilterProps<TData, TValue> {
   title?: string;
   options: Option[];
   onChange?: (selected: string[]) => void;
+  onReset?: () => void;
 }
 
 export function DataTableFacetedFilter<TData, TValue>({
@@ -28,6 +29,7 @@ export function DataTableFacetedFilter<TData, TValue>({
   title,
   options,
   onChange,
+  onReset,
 }: DataTableFacetedFilterProps<TData, TValue>) {
   // Single value instead of a Set
   const selectedValue = column?.getFilterValue() as string | undefined;
@@ -104,7 +106,9 @@ export function DataTableFacetedFilter<TData, TValue>({
                 <CommandSeparator />
                 <CommandGroup>
                   <CommandItem
-                    onSelect={() => column?.setFilterValue(undefined)}
+                    onSelect={onReset ?? (() => {
+                      column?.setFilterValue(undefined)
+                    })}
                     className="justify-center text-center"
                   >
                     Clear filters

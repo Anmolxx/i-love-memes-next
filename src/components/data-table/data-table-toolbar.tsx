@@ -1,4 +1,4 @@
-import { X, ListChevronsUpDown } from "lucide-react";
+import { X, ListChevronsUpDown, Table as TableIcon, Grid, Images } from "lucide-react";
 import { type Table } from "@tanstack/react-table";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,6 +12,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip";
 
 export type FilterOption = {
   label: string;
@@ -47,6 +48,9 @@ type DataTableToolbarProps<TData, TOrderBy extends string> = {
   orderBy?: TOrderBy;
   setOrderBy?: (field: TOrderBy | undefined) => void;
   sortableFields?: readonly TOrderBy[];
+  view?: "table" | "gallery"; 
+  setView?: (view: "table" | "gallery") => void;
+  onReset?: () => void; 
 };
 
 export function DataTableToolbar<TData, TOrderBy extends string>({
@@ -65,6 +69,9 @@ export function DataTableToolbar<TData, TOrderBy extends string>({
   orderBy,
   setOrderBy,
   sortableFields,
+  view = "table",
+  setView,
+  onReset,
 }: DataTableToolbarProps<TData, TOrderBy>) {
   const isFiltered =
     table.getState().columnFilters.length > 0 ||
@@ -73,6 +80,7 @@ export function DataTableToolbar<TData, TOrderBy extends string>({
 
   return (
     <div className="flex items-center justify-between">
+      {/* Left section: search + filters */}
       <div className="flex flex-1 flex-col-reverse items-start gap-y-2 sm:flex-row sm:items-center sm:space-x-2">
         <div className="relative w-[150px] lg:w-[250px]">
           <Input
@@ -126,6 +134,7 @@ export function DataTableToolbar<TData, TOrderBy extends string>({
                 title={item.title}
                 options={item.options}
                 onChange={item.onChange}
+                onReset={onReset}
               />
             ) : null;
           })}
@@ -133,11 +142,11 @@ export function DataTableToolbar<TData, TOrderBy extends string>({
 
         {isFiltered && (
           <Button
-            onClick={() => {
+            onClick={onReset ?? (() => {
               table.resetColumnFilters();
               setServerSearchQuery("");
               if (setSelectedTags) setSelectedTags([]);
-            }}
+            })}
             className="h-8 w-fit px-2"
           >
             Reset
@@ -146,6 +155,7 @@ export function DataTableToolbar<TData, TOrderBy extends string>({
         )}
       </div>
 
+      {/* Right section: sort + view toggle */}
       <div className="flex items-center gap-x-2">
         {sortableFields && (
           <DataTableSort<TOrderBy>
@@ -157,7 +167,43 @@ export function DataTableToolbar<TData, TOrderBy extends string>({
           />
         )}
 
-        <DataTableViewOptions table={table} />
+        {/* View toggle logic */}
+        {setView && (
+          <div className="flex items-center gap-2">
+            {view === "gallery" ? (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setView("table")}
+                    className="flex items-center justify-center cursor-pointer"
+                  >
+                    <TableIcon size={16} />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent sideOffset={4} className="dark:bg-[#202020] border border-gray-200 dark:border-none p-2">Switch to Table View</TooltipContent>
+              </Tooltip>
+            ) : (
+              <>
+                <DataTableViewOptions table={table} />
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setView("gallery")}
+                      className="flex items-center justify-center cursor-pointer"
+                    >
+                      <Images size={16} />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent sideOffset={4} className="dark:bg-[#202020] border border-gray-200 dark:border-none p-2">Switch to Gallery View</TooltipContent>
+                </Tooltip>
+              </>
+            )}
+          </div>
+        )}  
       </div>
     </div>
   );

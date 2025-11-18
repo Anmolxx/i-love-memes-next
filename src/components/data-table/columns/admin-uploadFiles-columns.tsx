@@ -10,6 +10,9 @@ import { DeleteDialog } from "@/components/dialog/delete-dialog";
 import { useDeleteFileMutation } from "@/redux/services/uploadfile";
 import { toast } from "sonner";
 import { Checkbox } from "@/components/ui/checkbox";
+import React from "react";
+import { ImagePopover } from "@/components/ui/extension/image-popover";
+import { Popover, PopoverTrigger } from "@/components/ui/popover";
 
 export interface FileItem {
   id: string;
@@ -19,39 +22,31 @@ export interface FileItem {
 export function adminFilesColumns(): ColumnDef<FileItem>[] {
   return [
     {
-        id: "select",
-        header: ({ table }) => (
-          <Checkbox
-            aria-label="Select all"
-            checked={
-              table.getIsAllPageRowsSelected() ||
-              (table.getIsSomePageRowsSelected() && "indeterminate")
-            }
-            onCheckedChange={(value: boolean | "indeterminate") =>
-              table.toggleAllPageRowsSelected(!!value)
-            }
-          />
-        ),
-        cell: ({ row }) => (
-          <Checkbox
-            aria-label="Select row"
-            checked={row.getIsSelected()}
-            onCheckedChange={(value: boolean | "indeterminate") =>
-              row.toggleSelected(!!value)
-            }
-          />
-        ),
-        enableSorting: false,
-        enableHiding: false,
-        size: 40,
-      },
-    {
-      accessorKey: "file ID",
-      header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="File ID" />
+      id: "select",
+      header: ({ table }) => (
+        <Checkbox
+          aria-label="Select all"
+          checked={
+            table.getIsAllPageRowsSelected() ||
+            (table.getIsSomePageRowsSelected() && "indeterminate")
+          }
+          onCheckedChange={(value) =>
+            table.toggleAllPageRowsSelected(!!value)
+          }
+        />
       ),
-      cell: ({ row }) => <span className="font-mono text-xs">{row.original.id}</span>,
+      cell: ({ row }) => (
+        <Checkbox
+          aria-label="Select row"
+          checked={row.getIsSelected()}
+          onCheckedChange={(value) =>
+            row.toggleSelected(!!value)
+          }
+        />
+      ),
       enableSorting: false,
+      enableHiding: false,
+      size: 40,
     },
 
     {
@@ -61,22 +56,27 @@ export function adminFilesColumns(): ColumnDef<FileItem>[] {
       ),
       cell: ({ row }) => {
         const path = row.original.path;
-
+        const [isOpen, setIsOpen] = React.useState(false);
         return (
-          <img
-            src={path}
-            alt="file preview"
-            className="h-12 w-12 object-cover rounded border"
-            onError={(e) => {
-              (e.currentTarget as HTMLImageElement).src =
-                "https://via.placeholder.com/100?text=Preview";
-            }}
-          />
+          <Popover open={isOpen} onOpenChange={(open) => !open && setIsOpen(false)}>
+              <PopoverTrigger asChild>
+                <img
+                  src={path}
+                  alt="file preview"
+                  className="h-10 w-10 object-cover rounded border cursor-pointer"
+                  onClick={() => setIsOpen(true)}
+                  onError={(e) => {
+                    e.currentTarget.src = "https://via.placeholder.com/100?text=Preview";
+                  }}
+                />
+              </PopoverTrigger>
+          
+              <ImagePopover src={path} />
+            </Popover>
         );
       },
       enableSorting: false,
     },
-
     {
       accessorKey: "file URL",
       header: ({ column }) => (
@@ -127,7 +127,7 @@ const ActionCell = ({ row }: { row: any }) => {
 
         <DropdownMenuContent align="end">
           <DropdownMenuItem className="cursor-pointer" asChild>
-            <a href={file.path} target="_blank" className="cursor-pointer flex gap-2">
+            <a href={file.path} target="_blank" className="flex gap-2">
               <Eye size={16} />
               View File
             </a>
@@ -148,7 +148,7 @@ const ActionCell = ({ row }: { row: any }) => {
         onOpenChange={setShowDeleteDialog}
         showTrigger={false}
         deleteTitle="Delete File"
-        deleteDescription={`Are you sure you want to delete this file? This action cannot be undone.`}
+        deleteDescription="Are you sure you want to delete this file? This action cannot be undone."
         action={handleDelete}
       />
     </div>

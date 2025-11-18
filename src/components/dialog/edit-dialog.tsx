@@ -40,7 +40,7 @@ export function EditDialog<T, Payload>({
   const [selectedTags, setSelectedTags] = useState<string[]>(initialSelected);
   const [isSaving, setIsSaving] = useState(false);
 
-  const { data: tagData } = useGetAllTagsQuery({ page: 1, limit: 100 });
+  const { data: tagData } = useGetAllTagsQuery({ page: 1, limit: 50 });
 
   const finalTags: Tag[] = useMemo(() => {
     if (!tagData?.items) return [];

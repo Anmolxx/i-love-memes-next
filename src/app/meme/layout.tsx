@@ -6,7 +6,7 @@ import ImageSelector from "@/components/memes/ImageSelector";
 import TextStyles from "@/components/memes/TextStyles";
 import ImageControls from "@/components/memes/ImageControls";
 import Stickers from "@/components/memes/Stickers";
-import Header from "@/components/ui/extension/Header";
+import Header from "@/components/memes/Header";
 import { Footer } from "@/sections/Footer";
 import { useParams, useRouter } from "next/navigation";
 import { useGetTemplateByIdOrSlugQuery } from "@/redux/services/template";
@@ -396,6 +396,7 @@ export default function MemeLayout({ children }: LayoutProps) {
           canvasRef={canvasRef}
           onReset={resetCanvas}
           backgroundImageId={selectedImageId}
+          templateSlugToEdit={currentSlug}
         />
 
         <div className="flex flex-1 flex-col md:flex-row relative overflow-hidden items-stretch">

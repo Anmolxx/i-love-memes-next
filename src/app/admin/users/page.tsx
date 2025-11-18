@@ -126,6 +126,12 @@ function UsersContent() {
     },
   ];
 
+  const handleReset = () => {
+    table.resetColumnFilters();
+    setSearchQuery("");
+    updateUrl({ status: "1" }); 
+  };
+  
   const UserToolbar = (
     <DataTableToolbar<typeof tableData[0], UserOrderBy>
       table={table}
@@ -141,6 +147,7 @@ function UsersContent() {
       orderBy={rawOrderBy as UserOrderBy}
       setOrderBy={() => {}}
       sortableFields={VALID_ORDER_BY}
+      onReset={handleReset}
     />
   );
 

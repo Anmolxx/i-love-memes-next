@@ -176,7 +176,7 @@ export function DataTableSort<TOrderBy extends string>({
             className="h-8 w-8 rounded-md cursor-pointer"
             onClick={handleDeleteSort}
           >
-            <Trash2 className="h-4 w-4 text-white" />
+            <Trash2 className="h-4 w-4 dark:text-white text-black" />
           </Button>
         </div>
 

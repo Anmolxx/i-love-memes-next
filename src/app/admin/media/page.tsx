@@ -28,18 +28,19 @@ function MediaContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
 
-  const rawLimit = parseInt(searchParams.get("limit") ?? "10");
+  const rawLimit = parseInt(searchParams.get("limit") ?? "20");
   const limit = rawLimit > 50 ? 10 : rawLimit;
   const page = parseInt(searchParams.get("page") ?? "1");
-
+  const [searchQuery, setSearchQuery] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [view, setView] = useState<"table" | "gallery">("gallery");
+  const viewDefaultSize = view === "gallery" ? 8 : 10;
+  
   const { data, isLoading } = useGetFilesQuery({ page, limit });
   const tableData = useMemo(() => data?.items ?? [], [data?.items]);
   const pageCount = data?.meta?.totalPages ?? 0;
-
   const tableColumns = useMemo(() => adminFilesColumns(), []);
-  
-  const [searchQuery, setSearchQuery] = useState("");
-  const [debouncedSearch, setDebouncedSearch] = useState("");
+      
 
   useEffect(() => {
     const timer = setTimeout(() => setDebouncedSearch(searchQuery), 500);
@@ -75,6 +76,8 @@ function MediaContent() {
         <div className="mb-4">
           <DataTableToolbar
             table={filteredTable}
+            view={view}
+            setView={setView}
             searchPlaceholder="Search Media"
             serverSearchQuery={searchQuery}
             setServerSearchQuery={setSearchQuery}
@@ -82,7 +85,7 @@ function MediaContent() {
         </div>
       )}
 
-      {isLoading ? <FilesTableSkeleton/> : <DataTable table={filteredTable} />}
+      {isLoading ? <FilesTableSkeleton/> : <DataTable table={filteredTable} view={view}/>}
     </DashboardLayout>
   );
 }

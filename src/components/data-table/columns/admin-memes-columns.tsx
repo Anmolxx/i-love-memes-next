@@ -19,6 +19,9 @@ import { toast } from "sonner";
 import { Meme } from "@/utils/dtos/meme.dto";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import React from "react";
+import { Popover, PopoverTrigger } from "@/components/ui/popover";
+import { ImagePopover } from "@/components/ui/extension/image-popover";
 
 export function adminMemeColumns(): ColumnDef<Meme>[] {
   return [
@@ -56,18 +59,25 @@ export function adminMemeColumns(): ColumnDef<Meme>[] {
       ),
       cell: ({ row }) => {
         const meme = row.original;
-        const image = meme.file?.path;
+        const path = meme.file?.path;
+        const [isOpen, setIsOpen] = React.useState(false);
         return (
           <div className="space-x-4 flex items-center">
-            <img
-              src={image || "https://picsum.photos/id/1/200/300"}
-              alt={row.getValue("title")}
-              onError={(e) => {
-                (e.currentTarget as HTMLImageElement).src =
-                  "https://picsum.photos/id/1/200/300";
-              }}
-              className="h-10 w-10 rounded-md object-cover border"
-            />
+            <Popover open={isOpen} onOpenChange={(open) => !open && setIsOpen(false)}>
+                <PopoverTrigger asChild>
+                  <img
+                    src={path}
+                    alt="file preview"
+                    className="h-10 w-10 object-cover rounded border cursor-pointer"
+                    onClick={() => setIsOpen(true)}
+                    onError={(e) => {
+                      e.currentTarget.src = "https://via.placeholder.com/100?text=Preview";
+                    }}
+                  />
+                </PopoverTrigger>
+            
+                <ImagePopover src={path} />
+              </Popover>
             <button
               onClick={() => window.open(`/community/${meme.slug}`, "_blank")}
               className="hover:underline font-medium text-left"

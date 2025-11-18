@@ -19,6 +19,9 @@ import { Template } from "@/utils/dtos/template.dto";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { EditDialog } from "@/components/dialog/edit-dialog";
+import { Popover, PopoverTrigger } from "@/components/ui/popover";
+import { ImagePopover } from "@/components/ui/extension/image-popover";
+import React from "react";
 
 export function adminTemplateColumns(): ColumnDef<Template>[] {
   return [
@@ -55,17 +58,25 @@ export function adminTemplateColumns(): ColumnDef<Template>[] {
         <DataTableColumnHeader column={column} title="Template Name" />
       ),
       cell: ({ row }) => {
-        const image = row.original.config.backgroundImage?.src;
+        const path = row.original.config.backgroundImage?.src;
+        const [isOpen, setIsOpen] = React.useState(false);
         return (
           <div className="space-x-4 flex items-center">
-            <img
-              src={image || "https://picsum.photos/id/1/200/300"}
-              alt={row.getValue("title")}
-              onError={(e) => {
-                  (e.currentTarget as HTMLImageElement).src = "https://picsum.photos/id/1/200/300";
-                }}
-              className="h-10 w-10 rounded-md object-cover border"
-            />
+            <Popover open={isOpen} onOpenChange={(open) => !open && setIsOpen(false)}>
+                <PopoverTrigger asChild>
+                  <img
+                    src={path}
+                    alt="file preview"
+                    className="h-10 w-10 object-cover rounded border cursor-pointer"
+                    onClick={() => setIsOpen(true)}
+                    onError={(e) => {
+                      e.currentTarget.src = "https://via.placeholder.com/100?text=Preview";
+                    }}
+                  />
+                </PopoverTrigger>
+            
+                <ImagePopover src={path} />
+              </Popover>
             <button
                 onClick={() => window.open(`/meme/${row.original.slug}`, "_blank")}
                 className="hover:underline font-medium text-left"
@@ -194,10 +205,12 @@ const ActionCell = ({ row }: { row: any }) => {
               View Template
             </Link>
           </DropdownMenuItem>
-          <DropdownMenuItem className="cursor-pointer" onClick={() => setShowEditDialog(true)}>
+          <DropdownMenuItem asChild>
+            <Link href={`/meme/${template.slug}`} target="_blank">
               <Edit size={16} />
-              <span className="cursor-pointer">Edit Template</span>
-            </DropdownMenuItem>
+              Edit Template
+            </Link>
+          </DropdownMenuItem>
           <DropdownMenuItem className="cursor-pointer" onClick={() => setShowDeleteDialog(true)}>
             <Trash2 className="text-destructive" size={16} />
             <span className="text-destructive cursor-pointer">Delete Template</span>

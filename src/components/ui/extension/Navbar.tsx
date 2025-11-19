@@ -22,33 +22,33 @@ export function Navbar() {
                     </button>
 
                     {/* Desktop navigation - left side */}
-                    <div className="hidden md:flex items-center gap-6 text-base font-medium font-serif">
-                      <Link 
-                        href="/" 
+                    <div className="hidden md:flex items-center gap-4 text-base font-medium font-serif">
+                      <Link
+                        href="/"
                         className="text-[#4b087ea5] hover:text-[#4b087e] transition-colors duration-200"
                       >
                         Home
                       </Link>
-                      <Link 
-                          href="/meme" 
+                      <Link
+                          href="/meme"
                           className="text-[#4b087ea5] hover:text-[#4b087e] transition-colors duration-200"
                         >
                           Create Humour
                         </Link>
-                      <Link 
-                        href="/templates" 
+                      <Link
+                        href="/templates"
                         className="text-[#4b087ea5] hover:text-[#4b087e] transition-colors duration-200"
                       >
                         Templates
                       </Link>
-                      <Link 
-                        href="/community" 
+                      <Link
+                        href="/community"
                         className="text-[#4b087ea5] hover:text-[#4b087e] transition-colors duration-200"
                       >
                         Community
                       </Link>
-                      <Link 
-                        href="https://www.jewelrycandles.com/" 
+                      <Link
+                        href="https://www.jewelrycandles.com/"
                         className="text-[#4b087ea5] hover:text-[#4b087e] transition-colors duration-200"
                       >
                         Meme Merch
@@ -89,36 +89,36 @@ export function Navbar() {
                         </Link>
                       </div>
                     </div>
-                    
+
                 </div>
 
                 {/* Mobile menu */}
                 {isMenuOpen && (
                     <div className="md:hidden mt-4 pb-4 border-t border-black/10">
                         <div className="flex flex-col gap-4 pt-4">
-                            <Link 
-                                href="/" 
+                            <Link
+                                href="/"
                                 className="hover:text-black/80 text-black/60 py-2"
                                 onClick={() => setIsMenuOpen(false)}
                             >
                                 Home
                             </Link>
-                            <Link 
-                                href="/meme" 
+                            <Link
+                                href="/meme"
                                 className="hover:text-black/80 text-black/60 py-2"
                                 onClick={() => setIsMenuOpen(false)}
                             >
                                 Templates
                             </Link>
-                            <Link 
-                                href="/community" 
+                            <Link
+                                href="/community"
                                 className="hover:text-black/80 text-black/60 py-2"
                                 onClick={() => setIsMenuOpen(false)}
                             >
                                 Community
                             </Link>
-                            <Link 
-                                href="/merch" 
+                            <Link
+                                href="/merch"
                                 className="hover:text-black/80 text-black/60 py-2"
                                 onClick={() => setIsMenuOpen(false)}
                             >

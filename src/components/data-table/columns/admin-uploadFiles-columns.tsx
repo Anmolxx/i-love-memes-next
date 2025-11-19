@@ -47,7 +47,6 @@ export function adminFilesColumns(): ColumnDef<FileItem>[] {
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title="Preview" />
       ),
-      // Use the new functional component here
       cell: ({ row }) => <FilePreviewCell file={row.original} />, 
       enableSorting: false,
     },

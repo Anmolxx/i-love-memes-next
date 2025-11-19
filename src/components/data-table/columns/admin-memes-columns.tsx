@@ -13,7 +13,7 @@ import { EllipsisVertical, Eye, Trash2, Edit, CirclePlus } from "lucide-react";
 import Link from "next/link";
 import { useState, useCallback } from "react";
 import { DeleteDialog } from "@/components/dialog/delete-dialog";
-import { EditDialog } from "@/components/dialog/edit-dialog";
+import { EditDialog } from "@/components/dialog/edit-template";
 import { useDeleteMemeMutation, useUpdateMemeMutation } from "@/redux/services/meme";
 import { toast } from "sonner";
 import { Meme } from "@/utils/dtos/meme.dto";
@@ -207,15 +207,15 @@ const ActionCell = ({ row }: { row: any }) => {
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
-          <DropdownMenuItem asChild>
+          <DropdownMenuItem className="cursor-pointer" asChild>
             <Link href={`/community/${meme.slug}`} target="_blank">
               <Eye size={16} /> View Meme
             </Link>
           </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => setShowEditDialog(true)}>
+          <DropdownMenuItem className="cursor-pointer" onClick={() => setShowEditDialog(true)}>
               <Edit size={16} /> <span>Edit Meme</span>
             </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => setShowDeleteDialog(true)}>
+          <DropdownMenuItem className="cursor-pointer" onClick={() => setShowDeleteDialog(true)}>
             <Trash2 className="text-destructive" size={16} /> 
             <span className="text-destructive">Delete Meme</span>
           </DropdownMenuItem>

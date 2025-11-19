@@ -30,7 +30,6 @@ interface DeleteDialogProps
   showTrigger?: boolean;
   onSuccess?: () => void;
   deleteDescription?: string;
-  //to do change the promise type
   deleteTitle?: string;
   action: () => Promise<any>;
 }

@@ -126,15 +126,13 @@ const ActionCell = ({ row }: any) => {
     const [showDeleteDialog, setShowDeleteDialog] = useState(false);
     const [showEditDialog, setShowEditDialog] = useState(false);
 
-    const handleDeleteUser = useCallback((userId: string) => {
-        deleteUser(userId)
-            .unwrap()
-            .then((res) => {
-                toast.success(res.data.message || "User deleted successfully");
-            })
-            .catch((err) => {
-                toast.error(err?.data?.error?.message || "Something went wrong");
-            });
+    const handleDeleteUser = useCallback(async (userId: string) => {
+      try {
+          await deleteUser(userId).unwrap();
+          toast.success("User deleted successfully!");
+        } catch (err: any) {
+          toast.error(err?.data?.error?.message || "Something went wrong");
+        }
     }, [deleteUser]);
 
     return (
@@ -151,12 +149,12 @@ const ActionCell = ({ row }: any) => {
                         </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
-                        <DropdownMenuItem onSelect={() => setShowEditDialog(true)}>
-                            <Eye className="" size={16} />
-                            <span>Edit User</span>
+                        <DropdownMenuItem className="cursor-pointer" onSelect={() => setShowEditDialog(true)}>
+                            <Eye className="cursor-pointer" size={16} />
+                            <span className="cursor-pointer">Edit User</span>
                         </DropdownMenuItem>
 
-                        <DropdownMenuItem onSelect={() => setShowDeleteDialog(true)}>
+                        <DropdownMenuItem className="cursor-pointer" onSelect={() => setShowDeleteDialog(true)}>
                             <Trash2 className="text-destructive" size={16} />
                             <span className="text-destructive">Delete User</span>
                         </DropdownMenuItem>
@@ -168,7 +166,7 @@ const ActionCell = ({ row }: any) => {
                 showTrigger={false}
                 onOpenChange={setShowDeleteDialog}
                 onSuccess={() => console.log("success")}
-                action={async () => await handleDeleteUser(row.original.id)}
+                action={() => handleDeleteUser(row.original.id)}
                 deleteDescription="This action cannot be undone. This will permanently delete this user from our servers."
             />
             <EditUserDialog

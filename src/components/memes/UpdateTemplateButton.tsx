@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Edit } from "lucide-react";
 import { Canvas } from "fabric";
 import { toast } from "sonner";
-import { EditDialog } from "@/components/dialog/edit-dialog";
+import { EditDialog } from "@/components/dialog/edit-template";
 import {  useGetTemplateByIdOrSlugQuery, useUpdateTemplateMutation } from "@/redux/services/template";
 
 interface UpdateTemplateButtonProps {

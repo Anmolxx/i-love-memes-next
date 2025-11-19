@@ -49,7 +49,7 @@ function UsersContent() {
     const rawFirst = searchParams.get("firstName") ?? "";
     const rawLast = searchParams.get("lastName") ?? "";
     const rawEmail = searchParams.get("email") ?? "";
-    const rawStatus = searchParams.get("status") ?? "1";
+    const rawStatus = searchParams.get("status") ?? "";
     const rawRole = searchParams.get("role") ?? "";
 
     const page = Math.max(1, parseInt(rawPage));
@@ -158,7 +158,7 @@ function UsersContent() {
     const handleReset = () => {
         table.resetColumnFilters();
         setSearchQuery("");
-        updateUrl({ status: "1", role: "" }); 
+        updateUrl({ status: "", role: "" }); 
     };
     
     const UserToolbar = (

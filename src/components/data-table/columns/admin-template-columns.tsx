@@ -17,7 +17,7 @@ import { useDeleteTemplateMutation, useUpdateTemplateMutation } from "@/redux/se
 import { toast } from "sonner";
 import { Template } from "@/utils/dtos/template.dto";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { EditDialog } from "@/components/dialog/edit-dialog";
+import { EditDialog } from "@/components/dialog/edit-template";
 import { Popover, PopoverTrigger } from "@/components/ui/popover";
 import { ImagePopover } from "@/components/ui/extension/image-popover";
 import React from "react";
@@ -154,15 +154,13 @@ const ActionCell = ({ row }: { row: any }) => {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
 
-  const handleDeleteTemplate = useCallback(() => {
-    deleteTemplate(template.id)
-      .unwrap()
-      .then((res) => {
-        toast.success(res.data?.message || "Template deleted successfully");
-      })
-      .catch((err) => {
+  const handleDeleteTemplate = useCallback(async () => {
+    try {
+        await deleteTemplate(template.id).unwrap();
+        toast.success("Template deleted successfully!");
+      } catch (err: any) {
         toast.error(err?.data?.error?.message || "Something went wrong");
-      });
+      }
   }, [template.id, deleteTemplate]);
 
   return (
@@ -181,7 +179,7 @@ const ActionCell = ({ row }: { row: any }) => {
               View Template
             </Link>
           </DropdownMenuItem>
-          <DropdownMenuItem asChild>
+          <DropdownMenuItem className="cursor-pointer" asChild>
             <Link href={`/meme/${template.slug}`} target="_blank">
               <Edit size={16} />
               Edit Template
@@ -200,9 +198,7 @@ const ActionCell = ({ row }: { row: any }) => {
         showTrigger={false}
         deleteTitle="Delete Template"
         deleteDescription={`Are you sure you want to delete "${template.title}"? This action cannot be undone.`}
-        action={async () => {
-          await handleDeleteTemplate();
-        }}
+        action={handleDeleteTemplate}
       />
 
       <EditDialog

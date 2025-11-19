@@ -1,5 +1,25 @@
 import { TAG_GET_USERS } from "@/contracts/iLoveMemesApiTags";
 import { iLoveMemesApi } from ".";
+interface UserUpdateBody {
+  email: string;
+  password: string;
+  firstName: string;
+  lastName: string;
+  photo?: {
+    id: string;
+  };
+  role: {
+    id: any;
+  };
+  status: {
+    id: any; 
+  };
+}
+
+interface UpdateUserArgs {
+    id: number | string; 
+    body: UserUpdateBody;
+}
 
 export const userApi = iLoveMemesApi.injectEndpoints({
   endpoints: (builder) => ({
@@ -62,9 +82,18 @@ export const userApi = iLoveMemesApi.injectEndpoints({
         method: "DELETE",
       }),
     }),
+
+    updateUser: builder.mutation<any, UpdateUserArgs>({
+        invalidatesTags: [TAG_GET_USERS],
+        query: ({ id, body }) => ({
+          url: `/users/${id}`, 
+          method: "PATCH", 
+          body, 
+        }),
+      }),
   }),
   overrideExisting: true,
 });
 
-export const { useGetUsersQuery, useAddUserMutation, useDeleteUserMutation } =
+export const { useGetUsersQuery, useAddUserMutation, useDeleteUserMutation, useUpdateUserMutation } =
   userApi;

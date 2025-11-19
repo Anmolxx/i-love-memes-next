@@ -80,7 +80,7 @@ useEffect(() => {
   if (debouncedSearch !== initialSearch) {
     updateUrl({ search: debouncedSearch });
   }
-}, [debouncedSearch]);
+}, [debouncedSearch, initialSearch, updateUrl]);
 
   const { data, isLoading } = useGetTemplatesQuery({
     page,
@@ -116,6 +116,7 @@ useEffect(() => {
       orderBy={orderBy}
       setOrderBy={(ob) => updateUrl({ orderBy: ob })}
       sortableFields={VALID_ORDER_BY}
+      view="table"
     />
   );
 

@@ -9,7 +9,6 @@ import { useState, useCallback } from "react";
 import { DeleteDialog } from "@/components/dialog/delete-dialog";
 import { useDeleteFileMutation } from "@/redux/services/uploadfile";
 import { toast } from "sonner";
-import { Checkbox } from "@/components/ui/checkbox";
 import React from "react";
 import { ImagePopover } from "@/components/ui/extension/image-popover";
 import { Popover, PopoverTrigger } from "@/components/ui/popover";
@@ -19,62 +18,37 @@ export interface FileItem {
   path: string;
 }
 
+const FilePreviewCell = ({ file }: { file: FileItem }) => {
+  const path = file.path;
+  const [isOpen, setIsOpen] = React.useState(false); 
+  
+  return (
+    <Popover open={isOpen} onOpenChange={(open) => !open && setIsOpen(false)}>
+      <PopoverTrigger asChild>
+        <img
+          src={path}
+          alt="file preview"
+          className="h-10 w-10 object-cover rounded border cursor-pointer"
+          onClick={() => setIsOpen(true)}
+          onError={(e) => {
+            e.currentTarget.src = "https://via.placeholder.com/100?text=Preview";
+          }}
+        />
+      </PopoverTrigger>
+      <ImagePopover src={path} />
+    </Popover>
+  );
+};
+
 export function adminFilesColumns(): ColumnDef<FileItem>[] {
   return [
-    {
-      id: "select",
-      header: ({ table }) => (
-        <Checkbox
-          aria-label="Select all"
-          checked={
-            table.getIsAllPageRowsSelected() ||
-            (table.getIsSomePageRowsSelected() && "indeterminate")
-          }
-          onCheckedChange={(value) =>
-            table.toggleAllPageRowsSelected(!!value)
-          }
-        />
-      ),
-      cell: ({ row }) => (
-        <Checkbox
-          aria-label="Select row"
-          checked={row.getIsSelected()}
-          onCheckedChange={(value) =>
-            row.toggleSelected(!!value)
-          }
-        />
-      ),
-      enableSorting: false,
-      enableHiding: false,
-      size: 40,
-    },
-
     {
       accessorKey: "preview",
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title="Preview" />
       ),
-      cell: ({ row }) => {
-        const path = row.original.path;
-        const [isOpen, setIsOpen] = React.useState(false);
-        return (
-          <Popover open={isOpen} onOpenChange={(open) => !open && setIsOpen(false)}>
-              <PopoverTrigger asChild>
-                <img
-                  src={path}
-                  alt="file preview"
-                  className="h-10 w-10 object-cover rounded border cursor-pointer"
-                  onClick={() => setIsOpen(true)}
-                  onError={(e) => {
-                    e.currentTarget.src = "https://via.placeholder.com/100?text=Preview";
-                  }}
-                />
-              </PopoverTrigger>
-          
-              <ImagePopover src={path} />
-            </Popover>
-        );
-      },
+      // Use the new functional component here
+      cell: ({ row }) => <FilePreviewCell file={row.original} />, 
       enableSorting: false,
     },
     {
@@ -85,7 +59,7 @@ export function adminFilesColumns(): ColumnDef<FileItem>[] {
       cell: ({ row }) => (
         <a
           href={row.original.path}
-          className="text-blue-600 underline text-sm"
+          className="text-blue-600 underline text-sm cursor-pointer"
           target="_blank"
         >
           {row.original.path}

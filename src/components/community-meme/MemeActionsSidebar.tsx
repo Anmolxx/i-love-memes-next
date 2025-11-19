@@ -9,8 +9,10 @@ interface MemeActionsSidebarProps {
 }
 
 export default function MemeActionsSidebar({ meme, handleCaptionClick }: MemeActionsSidebarProps) {
+  const istemplate= meme?.template;
   return (
     <div className="flex flex-col gap-4 w-full md:flex-[1]">
+      {istemplate && (
       <div
         onClick={handleCaptionClick}
         className="flex items-center justify-center gap-2 px-4 py-3 rounded-full text-sm font-medium text-white shadow-sm cursor-pointer"
@@ -22,6 +24,7 @@ export default function MemeActionsSidebar({ meme, handleCaptionClick }: MemeAct
       >
         Caption this Meme
       </div>
+      )}
 
       <div className="bg-white p-4 rounded-xl shadow-md border border-gray-200 text-sm">
         <div className="flex flex-col gap-1">

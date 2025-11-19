@@ -16,76 +16,50 @@ import { DeleteDialog } from "@/components/dialog/delete-dialog";
 import { useDeleteTemplateMutation, useUpdateTemplateMutation } from "@/redux/services/template";
 import { toast } from "sonner";
 import { Template } from "@/utils/dtos/template.dto";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { EditDialog } from "@/components/dialog/edit-dialog";
 import { Popover, PopoverTrigger } from "@/components/ui/popover";
 import { ImagePopover } from "@/components/ui/extension/image-popover";
 import React from "react";
 
+const TemplateTitleCell = ({ template }: { template: Template }) => {
+  const path = template.config.backgroundImage?.src;
+  const [isOpen, setIsOpen] = React.useState(false);
+  
+  return (
+    <div className="space-x-4 flex items-center">
+      <Popover open={isOpen} onOpenChange={(open) => !open && setIsOpen(false)}>
+        <PopoverTrigger asChild>
+          <img
+            src={path}
+            alt="file preview"
+            className="h-10 w-10 object-cover rounded border cursor-pointer"
+            onClick={() => setIsOpen(true)}
+            onError={(e) => {
+              e.currentTarget.src = "https://via.placeholder.com/100?text=Preview";
+            }}
+          />
+        </PopoverTrigger>
+        <ImagePopover src={path} />
+      </Popover>
+      <button
+        onClick={() => window.open(`/meme/${template.slug}`, "_blank")}
+        className="hover:underline font-medium text-left cursor-pointer"
+      >
+        {template.title}
+      </button>
+    </div>
+  );
+};
+
 export function adminTemplateColumns(): ColumnDef<Template>[] {
   return [
-    {
-        id: "select",
-        header: ({ table }) => (
-          <Checkbox
-            aria-label="Select all"
-            checked={
-              table.getIsAllPageRowsSelected() ||
-              (table.getIsSomePageRowsSelected() && "indeterminate")
-            }
-            onCheckedChange={(value: boolean | "indeterminate") =>
-              table.toggleAllPageRowsSelected(!!value)
-            }
-          />
-        ),
-        cell: ({ row }) => (
-          <Checkbox
-            aria-label="Select row"
-            checked={row.getIsSelected()}
-            onCheckedChange={(value: boolean | "indeterminate") =>
-              row.toggleSelected(!!value)
-            }
-          />
-        ),
-        enableSorting: false,
-        enableHiding: false,
-        size: 40,
-      },
     {
       accessorKey: "title",
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title="Template Name" />
       ),
-      cell: ({ row }) => {
-        const path = row.original.config.backgroundImage?.src;
-        const [isOpen, setIsOpen] = React.useState(false);
-        return (
-          <div className="space-x-4 flex items-center">
-            <Popover open={isOpen} onOpenChange={(open) => !open && setIsOpen(false)}>
-                <PopoverTrigger asChild>
-                  <img
-                    src={path}
-                    alt="file preview"
-                    className="h-10 w-10 object-cover rounded border cursor-pointer"
-                    onClick={() => setIsOpen(true)}
-                    onError={(e) => {
-                      e.currentTarget.src = "https://via.placeholder.com/100?text=Preview";
-                    }}
-                  />
-                </PopoverTrigger>
-            
-                <ImagePopover src={path} />
-              </Popover>
-            <button
-                onClick={() => window.open(`/meme/${row.original.slug}`, "_blank")}
-                className="hover:underline font-medium text-left"
-              >
-                {row.getValue("title")}
-              </button>
-          </div>
-        );
-      },
+      cell: ({ row }) => <TemplateTitleCell template={row.original} />,
       enableSorting: false,
     },
     {
@@ -101,6 +75,7 @@ export function adminTemplateColumns(): ColumnDef<Template>[] {
         );
       },
       enableSorting: false,
+      enableHiding: false,
     },
     {
         id: "tags",
@@ -111,7 +86,7 @@ export function adminTemplateColumns(): ColumnDef<Template>[] {
           const tags = row.original.tags?.filter(tag => !tag.deletedAt) ?? [];
           const displayedTags = tags.slice(0, 2);
           const hiddenTags = tags.slice(2);
-      
+        
           return (
             <div className="flex items-center gap-1">
               {displayedTags.map(tag => (
@@ -122,7 +97,7 @@ export function adminTemplateColumns(): ColumnDef<Template>[] {
                   #{tag.name}
                 </span>
               ))}
-            
+              
               {hiddenTags.length > 0 && (
                 <Tooltip>
                   <TooltipTrigger asChild>
@@ -145,10 +120,11 @@ export function adminTemplateColumns(): ColumnDef<Template>[] {
                   </TooltipContent>
                 </Tooltip>
               )}
-            </div>  
+            </div> 
           )
         },
         enableSorting: false, 
+        enableHiding: false,
       },
     {
       accessorKey: "createdAt",

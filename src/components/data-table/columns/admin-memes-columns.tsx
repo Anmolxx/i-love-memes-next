@@ -17,76 +17,51 @@ import { EditDialog } from "@/components/dialog/edit-dialog";
 import { useDeleteMemeMutation, useUpdateMemeMutation } from "@/redux/services/meme";
 import { toast } from "sonner";
 import { Meme } from "@/utils/dtos/meme.dto";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import React from "react";
 import { Popover, PopoverTrigger } from "@/components/ui/popover";
 import { ImagePopover } from "@/components/ui/extension/image-popover";
 
+const MemeTitleCell = ({ meme }: { meme: Meme }) => {
+  const path = meme.file?.path;
+  
+  const [isOpen, setIsOpen] = useState(false); 
+
+  return (
+    <div className="space-x-4 flex items-center">
+      <Popover open={isOpen} onOpenChange={(open) => !open && setIsOpen(false)}>
+        <PopoverTrigger asChild>
+          <img
+            src={path}
+            alt="file preview"
+            className="h-10 w-10 object-cover rounded border cursor-pointer"
+            onClick={() => setIsOpen(true)}
+            onError={(e) => {
+              e.currentTarget.src = "https://via.placeholder.com/100?text=Preview";
+            }}
+          />
+        </PopoverTrigger>
+        <ImagePopover src={path} />
+      </Popover>
+      <button
+        onClick={() => window.open(`/community/${meme.slug}`, "_blank")}
+        className="hover:underline font-medium text-left cursor-pointer"
+      >
+        {meme.title}
+      </button>
+    </div>
+  );
+};
+
+
 export function adminMemeColumns(): ColumnDef<Meme>[] {
   return [
-    {
-      id: "select",
-      header: ({ table }) => (
-        <Checkbox
-          aria-label="Select all"
-          checked={
-            table.getIsAllPageRowsSelected() ||
-            (table.getIsSomePageRowsSelected() && "indeterminate")
-          }
-          onCheckedChange={(value: boolean | "indeterminate") =>
-            table.toggleAllPageRowsSelected(!!value)
-          }
-        />
-      ),
-      cell: ({ row }) => (
-        <Checkbox
-          aria-label="Select row"
-          checked={row.getIsSelected()}
-          onCheckedChange={(value: boolean | "indeterminate") =>
-            row.toggleSelected(!!value)
-          }
-        />
-      ),
-      enableSorting: false,
-      enableHiding: false,
-      size: 40,
-    },
     {
       accessorKey: "title",
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title="Meme Title" />
       ),
-      cell: ({ row }) => {
-        const meme = row.original;
-        const path = meme.file?.path;
-        const [isOpen, setIsOpen] = React.useState(false);
-        return (
-          <div className="space-x-4 flex items-center">
-            <Popover open={isOpen} onOpenChange={(open) => !open && setIsOpen(false)}>
-                <PopoverTrigger asChild>
-                  <img
-                    src={path}
-                    alt="file preview"
-                    className="h-10 w-10 object-cover rounded border cursor-pointer"
-                    onClick={() => setIsOpen(true)}
-                    onError={(e) => {
-                      e.currentTarget.src = "https://via.placeholder.com/100?text=Preview";
-                    }}
-                  />
-                </PopoverTrigger>
-            
-                <ImagePopover src={path} />
-              </Popover>
-            <button
-              onClick={() => window.open(`/community/${meme.slug}`, "_blank")}
-              className="hover:underline font-medium text-left"
-            >
-              {row.getValue("title")}
-            </button>
-          </div>
-        );
-      },
+      // 💡 FIX: Use the new React component here
+      cell: ({ row }) => <MemeTitleCell meme={row.original} />, 
       enableSorting: false,
     },
     {
@@ -100,6 +75,7 @@ export function adminMemeColumns(): ColumnDef<Meme>[] {
         </span>
       ),
       enableSorting: false, 
+      enableHiding: false,
     },
     {
       accessorKey: "Created By",
@@ -116,6 +92,8 @@ export function adminMemeColumns(): ColumnDef<Meme>[] {
           </span>
         );
       },
+      enableSorting: false, 
+      enableHiding: false,
     },
     {
       accessorKey: "Credentials",
@@ -124,6 +102,7 @@ export function adminMemeColumns(): ColumnDef<Meme>[] {
       ),
       cell: ({ row }) => <span className="text-sm">{row.original.author.email}</span>,
       enableSorting: false, 
+      enableHiding: false,
     },
     {
       id: "tags",
@@ -171,7 +150,8 @@ export function adminMemeColumns(): ColumnDef<Meme>[] {
           </div>  
         );
       },
-      enableSorting: false, 
+      enableSorting: false,
+      enableHiding: false, 
     },
     {
       accessorKey: "createdAt",

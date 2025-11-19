@@ -3,7 +3,7 @@ import {
   InteractionSummary,
   PostInteractionBody,
 } from "@/types/meme-types";
-import { TAG_MEME_INTERACTION_SUMMARY } from "@/contracts/iLoveMemesApiTags"; 
+import { TAG_GET_MEMES, TAG_MEME_INTERACTION_SUMMARY } from "@/contracts/iLoveMemesApiTags"; 
 
 export const memeInteractionsApi = iLoveMemesApi.injectEndpoints({
   endpoints: (builder) => ({
@@ -15,7 +15,8 @@ export const memeInteractionsApi = iLoveMemesApi.injectEndpoints({
         body,
       }),
       invalidatesTags: (result, error, { memeId }) => [
-        { type: TAG_MEME_INTERACTION_SUMMARY, id: memeId }
+        { type: TAG_MEME_INTERACTION_SUMMARY, id: memeId },
+        TAG_GET_MEMES
       ],
     }),
 
@@ -41,7 +42,8 @@ export const memeInteractionsApi = iLoveMemesApi.injectEndpoints({
         method: "DELETE",
       }),
       invalidatesTags: (result, error, { memeId }) => [
-        { type: TAG_MEME_INTERACTION_SUMMARY, id: memeId }
+        { type: TAG_MEME_INTERACTION_SUMMARY, id: memeId },
+        TAG_GET_MEMES
       ],
     }),
   }),

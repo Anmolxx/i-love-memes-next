@@ -59,7 +59,7 @@ function MemesContent() {
   const initialSearch = searchParams.get("search") ?? "";
   const [searchQuery, setSearchQuery] = useState(initialSearch);
   const debouncedSearch = useDebounce(searchQuery, 600);
-
+  
   const updateUrl = useCallback(
     (
       newParams: Partial<{
@@ -96,7 +96,7 @@ function MemesContent() {
     if (debouncedSearch !== initialSearch) {
       updateUrl({ search: debouncedSearch });
     }
-  }, [debouncedSearch]);
+  }, [debouncedSearch, updateUrl, initialSearch]);
   
   const { data, isLoading } = useGetMemesQuery({
     page,
@@ -133,6 +133,7 @@ function MemesContent() {
       orderBy={orderBy}
       setOrderBy={(ob) => updateUrl({ orderBy: ob })}
       sortableFields={VALID_ORDER_BY}
+      view= "table"
     />
   );
 

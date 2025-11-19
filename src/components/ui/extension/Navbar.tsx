@@ -30,7 +30,13 @@ export function Navbar() {
                         Home
                       </Link>
                       <Link 
-                        href="/meme" 
+                          href="/meme" 
+                          className="text-[#4b087ea5] hover:text-[#4b087e] transition-colors duration-200"
+                        >
+                          Create Humour
+                        </Link>
+                      <Link 
+                        href="/templates" 
                         className="text-[#4b087ea5] hover:text-[#4b087e] transition-colors duration-200"
                       >
                         Templates
@@ -42,7 +48,7 @@ export function Navbar() {
                         Community
                       </Link>
                       <Link 
-                        href="/merch" 
+                        href="https://www.jewelrycandles.com/" 
                         className="text-[#4b087ea5] hover:text-[#4b087e] transition-colors duration-200"
                       >
                         Meme Merch

@@ -36,8 +36,8 @@ export default function CommunityGallery(): JSX.Element {
   const [debouncedSearch, setDebouncedSearch] = useState(searchQuery);
 
   const { user, isLoggedIn } = useAuthentication();
-  const [postInteraction] = usePostInteractionMutation();
-  const [deleteInteraction] = useDeleteInteractionMutation();
+  const [postInteraction, { isLoading: isPostingInteraction }] = usePostInteractionMutation();
+  const [deleteInteraction, { isLoading: isDeletingInteraction }] = useDeleteInteractionMutation();
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   const [flagMemeId, setFlagMemeId] = useState<string | null>(null);
@@ -98,37 +98,86 @@ export default function CommunityGallery(): JSX.Element {
   const handleVote = useCallback(
     async (memeId: string, targetVoteType: InteractionType.UPVOTE | InteractionType.DOWNVOTE) => {
       if (!isLoggedIn) return toast.error("Please login to cast a vote.");
-      if (!user?.id) return toast.error("User ID is missing.");
+      if (isPostingInteraction || isDeletingInteraction) return;
 
       const meme = memes.find((m) => m.id === memeId);
       if (!meme) return;
 
       const interactions = meme.interactionSummary?.userInteractions ?? [];
-      const currentVote = interactions.find((i) => i.type === InteractionType.UPVOTE || i.type === InteractionType.DOWNVOTE)
-        ?.type as VoteStatus;
+      const currentVote = interactions.find(
+        (i) => i.type === InteractionType.UPVOTE || i.type === InteractionType.DOWNVOTE
+      )?.type as VoteStatus;
 
       try {
         if (currentVote === targetVoteType) {
-          await deleteInteraction({ memeId, type: targetVoteType });
+          await deleteInteraction({ memeId: meme.id, type: targetVoteType });
+
+          setMemes(memes.map(m =>
+            m.id === memeId
+              ? {
+                  ...m,
+                  interactionSummary: {
+                    ...m.interactionSummary!,
+                    userInteractions: [],
+                    netScore: m.interactionSummary!.netScore - (targetVoteType === InteractionType.UPVOTE ? 1 : -1),
+                  }
+                } as Meme
+              : m
+          ));
+          toast.info("Vote removed.");
+
         } else {
-          if (currentVote !== "NONE") {
-            await deleteInteraction({ memeId, type: currentVote });
+          const isChangingVote = currentVote && currentVote !== "NONE";
+          let scoreChange = 0;
+
+          if (isChangingVote) {
+            await deleteInteraction({ memeId: meme.id, type: currentVote });
           }
-          await postInteraction({ memeId, type: targetVoteType });
+
+          await postInteraction({ memeId: meme.id, type: targetVoteType });
+
+          if (targetVoteType === InteractionType.UPVOTE) {
+            scoreChange = isChangingVote && currentVote === InteractionType.DOWNVOTE ? 2 : 1;
+          } else {
+            scoreChange = isChangingVote && currentVote === InteractionType.UPVOTE ? -2 : -1;
+          }
+
+          setMemes(memes.map(m =>
+            m.id === memeId
+              ? {
+                  ...m,
+                  interactionSummary: {
+                    ...m.interactionSummary!,
+                    userInteractions: [
+                      { type: targetVoteType, createdAt: new Date().toISOString() }
+                    ],
+                    netScore: m.interactionSummary!.netScore + scoreChange,
+                  }
+                } as Meme
+              : m
+          ));
+
+          if (isChangingVote) {
+            toast.success("Vote updated!");
+          } else if (targetVoteType === InteractionType.UPVOTE) {
+            toast.success("Meme upvoted! 👍");
+          } else {
+            toast.success("Meme downvoted! 👎");
+          }
         }
 
-        toast.success("Vote updated!");
-      } catch {
+      } catch (err) {
+        console.error(err);
         toast.error("Failed to update vote.");
       }
     },
-    [isLoggedIn, user?.id, memes, postInteraction, deleteInteraction]
+    [isLoggedIn, isPostingInteraction, isDeletingInteraction, memes, postInteraction, deleteInteraction]
   );
+
   useEffect(() => {
-      setCurrentPage(1);
-      updateUrl(1, searchQuery, selectedTags);
-    }, [selectedTags, searchQuery, updateUrl]);
-    
+    setCurrentPage(1);
+    updateUrl(1, searchQuery, selectedTags);
+  }, [selectedTags, searchQuery, updateUrl]);
 
   const shareMeme = (meme: Meme) => {
     const shareData = {
@@ -222,8 +271,8 @@ export default function CommunityGallery(): JSX.Element {
                     handleVote={handleVote}
                     shareMeme={shareMeme}
                     setFlagMemeId={setFlagMemeId}
-                    isPosting={false}
-                    isDeleting={false}
+                    isPosting={isPostingInteraction}
+                    isDeleting={isDeletingInteraction}
                   />
                 ))
               )}
@@ -241,7 +290,7 @@ export default function CommunityGallery(): JSX.Element {
           </div>
 
           <aside className="flex flex-col gap-6 pt-4 sticky top-0 h-[calc(100vh-200px)] overflow-y-auto">
-            <CreateMemeCard isLoggedIn={isLoggedIn} />
+            <CreateMemeCard />
             {topMeme && <TopMemeSidebar topMeme={topMeme} />}
           </aside>
         </div>

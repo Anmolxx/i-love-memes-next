@@ -1,9 +1,20 @@
 "use client";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
+import useAuthentication from "@/hooks/use-authentication";
 
-export function CreateMemeCard({ isLoggedIn }: { isLoggedIn: boolean }) {
+export function CreateMemeCard() {
+  const { user, isLoggedIn } = useAuthentication();
+
+  const [hydrated, setHydrated] = useState(false);
+  useEffect(() => {
+    setHydrated(true);
+  }, []);
+
+  if (!hydrated) return null; 
+
   return (
     <div className="bg-gray-100 p-4 rounded-2xl shadow">
       {isLoggedIn ? (

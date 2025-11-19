@@ -1,4 +1,4 @@
-import { flexRender, type Table as TanstackTable } from "@tanstack/react-table";
+import { flexRender, type Table as TanstackTable, type Row } from "@tanstack/react-table";
 import * as React from "react";
 
 import { DataTablePagination } from "@/components/data-table/data-table-pagination";
@@ -21,6 +21,53 @@ interface DataTableProps<TData> extends React.ComponentProps<"div"> {
   actionBar?: React.ReactNode;
   view?: "table" | "gallery";
 }
+const GalleryItem = <TData,>({ row }: { row: Row<TData> }) => {
+  const file = row.original as any;
+  const [isOpen, setIsOpen] = React.useState(false);
+  
+  const selectCell = row.getVisibleCells().find(c => c.column.id === "select");
+  const actionsCell = row.getVisibleCells().find(c => c.column.id === "actions");
+
+  return (
+    <div
+      key={row.id}
+      className="rounded-md border p-3 shadow-sm flex flex-col"
+    >
+      <div className="w-full h-40 overflow-hidden rounded-md mb-2">
+        <Popover open={isOpen} onOpenChange={(open) => !open && setIsOpen(false)}>
+          <PopoverTrigger asChild>
+            <img
+              src={file.path}
+              alt="file preview"
+              className="h-full w-full object-cover rounded border cursor-pointer"
+              onClick={() => setIsOpen(true)}
+              onError={(e) => {
+                e.currentTarget.src = "https://via.placeholder.com/100?text=Preview";
+              }}
+            />
+          </PopoverTrigger>
+          <ImagePopover src={file.path} />
+        </Popover>
+      </div>
+
+      <a
+        href={file.path}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="inline-block mb-2"
+      >
+        <Link className="dark:text-white text-black" size={20} />
+      </a>
+
+      <div className="mt-auto flex justify-between items-center">
+        {selectCell &&
+          flexRender(selectCell.column.columnDef.cell, selectCell.getContext())}
+        {actionsCell &&
+          flexRender(actionsCell.column.columnDef.cell, actionsCell.getContext())}
+      </div>
+    </div>
+  );
+};
 
 export function DataTable<TData>({
   table,
@@ -44,61 +91,18 @@ export function DataTable<TData>({
 
       {/* Gallery View */}
       {view === "gallery" ? (
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 overflow-auto mb-5 hide-scrollbar">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 overflow-auto mb-5">
           {rows.length ? (
-            rows.map((row) => {
-              const file = row.original as any;
-              const [isOpen, setIsOpen] = React.useState(false);
-              const selectCell = row.getVisibleCells().find(c => c.column.id === "select");
-              const actionsCell = row.getVisibleCells().find(c => c.column.id === "actions");
-      
-              return (
-                <div
-                  key={row.id}
-                  className="rounded-md border p-3 shadow-sm flex flex-col"
-                >
-                  <div className="w-full h-40 overflow-hidden rounded-md mb-2">
-                    <Popover open={isOpen} onOpenChange={(open) => !open && setIsOpen(false)}>
-                        <PopoverTrigger asChild>
-                          <img
-                            src={file.path}
-                            alt="file preview"
-                            className="h-full w-full object-cover rounded border cursor-pointer"
-                            onClick={() => setIsOpen(true)}
-                            onError={(e) => {
-                              e.currentTarget.src = "https://via.placeholder.com/100?text=Preview";
-                            }}
-                          />
-                        </PopoverTrigger>
-                        <ImagePopover src={file.path} />
-                      </Popover>
-                  </div>
-    
-                  <a
-                    href={file.path}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-block mb-2"
-                  >
-                    <Link className="dark:text-white text-black" size={20} />
-                  </a>
-      
-                  <div className="mt-auto flex justify-between items-center">
-                    {selectCell &&
-                      flexRender(selectCell.column.columnDef.cell, selectCell.getContext())}
-                    {actionsCell &&
-                      flexRender(actionsCell.column.columnDef.cell, actionsCell.getContext())}
-                  </div>
-                </div>
-              );
-            })
+            rows.map((row) => (
+              <GalleryItem key={row.id} row={row} />
+            ))
           ) : (
             <p className="text-center py-10 col-span-full">No results.</p>
           )}
         </div>
       ) : (
         /* Table View */
-        <div className="overflow-auto rounded-md border hide-scrollbar">
+        <div className="overflow-auto rounded-md border">
           <Table>
             <TableHeader>
               {table.getHeaderGroups().map((headerGroup) => (

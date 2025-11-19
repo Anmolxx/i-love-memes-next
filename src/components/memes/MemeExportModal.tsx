@@ -1,7 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
-import Image from "next/image";
+import React, { useState, useCallback } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Download, Share2, Save } from "lucide-react";
@@ -75,11 +74,13 @@ const MemeExportModal: React.FC<MemeExportModalProps> = ({
     },
   });
 
-  const getExportDataURL = async (): Promise<string | null> => {
+  // FIX: Wrap getExportDataURL in useCallback
+  const getExportDataURL = useCallback(async (): Promise<string | null> => {
     const canvas = canvasRef.current;
     if (!canvas) return null;
 
     try {
+      // NOTE: FabricImage and FabricText are imported from 'fabric' and are stable constructors
       const watermarkImg = await FabricImage.fromURL("/watermark.jpg", {
           crossOrigin: "anonymous",
       });
@@ -145,10 +146,7 @@ const MemeExportModal: React.FC<MemeExportModalProps> = ({
 
       return dataURL;
     }
-  };
-
-
-  // --- Handlers ---
+  }, [canvasRef]); // canvasRef is stable, so this function is stable too.
 
   React.useEffect(() => {
     if (isOpen) {
@@ -168,7 +166,7 @@ const MemeExportModal: React.FC<MemeExportModalProps> = ({
       setSelectedTags([]);
       memeForm.reset();
     }
-  }, [isOpen, canvasRef, onOpenChange]);
+  }, [isOpen, onOpenChange, getExportDataURL, memeForm]); // getExportDataURL is now a stable dependency
 
 
   const exportMeme = async () => {
@@ -187,7 +185,7 @@ const MemeExportModal: React.FC<MemeExportModalProps> = ({
   const shareMeme = async () => {
     if (!previewUrl) return;
     try {
-     
+      
       if (navigator.share && navigator.canShare) {
         const res = await fetch(previewUrl);
         const blob = await res.blob();

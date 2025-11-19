@@ -32,10 +32,10 @@ export default function UpdateTemplateButton({
         variant="outline"
         size="sm"
         onClick={() => setShowDialog(true)}
-        className="flex items-center space-x-1"
+        className="rounded-full cursor-pointer h-10 px-4 md:px-6 border-[#1E085C] text-[#1E085C] text-sm md:text-base"
       >
         <Edit size={16} />
-        <span>Edit Template</span>
+        <span>Update Template</span>
       </Button>
 
       <EditDialog

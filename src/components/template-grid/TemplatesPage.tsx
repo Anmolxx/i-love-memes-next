@@ -7,6 +7,7 @@ import { NavbarSearch } from "./NavbarSearch";
 import { Button } from "@/components/ui/button";
 import { TagSelector } from "./TagSelector";
 import { useDebounce } from "@/hooks/use-debounce";
+import NextImage from "next/image";
 
 export function TemplateGallery() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -22,22 +23,39 @@ export function TemplateGallery() {
   });
 
   const templates = data?.items || [];
-
   const handleSearch = () => setPage(1);
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-6 flex flex-col gap-6">
-      {/* Navbar search */}
-      <NavbarSearch
-        searchQuery={searchQuery}
-        setSearchQuery={setSearchQuery}
-        handleSearch={handleSearch}
-        isFetching={isFetching}
-        selectedTags={selectedTags}
-        setSelectedTags={setSelectedTags}
-        availableTags={availableTags}
-      />
-      <TagSelector setAvailableTags={setAvailableTags} />
+    <div className="max-w-7xl mx-auto px-4 py-6">
+      {/* Navbar with logo and search */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+        <Link href="/">
+          <div className="relative h-16 w-40 flex-shrink-0">
+            <NextImage
+              src="/brand/ilovememes-logo.png"
+              alt="I Love Memes"
+              fill
+              className="object-contain"
+              priority
+            />
+          </div>
+        </Link>
+
+        <div className="flex-1">
+          <NavbarSearch
+            searchQuery={searchQuery}
+            setSearchQuery={setSearchQuery}
+            handleSearch={handleSearch}
+            isFetching={isFetching}
+            selectedTags={selectedTags}
+            setSelectedTags={setSelectedTags}
+            availableTags={availableTags}
+          />
+        </div>
+
+        <TagSelector setAvailableTags={setAvailableTags} />
+      </div>
+
       {/* Templates gallery */}
       {templates.length === 0 && !isFetching ? (
         <p className="text-gray-500 text-center mt-6">No templates found</p>
@@ -71,8 +89,14 @@ export function TemplateGallery() {
                     {template.description}
                   </p>
 
-                  <Link href={`/meme/${template.slug}`} target="_blank" className="mt-auto">
-                    <Button className="w-full cursor-pointer">Use this template</Button>
+                  <Link
+                    href={`/meme/${template.slug}`}
+                    target="_blank"
+                    className="mt-auto"
+                  >
+                    <Button className="w-full cursor-pointer">
+                      Use this template
+                    </Button>
                   </Link>
                 </div>
               </div>

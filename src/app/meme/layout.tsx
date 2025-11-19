@@ -51,7 +51,6 @@ export default function MemeLayout({ children }: LayoutProps) {
     window.scrollTo(0, 0);
   }, []);
 
-  // --- Initialize Canvas ---
   useEffect(() => {
     if (canvasRef.current) return;
     const canvasElement = document.getElementById("meme-canvas");
@@ -348,7 +347,10 @@ export default function MemeLayout({ children }: LayoutProps) {
   // --- Reset Canvas ---
   const resetCanvas = () => {
     const canvas = canvasRef.current;
-    if (!canvas) return;
+    if (!canvas) {
+      console.error("Canvas reference is missing!")
+      return;
+    }
     canvas.getObjects().forEach((obj) => {
       if (obj !== canvas.backgroundImage) canvas.remove(obj);
     });
@@ -406,6 +408,7 @@ export default function MemeLayout({ children }: LayoutProps) {
               onSelect={handleImageSelect}
               onTemplateSelect={(template) => handleTemplateSelect(template)}
               selectedImage={selectedImage}
+              onBeforeSelect={resetCanvas}
             />
           </div>
 

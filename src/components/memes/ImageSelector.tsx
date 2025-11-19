@@ -4,27 +4,31 @@ import {
   useGetTemplatesQuery,
 } from "@/redux/services/template";
 import { useUploadFileMutation } from "@/redux/services/uploadfile"
-import React, { useRef } from "react";
+import React, { useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import { toast } from "sonner";
 import useAuthentication from "@/hooks/use-authentication";
+import { useRouter } from "next/navigation";
 
 interface Props {
   onSelect: (url: string, id?: string) => void;
   onTemplateSelect?: (template: any) => void; 
   selectedImage?: string | null;
+  onBeforeSelect?: () => void;
 }
 
 const ImageSelector: React.FC<Props> = ({
   onSelect,
   onTemplateSelect,
   selectedImage,
+  onBeforeSelect,
 }) => {
+  const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploadFile, { isLoading: isUploading }] = useUploadFileMutation();
   const { isAdmin } = useAuthentication();
-
+  
   const { data: templates } = useGetTemplatesQuery(
     {
       page: 1,
@@ -111,7 +115,8 @@ const ImageSelector: React.FC<Props> = ({
      
       if (result.file && result.file.path) {
         toast.success("Image uploaded successfully!");
-       
+        onBeforeSelect?.();
+        router.replace('/meme', { scroll: false });
         const formattedPath = result.file.path;
         onSelect(formattedPath, result.file.id);
         console.log("Uploaded file data:", result.file);
@@ -130,6 +135,7 @@ const ImageSelector: React.FC<Props> = ({
       }
     }
   };
+
   return (
     <div className="bg-white rounded-lg h-full flex flex-col p-1 max-h-screen">
       <div className="p-4 border-b border-gray-200 flex-shrink-0">

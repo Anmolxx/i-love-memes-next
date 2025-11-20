@@ -1,10 +1,10 @@
-import React from 'react'
+import React, { Suspense } from 'react'
 import { TemplateGallery } from "@/components/template-grid/TemplatesPage"
 
 export default function CommunityPage() {
   return (
-    <div>
-      <TemplateGallery />
-  </div>
+    <Suspense fallback={<div>Loading...</div>}>
+          <TemplateGallery/>
+    </Suspense>
   )
 }

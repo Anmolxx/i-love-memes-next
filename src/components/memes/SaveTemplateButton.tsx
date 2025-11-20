@@ -26,6 +26,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { DataTableTagFilter } from "@/components/data-table/data-table-tag-filter";
 
 interface SaveTemplateButtonProps {
   canvasRef: React.RefObject<Canvas | null>;
@@ -35,23 +36,24 @@ interface SaveTemplateButtonProps {
 type TemplateFormData = {
   title: string;
   description: string;
-};
+}
 
 const SaveTemplateButton: React.FC<SaveTemplateButtonProps> = ({
   canvasRef,
   backgroundImageId,
 }) => {
   const [isSaveTemplateOpen, setIsSaveTemplateOpen] = useState(false);
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [saveAsTemplateTrigger] = useSaveAsTemplateMutation();
 
-  const form = useForm<TemplateFormData>({
+  const form = useForm<Omit<TemplateFormData, 'tags'>>({ 
     defaultValues: {
       title: "",
       description: "",
     },
   });
 
-  const saveAsTemplate = (data: TemplateFormData) => {
+  const saveAsTemplate = (data: Omit<TemplateFormData, 'tags'>) => {
     const canvas = canvasRef.current;
     if (!canvas) {
       toast.error("No canvas found");
@@ -73,6 +75,7 @@ const SaveTemplateButton: React.FC<SaveTemplateButtonProps> = ({
     saveAsTemplateTrigger({
       title: data.title.trim(),
       description: data.description.trim() || "No description provided",
+      tags: selectedTags, 
       ...templateData,
     })
       .unwrap()
@@ -80,15 +83,24 @@ const SaveTemplateButton: React.FC<SaveTemplateButtonProps> = ({
         toast.success("Template saved successfully!");
         setIsSaveTemplateOpen(false);
         form.reset();
+        setSelectedTags([]); 
       })
       .catch((error) => {
         console.error("Error saving template:", error);
         toast.error("Failed to save template. Please try again.");
       });
   };
+  
+  const handleOpenChange = (open: boolean) => {
+    setIsSaveTemplateOpen(open);
+    if (!open) {
+      setSelectedTags([]);
+      form.reset();
+    }
+  };
 
   return (
-    <Dialog open={isSaveTemplateOpen} onOpenChange={setIsSaveTemplateOpen}>
+    <Dialog open={isSaveTemplateOpen} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
         <Button
           className="rounded-full cursor-pointer h-10 px-4 md:px-6 border-[#1E085C] text-[#1E085C] text-sm md:text-base"
@@ -146,13 +158,26 @@ const SaveTemplateButton: React.FC<SaveTemplateButtonProps> = ({
                 </FormItem>
               )}
             />
+
+            {/* Tags Field (using DataTableTagFilter) */}
+            <FormItem>
+              <FormLabel>Tags</FormLabel>
+              <FormControl>
+                {/* ✨ NEW: Use the DataTableTagFilter component */}
+                <DataTableTagFilter
+                  selectedTags={selectedTags}
+                  setSelectedTags={setSelectedTags}
+                  variant='dialog' // Use the 'dialog' variant for full width and better display in the dialog
+                />
+              </FormControl>
+            </FormItem>
+            
             <DialogFooter>
               <Button
                 type="button"
                 variant="outline"
                 onClick={() => {
-                  setIsSaveTemplateOpen(false);
-                  form.reset();
+                  handleOpenChange(false); // Use the unified handler
                 }}
               >
                 Cancel

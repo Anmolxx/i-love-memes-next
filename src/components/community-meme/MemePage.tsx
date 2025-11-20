@@ -21,6 +21,7 @@ import MemeActionsSidebar from "./MemeActionsSidebar";
 import FlagMemeDialog from "./FlagMemeDialog";
 import { CommentDto } from "@/utils/dtos/comment.dto";
 import { CommentActionsProvider } from "@/context/CommentActions";
+import { current } from "@reduxjs/toolkit";
 
 export default function MemePage() {
   const { slug } = useParams();
@@ -59,8 +60,12 @@ export default function MemePage() {
       await createComment({ content, memeId: meme.id, parentCommentId }).unwrap();
       refetchComments();
       toast.success(parentCommentId ? "Reply added!" : "Comment added!");
-    } catch {
-      toast.error("Failed to add comment");
+    } catch (err: any) {
+      const apiError = err?.data;
+      if (apiError?.errors && typeof apiError.errors === "object") {
+        Object.values(apiError.errors).forEach((msg: any) => { if (typeof msg === "string") toast.error(msg); });
+      } else if (apiError?.message) toast.error(apiError.message);
+      else toast.error("Failed to update user");
     }
   }, [meme, createComment, refetchComments]);
 
@@ -70,8 +75,12 @@ export default function MemePage() {
       await updateComment({ id, content }).unwrap();
       refetchComments();
       toast.success("Comment updated!");
-    } catch {
-      toast.error("Failed to update comment");
+    } catch (err: any) {
+      const apiError = err?.data;
+      if (apiError?.errors && typeof apiError.errors === "object") {
+        Object.values(apiError.errors).forEach((msg: any) => { if (typeof msg === "string") toast.error(msg); });
+      } else if (apiError?.message) toast.error(apiError.message);
+      else toast.error("Failed to update user");
     }
   }, [updateComment, refetchComments]);
 
@@ -79,8 +88,12 @@ export default function MemePage() {
     try {
       await deleteComment({ id }).unwrap();
       refetchComments();
-    } catch {
-      toast.error("Failed to delete comment");
+    } catch (err: any) {
+      const apiError = err?.data;
+      if (apiError?.errors && typeof apiError.errors === "object") {
+        Object.values(apiError.errors).forEach((msg: any) => { if (typeof msg === "string") toast.error(msg); });
+      } else if (apiError?.message) toast.error(apiError.message);
+      else toast.error("Failed to update user");
     }
   }, [deleteComment, refetchComments]);
 

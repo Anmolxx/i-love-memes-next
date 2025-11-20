@@ -133,7 +133,6 @@ function MemesContent() {
       orderBy={orderBy}
       setOrderBy={(ob) => updateUrl({ orderBy: ob })}
       sortableFields={VALID_ORDER_BY}
-      view= "table"
     />
   );
 

@@ -13,7 +13,7 @@ import { EllipsisVertical, Eye, Trash2, Edit, CirclePlus } from "lucide-react";
 import Link from "next/link";
 import { useState, useCallback } from "react";
 import { DeleteDialog } from "@/components/dialog/delete-dialog";
-import { EditDialog } from "@/components/dialog/edit-template";
+import { EditDialog } from "@/components/dialog/edit-dialog";
 import { useDeleteMemeMutation, useUpdateMemeMutation } from "@/redux/services/meme";
 import { toast } from "sonner";
 import { Meme } from "@/utils/dtos/meme.dto";
@@ -114,17 +114,27 @@ export function adminMemeColumns(): ColumnDef<Meme>[] {
         const displayedTags = tags.slice(0, 2);
         const hiddenTags = tags.slice(2);
     
-        return (
-          <div className="flex items-center gap-1">
-            {displayedTags.map(tag => (
-              <span
-                key={tag.id}
-                className="text-xs px-2 py-1.5 rounded-lg font-medium dark:bg-[#28282B] dark:text-white border dark:border-gray-200 border-gray-900 bg-gray-200"
-              >
-                #{tag.name}
-              </span>
-            ))}
-          
+       return (
+         <div className="flex items-center gap-1">
+           {displayedTags.map(tag => {
+             const hasName = tag.name && tag.name.length > 0;
+             const tagClassName =
+               "text-xs px-2 py-1.5 rounded-lg font-medium dark:bg-[#28282B] dark:text-white border dark:border-gray-200 border-gray-900 bg-gray-200";
+             return hasName ? (
+               <Link
+                 key={tag.id}
+                 href={`/community/?tags=${tag.name}`}
+                 target="_blank"
+                 className="hover:opacity-80 transition-opacity"
+               >
+                 <span className={tagClassName}>#{tag.name}</span>
+               </Link>
+             ) : (
+               <span key={tag.id} className={tagClassName}>
+                 #Invalid Tag
+               </span>
+             );
+           })}
             {hiddenTags.length > 0 && (
               <Tooltip>
                 <TooltipTrigger asChild>
@@ -134,15 +144,26 @@ export function adminMemeColumns(): ColumnDef<Meme>[] {
                   side="top"
                   className="bg-white text-black dark:bg-[#202020] dark:text-white shadow-lg p-2 rounded-md border border-gray-200 dark:border-none"
                 >
-                  <div className="flex flex-wrap gap-1 max-w-[200px]">
-                    {hiddenTags.map(tag => (
-                      <span
+                  <div className="flex flex-wrap gap-2 max-w-[200px]">
+                    {hiddenTags.map(tag => {
+                      const hasName = tag.name && tag.name.length > 0;
+
+                      return hasName ? (
+                        <Link key={tag.id}
+                            href={`/community/?tags=${tag.name}`}
+                            target="_blank"
+                            className="hover:opacity-80 transition-opacity py-2"
+                          ><span
                         key={tag.id}
                         className="text-xs px-2 py-1 rounded-lg font-medium border border-transparent bg-gray-200 text-gray-800 dark:bg-black dark:text-white"
-                      >
-                        #{tag.name}
-                      </span>
-                    ))}
+                      >#{tag.name}
+                      </span></Link>
+                    ): (
+                    <span key={tag.id} className="text-xs px-2 py-1 rounded-lg font-medium border border-transparent bg-gray-200 text-gray-800 dark:bg-black dark:text-white">
+                      #Invalid Tag
+                    </span>
+                  );
+                  })}
                   </div>
                 </TooltipContent>
               </Tooltip>

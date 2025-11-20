@@ -1,5 +1,5 @@
 "use client";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
@@ -35,11 +35,9 @@ export function EditDialog<T, Payload>({
 }: EditDialogProps<T, Payload>) {
   const [title, setTitle] = useState((data as any).title ?? "");
   const [description, setDescription] = useState((data as any).description ?? "");
-
   const initialSelected = getTags(data);
   const [selectedTags, setSelectedTags] = useState<string[]>(initialSelected);
   const [isSaving, setIsSaving] = useState(false);
-
   const { data: tagData } = useGetAllTagsQuery({ page: 1, limit: 50 });
 
   const finalTags: Tag[] = useMemo(() => {
@@ -87,6 +85,7 @@ export function EditDialog<T, Payload>({
             <DataTableTagFilter
               selectedTags={selectedTags}
               setSelectedTags={setSelectedTags}
+              variant="dialog"
             />
           </div>
         </div>

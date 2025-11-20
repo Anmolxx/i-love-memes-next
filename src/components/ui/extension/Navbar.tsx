@@ -10,7 +10,7 @@ export function Navbar() {
 
     return (
         <nav className="w-full sticky top-0 z-50 border-b border-black/10 bg-white/70 backdrop-blur">
-            <div className="mx-auto max-w-6xl px-4 py-3">
+            <div className="mx-auto max-w-7xl px-4 py-3">
                 <div className="flex items-center justify-between">
                     {/* Mobile menu button */}
                     <button

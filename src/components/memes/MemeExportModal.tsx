@@ -11,7 +11,6 @@ import { usePostMemeMutation } from "@/redux/services/meme";
 import { useTypedSelector } from "@/redux/store";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
-import { Badge } from "@/components/ui/badge";
 import {
   Dialog,
   DialogContent,
@@ -30,8 +29,8 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { useCreateTagMutation, useGetAllTagsQuery } from "@/redux/services/tag";
 import useAuthentication from "@/hooks/use-authentication";
+import { DataTableTagFilter } from "@/components/data-table/data-table-tag-filter";
 
 interface MemeExportModalProps {
   canvasRef: React.RefObject<Canvas | null>;
@@ -57,15 +56,10 @@ const MemeExportModal: React.FC<MemeExportModalProps> = ({
   const [uploadFile] = useUploadFileMutation();
 
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-  const [isSaveMemeOpen, setIsSaveMemeOpen] = useState(false); 
-  const [newTag, setNewTag] = useState("");
-  const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [isSaveMemeOpen, setIsSaveMemeOpen] = useState(false);
+  const [selectedTags, setSelectedTags] = useState<string[]>([]); 
   
   const { selectedTemplateId } = useTypedSelector((state) => state.template);
-  const { data: tagsData } = useGetAllTagsQuery();
-  const [createTag] = useCreateTagMutation();
-
-  const availableTags: string[] = tagsData?.items?.map((t: any) => t.name) ?? [];
 
   const memeForm = useForm<MemeFormData>({
     defaultValues: {
@@ -74,40 +68,47 @@ const MemeExportModal: React.FC<MemeExportModalProps> = ({
     },
   });
 
-  // FIX: Wrap getExportDataURL in useCallback
+  const handleSetSelectedTags = useCallback((newTags: string[]) => {
+    if (newTags.length <= 2) {
+      setSelectedTags(newTags);
+    } else {
+      toast.error("You can only add a maximum of 2 tags to a meme.");
+      setSelectedTags(newTags.slice(0, 2));
+    }
+  }, []);
+
   const getExportDataURL = useCallback(async (): Promise<string | null> => {
     const canvas = canvasRef.current;
     if (!canvas) return null;
 
     try {
-      // NOTE: FabricImage and FabricText are imported from 'fabric' and are stable constructors
       const watermarkImg = await FabricImage.fromURL("/watermark.jpg", {
-          crossOrigin: "anonymous",
+        crossOrigin: "anonymous",
       });
       const maxWatermarkSize = 80;
       const scale = Math.min(
-          maxWatermarkSize / watermarkImg.width!,
-          maxWatermarkSize / watermarkImg.height!
+        maxWatermarkSize / watermarkImg.width!,
+        maxWatermarkSize / watermarkImg.height!
       );
 
       watermarkImg.set({
-          left: canvas.getWidth() - watermarkImg.width! * scale - 20,
-          top: canvas.getHeight() - watermarkImg.height! * scale - 20,
-          scaleX: scale,
-          scaleY: scale,
-          opacity: 0.7,
-          selectable: false,
-          evented: false,
-          excludeFromExport: false,
+        left: canvas.getWidth() - watermarkImg.width! * scale - 20,
+        top: canvas.getHeight() - watermarkImg.height! * scale - 20,
+        scaleX: scale,
+        scaleY: scale,
+        opacity: 0.7,
+        selectable: false,
+        evented: false,
+        excludeFromExport: false,
       });
 
       canvas.add(watermarkImg);
       canvas.renderAll();
 
       const dataURL = canvas.toDataURL({
-          format: "png",
-          quality: 1,
-          multiplier: 2,
+        format: "png",
+        quality: 1,
+        multiplier: 2,
       });
 
       canvas.remove(watermarkImg);
@@ -120,25 +121,25 @@ const MemeExportModal: React.FC<MemeExportModalProps> = ({
       console.error("Failed to load watermark image:", err);
 
       const textWatermark = new FabricText("ilovememes.com", {
-          left: 20,
-          top: canvas.getHeight() - 30,
-          fontSize: 16,
-          fill: "rgba(255, 255, 255, 0.8)",
-          fontFamily: "Arial",
-          selectable: false,
-          evented: false,
-          excludeFromExport: false,
-          stroke: "rgba(0, 0, 0, 0.3)",
-          strokeWidth: 1,
+        left: 20,
+        top: canvas.getHeight() - 30,
+        fontSize: 16,
+        fill: "rgba(255, 255, 255, 0.8)",
+        fontFamily: "Arial",
+        selectable: false,
+        evented: false,
+        excludeFromExport: false,
+        stroke: "rgba(0, 0, 0, 0.3)",
+        strokeWidth: 1,
       });
 
       canvas.add(textWatermark);
       canvas.renderAll();
 
       const dataURL = canvas.toDataURL({
-          format: "png",
-          quality: 1,
-          multiplier: 2,
+        format: "png",
+        quality: 1,
+        multiplier: 2,
       });
 
       canvas.remove(textWatermark);
@@ -146,7 +147,7 @@ const MemeExportModal: React.FC<MemeExportModalProps> = ({
 
       return dataURL;
     }
-  }, [canvasRef]); // canvasRef is stable, so this function is stable too.
+  }, [canvasRef]);
 
   React.useEffect(() => {
     if (isOpen) {
@@ -154,7 +155,7 @@ const MemeExportModal: React.FC<MemeExportModalProps> = ({
         const url = await getExportDataURL();
         if (!url) {
           toast.error("Create a meme first");
-          onOpenChange(false); 
+          onOpenChange(false);
           return;
         }
         setPreviewUrl(url);
@@ -163,11 +164,10 @@ const MemeExportModal: React.FC<MemeExportModalProps> = ({
     } else {
       setPreviewUrl(null);
       setIsSaveMemeOpen(false);
-      setSelectedTags([]);
+      setSelectedTags([]); 
       memeForm.reset();
     }
-  }, [isOpen, onOpenChange, getExportDataURL, memeForm]); // getExportDataURL is now a stable dependency
-
+  }, [isOpen, onOpenChange, getExportDataURL, memeForm]);
 
   const exportMeme = async () => {
     if (!previewUrl) {
@@ -185,7 +185,6 @@ const MemeExportModal: React.FC<MemeExportModalProps> = ({
   const shareMeme = async () => {
     if (!previewUrl) return;
     try {
-      
       if (navigator.share && navigator.canShare) {
         const res = await fetch(previewUrl);
         const blob = await res.blob();
@@ -213,8 +212,13 @@ const MemeExportModal: React.FC<MemeExportModalProps> = ({
       toast.error("No canvas or preview found");
       return;
     }
+  
+    if (selectedTags.length > 2) {
+      toast.error("You can only add a maximum of 2 tags to a meme.");
+      return;
+    }
+    
     try {
-      
       const canvasData = canvas.toJSON();
       const memeData = {
         config: {
@@ -225,7 +229,7 @@ const MemeExportModal: React.FC<MemeExportModalProps> = ({
         },
       };
 
-      // 2. Upload File (same as before)
+      // 2. Upload File
       const response = await fetch(previewUrl);
       const blob = await response.blob();
       const file = new File([blob], "meme.png", { type: "image/png" });
@@ -239,13 +243,13 @@ const MemeExportModal: React.FC<MemeExportModalProps> = ({
         throw new Error("Upload failed — missing file ID");
       }
 
-      // 3. Post Meme (same as before)
+      // 3. Post Meme
       const result = await postMemeTrigger({
         title: data.title.trim().slice(0, 20),
         description: data.description.trim() || "No description provided",
         file: { id: uploadedFileId },
         templateId: selectedTemplateId || "",
-        tags: selectedTags,
+        tags: selectedTags, 
         ...memeData,
       }).unwrap();
 
@@ -268,31 +272,6 @@ const MemeExportModal: React.FC<MemeExportModalProps> = ({
     }
   };
 
-  const addTag = async () => {
-    if (!newTag.trim()) return;
-    if (selectedTags.length >= 2) {
-      toast.error("You can attach a maximum of 2 tags");
-      return;
-    }
-    const tagName = newTag.trim().toLowerCase();
-    if (availableTags.includes(tagName)) {
-      setSelectedTags((prev) => [...new Set([...prev, tagName])]);
-    } else {
-      try {
-        await createTag({ name: tagName }).unwrap();
-        toast.success(`Tag "${tagName}" created`);
-        setSelectedTags((prev) => [...new Set([...prev, tagName])]);
-      } catch (err) {
-        toast.error("Failed to create tag");
-      }
-    }
-    setNewTag("");
-  };
-
-  const removeTag = (tag: string) => {
-    setSelectedTags(selectedTags.filter((t) => t !== tag));
-  };
-  
   const handleSaveToGalleryClick = () => {
     if (!isLoggedIn) {
       toast.error("User not logged in. Please log in.");
@@ -375,58 +354,19 @@ const MemeExportModal: React.FC<MemeExportModalProps> = ({
                     </FormItem>
                   )}
                 />
-                {/* Tag Selection */}
-                <div className="space-y-2">
-                  <FormLabel>Tags (max 2)</FormLabel>
-                  {/* Tag Input and Add Button */}
-                  <div className="flex items-center gap-2">
-                    <Input
-                      placeholder="Type or select tag..."
-                      value={newTag}
-                      onChange={(e) => setNewTag(e.target.value)}
-                      className="flex-1"
+                
+                {/* Tag Selection using DataTableTagFilter */}
+                <FormItem>
+                  <FormLabel>Tags <span className="text-xs text-muted-foreground">(Max 2)</span></FormLabel>
+                  <FormControl>
+                    <DataTableTagFilter
+                        selectedTags={selectedTags}
+                        setSelectedTags={handleSetSelectedTags} 
+                        variant='dialog'
                     />
-                    <Button
-                      type="button"
-                      variant="outline"
-                      className="cursor-pointer"
-                      onClick={addTag}
-                      disabled={!newTag.trim() || selectedTags.length >= 2}
-                    >
-                      Add
-                    </Button>
-                  </div>
-                  {/* Selected Tags */}
-                  <div className="flex flex-wrap gap-2 mt-2">
-                    {selectedTags.map((tag) => (
-                      <Badge
-                        key={tag}
-                        variant="secondary"
-                        className="cursor-pointer"
-                        onClick={() => removeTag(tag)}
-                      >
-                        #{tag} ✕
-                      </Badge>
-                    ))}
-                  </div>
-                  {/* Available Tags */}
-                  <div className="flex flex-wrap gap-2 mt-2">
-                    {availableTags
-                      .filter((tag) => !selectedTags.includes(tag))
-                      .map((tag) => (
-                        <Badge
-                          key={tag}
-                          variant="outline"
-                          className="cursor-pointer hover:bg-purple-100"
-                          onClick={() => {
-                            if (selectedTags.length < 2) setSelectedTags([...selectedTags, tag]);
-                          }}
-                        >
-                          #{tag}
-                        </Badge>
-                      ))}
-                  </div>
-                </div>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
 
                 <DialogFooter>
                   <Button
@@ -435,6 +375,7 @@ const MemeExportModal: React.FC<MemeExportModalProps> = ({
                     onClick={() => {
                       setIsSaveMemeOpen(false);
                       memeForm.reset();
+                      setSelectedTags([]);
                     }}
                   >
                     Cancel
@@ -450,7 +391,6 @@ const MemeExportModal: React.FC<MemeExportModalProps> = ({
               </form>
             </Form>
           ) : (
-            /* Action Buttons (Save, Download, Share) */
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
               <Button onClick={handleSaveToGalleryClick}>
                 Save to Gallery <Save className="w-4 h-4 ml-2" />

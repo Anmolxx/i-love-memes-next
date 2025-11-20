@@ -137,9 +137,9 @@ export default function CommunityGallery(): JSX.Element {
           await postInteraction({ memeId: meme.id, type: targetVoteType });
 
           if (targetVoteType === InteractionType.UPVOTE) {
-            scoreChange = isChangingVote && currentVote === InteractionType.DOWNVOTE ? 2 : 1;
+            scoreChange = isChangingVote && currentVote === InteractionType.DOWNVOTE ? 1 : -1;
           } else {
-            scoreChange = isChangingVote && currentVote === InteractionType.UPVOTE ? -2 : -1;
+            scoreChange = isChangingVote && currentVote === InteractionType.UPVOTE ? 1 : -1;
           }
 
           setMemes(memes.map(m =>

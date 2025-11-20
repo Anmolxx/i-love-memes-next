@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useGetTemplatesQuery } from "@/redux/services/template";
 import { NavbarSearch } from "./NavbarSearch";
@@ -8,22 +8,50 @@ import { Button } from "@/components/ui/button";
 import { TagSelector } from "./TagSelector";
 import { useDebounce } from "@/hooks/use-debounce";
 import NextImage from "next/image";
+import { useRouter } from "next/navigation";
+import { useSearchParams } from "next/navigation";
+import { Template } from "@/utils/dtos/template.dto";
 
 export function TemplateGallery() {
-  const [searchQuery, setSearchQuery] = useState("");
-  const [selectedTags, setSelectedTags] = useState<string[]>([]);
-  const [page, setPage] = useState(1);
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const initialPage = parseInt(searchParams.get("page") ?? "1");
+  const per_page = parseInt(searchParams.get("limit") ?? "4");
+  const initialSearch = searchParams.get("search") ?? "";
+  const initialTags = searchParams.getAll("tags") ?? [];
+
+  const [currentPage, setCurrentPage] = useState(initialPage);
+  const [searchQuery, setSearchQuery] = useState(initialSearch);
+  const [selectedTags, setSelectedTags] = useState<string[]>(initialTags);
   const [availableTags, setAvailableTags] = useState<string[]>([]);
+  const [template, setTemplate] = useState<Template[]>([]);
+
   const debouncedSearch = useDebounce(searchQuery, 600);
   const { data, isFetching } = useGetTemplatesQuery({
-    page,
-    limit: 30,
+    page: currentPage,
+    limit: per_page,
     search: debouncedSearch,
     tags: selectedTags,
   });
 
+  const updateUrl = useCallback(
+      (page: number, search?: string, tags?: string[]) => {
+      const params = new URLSearchParams();
+      params.set("page", page.toString());
+      params.set("limit", per_page.toString());
+      if (search) params.set("search", search);
+      tags?.forEach(tag => params.append("tags", tag));
+      router.push(`/templates?${params.toString()}`);
+    },
+    [router, per_page]
+  );
+    
   const templates = data?.items || [];
-  const handleSearch = () => setPage(1);
+  const handleSearch = () => setCurrentPage(1);
+  useEffect(() => {
+      setCurrentPage(1);
+      updateUrl(1, searchQuery, selectedTags);
+    }, [selectedTags, searchQuery, updateUrl]);
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-6">

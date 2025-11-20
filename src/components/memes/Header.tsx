@@ -96,13 +96,20 @@ const Header: React.FC<HeaderProps> = ({
             templateSlug={slug}
             backgroundImageId={backgroundImageId}
           />
-        ) : (slug && !isEditMode ? (
+        ) : (isAdmin && !isEditMode ? (
           <SaveTemplateButton
             canvasRef={canvasRef}
             backgroundImageId={backgroundImageId}
           />
         ) : null)}
         
+        {/* { isAdmin && (
+          <SaveTemplateButton
+              canvasRef={canvasRef}
+              backgroundImageId={backgroundImageId}
+            />
+        )} */}
+
         {/* 4. Save & Download Button (Opens the Modal, the Modal handles all logic) */}
         <Button
           onClick={handleOpenExportModal}

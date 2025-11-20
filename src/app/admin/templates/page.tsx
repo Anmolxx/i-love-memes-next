@@ -55,9 +55,11 @@ function TemplatesContent() {
       tags: string[];
       orderBy: TemplateOrderBy;
       order: SortOrder;
-    }>
+    }>,
+    resetPage = true
   ) => {
     const params = new URLSearchParams(searchParams.toString());
+    if (resetPage) params.set("page", "1");
 
     Object.entries(newParams).forEach(([key, value]) => {
       if (
@@ -67,6 +69,9 @@ function TemplatesContent() {
         (Array.isArray(value) && value.length === 0)
       ) {
         params.delete(key);
+      }  else if (Array.isArray(value)) {
+        params.delete(key);
+        value.forEach((v) => params.append(key, v as string));
       } else {
         params.set(key, String(value));
       }
@@ -86,6 +91,7 @@ useEffect(() => {
     page,
     limit,
     search: debouncedSearch || undefined,
+    tags: tags.length ? tags : undefined,
     orderBy,
     order,
   });
@@ -116,7 +122,6 @@ useEffect(() => {
       orderBy={orderBy}
       setOrderBy={(ob) => updateUrl({ orderBy: ob })}
       sortableFields={VALID_ORDER_BY}
-      view="table"
     />
   );
 

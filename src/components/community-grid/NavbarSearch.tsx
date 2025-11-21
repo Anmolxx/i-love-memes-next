@@ -7,6 +7,7 @@ import NextImage from "next/image";
 import { DataTableTagFilter } from "../data-table/data-table-tag-filter";
 import { X, RefreshCcw, ExternalLink } from "lucide-react";
 import useAuthentication from "@/hooks/use-authentication";
+import { UserHoverCard } from "../ui/extension/welcome-handler";
 
 interface NavbarSearchProps {
   searchQuery: string;
@@ -38,69 +39,58 @@ export function NavbarSearch({
 
   const showReset = searchQuery.length > 0 || selectedTags.length > 0;
 
-  const linkClassName =
-    "text-[#4b087ea5] hover:text-[#4b087e] transition-colors duration-200 text-base font-semibold";
+  const links = [
+        { id: 1, label: "Home", href: "/" },
+        { id: 2, label: "Templates", href: "/templates" },
+        { id: 3, label: "Meme Merch", href: "https://www.jewelrycandles.com/", external:true },
+      ];
+    
+    const logo = {
+      src:"/brand/ilovememes-logo.png",
+      alt:"I Love Memes",
+      href:"/"
+    }
 
-  const gradientStyle = {
-    backgroundImage: "linear-gradient(90deg,#CD01BA,#E20317)",
-    color: "white",
-    padding: "6px 12px",
-    borderRadius: "8px",
-    boxShadow:
-      "0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)",
-  };
+    const ctaButton = {
+        label: "Generate Meme",
+        href: "/meme",
+        external: false,
+      };
+    
 
   return (
     <div className="relative flex items-center justify-between w-full h-20 px-4 md:px-8 border-b bg-white">
-      <nav className="flex items-center gap-6 flex-1 justify-start min-w-[30%] text-sm font-medium font-serif">
-        {isAdmin ? (
-          <Link href="/admin/meme" className={linkClassName} target="_blank">
-              Admin
-          </Link> 
-       ) : ( 
-            <Link href="/" className={linkClassName}>
-               Home
-            </Link> 
-      )}
-
-        <Link href="/templates" className={linkClassName}>
-          Templates
-        </Link>
-
-        <Link
-          href="https://www.jewelrycandles.com/"
-          target="_blank"
-          rel="noopener noreferrer"
-          className={`${linkClassName} flex items-center gap-1`}
-        >
-          Meme Merch
-          <ExternalLink className="w-3 h-3" />
-        </Link>
-
-        <Link
-          href="/meme"
-          style={gradientStyle}
-          className="text-white hover:opacity-90 transition-opacity text-base font-semibold whitespace-nowrap"
-          target="_blank"
-        >
-          Create Humour
-        </Link>
-      </nav>
-
-      <Link
-        href="/"
-        className="absolute left-1/2 transform -translate-x-1/2 z-10"
-      >
-        <div className="relative h-18 w-36 flex-shrink-0">
-          <NextImage
-            src="/brand/ilovememes-logo.png"
-            alt="I Love Memes"
-            fill
-            className="object-contain"
-            priority
-          />
+      <div className="flex items-center gap-6 font-medium text-base font-serif flex-shrink-0">
+          {links.map((link) => (
+            <Link
+              key={link.id}
+              href={link.href}
+              target={link.external ? "_blank" : undefined}
+              className="text-[#4b087ea5] hover:text-[#4b087e] transition-colors duration-200"
+            >
+              {link.label}
+            </Link>
+          ))}
+          <Link
+              href={ctaButton.href}
+              target={ctaButton.external ? "_blank" : undefined}
+              className="px-4 py-2 rounded-full bg-gradient-to-r from-[#CD01BA] to-[#E20317] text-white text-sm font-medium shadow-sm"
+            >
+              {ctaButton.label}
+              </Link>
         </div>
-      </Link>
+      
+        <div className="absolute left-1/2 transform -translate-x-1/2 flex-shrink-0">
+            <Link href={logo.href} aria-label={logo.alt}>
+              <NextImage
+                src={logo.src}
+                alt={logo.alt}
+                width={180}
+                height={40}
+                className="object-contain"
+              />
+            </Link>
+          </div>
 
       <div className="flex items-center justify-end gap-2 flex-1 min-w-[30%]">
         <div className="relative flex items-center max-w-xs w-full">
@@ -140,6 +130,8 @@ export function NavbarSearch({
             <RefreshCcw className="h-4 w-4" />
           </Button>
         )}
+       
+          <UserHoverCard/>
       </div>
     </div>
   );

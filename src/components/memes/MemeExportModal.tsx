@@ -51,7 +51,7 @@ const MemeExportModal: React.FC<MemeExportModalProps> = ({
   onOpenChange,
 }) => {
   const router = useRouter();
-  const { isLoggedIn } = useAuthentication();
+  const { isAdmin, isLoggedIn } = useAuthentication();
   const [postMemeTrigger] = usePostMemeMutation();
   const [uploadFile] = useUploadFileMutation();
 
@@ -67,15 +67,15 @@ const MemeExportModal: React.FC<MemeExportModalProps> = ({
       description: "",
     },
   });
-
+  
   const handleSetSelectedTags = useCallback((newTags: string[]) => {
-    if (newTags.length <= 2) {
-      setSelectedTags(newTags);
-    } else {
+    if (!isAdmin && newTags.length > 2) {
       toast.error("You can only add a maximum of 2 tags to a meme.");
       setSelectedTags(newTags.slice(0, 2));
+    } else {
+      setSelectedTags(newTags);
     }
-  }, []);
+  }, [isAdmin]);
 
   const getExportDataURL = useCallback(async (): Promise<string | null> => {
     const canvas = canvasRef.current;
@@ -357,12 +357,14 @@ const MemeExportModal: React.FC<MemeExportModalProps> = ({
                 
                 {/* Tag Selection using DataTableTagFilter */}
                 <FormItem>
-                  <FormLabel>Tags <span className="text-xs text-muted-foreground">(Max 2)</span></FormLabel>
+                  <FormLabel>
+                    Tags { !isAdmin && <span className="text-xs text-muted-foreground">(Max 2)</span> }
+                  </FormLabel>
                   <FormControl>
                     <DataTableTagFilter
-                        selectedTags={selectedTags}
-                        setSelectedTags={handleSetSelectedTags} 
-                        variant='dialog'
+                      selectedTags={selectedTags}
+                      setSelectedTags={handleSetSelectedTags} 
+                      variant='dialog'
                     />
                   </FormControl>
                   <FormMessage />

@@ -11,11 +11,17 @@ export function Navbar() {
     { id: 4, label: "Meme Merch", href: "https://www.jewelrycandles.com/", external: true },
   ];
 
+  const logo = {
+    src:"/brand/ilovememes-logo.png",
+    alt:"I Love Memes",
+    href:"/"
+  }
+
   const ctaButton = {
     label: "Generate Meme",
     href: "/meme",
-    external: false,
+    external: true,
   };
 
-  return <GenericNavbar links={links} ctaButton={ctaButton} />;
+  return <GenericNavbar links={links} logo={logo} ctaButton={ctaButton} />;
 }

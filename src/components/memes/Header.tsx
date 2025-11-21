@@ -14,6 +14,8 @@ import SaveTemplateButton from "./SaveTemplateButton";
 import UpdateTemplateButton from "./UpdateTemplateButton";
 import { useGetTemplateByIdOrSlugQuery } from "@/redux/services/template";
 import NavbarPlate from "@/components/ui/extension/NavbarPlate";
+import Link from "next/link";
+import NextImage from "next/image";
 
 interface HeaderProps {
   canvasRef: React.RefObject<Canvas | null>;
@@ -67,8 +69,23 @@ const Header: React.FC<HeaderProps> = ({
     <header className="relative w-full bg-white border-b border-gray-200 flex items-center justify-between px-4 md:px-6 h-20">
       
       <div className="flex items-center flex-1">
-        <NavbarPlate links={navLinks} className="w-full justify-center" />
+        <NavbarPlate links={navLinks} className="justify-center" />
       </div>
+
+      <div className="absolute left-1/2 transform -translate-x-[45%]">
+          <Link href="/" aria-label="I Love Memes">
+            <div className="relative h-40 w-[140px] md:w-[180px]">
+              <NextImage
+                src="/brand/ilovememes-logo.png"
+                alt="I Love Memes"
+                fill
+                className="object-contain"
+                sizes="(max-width: 768px) 140px, 180px"
+                priority
+              />
+            </div>
+          </Link>
+        </div>
 
       <div className="flex items-center space-x-3 flex-1 justify-end min-w-[35%]">
         <MemeResetButton onReset={onReset} />

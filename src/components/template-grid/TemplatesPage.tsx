@@ -7,18 +7,17 @@ import { NavbarSearch } from "./NavbarSearch";
 import { Button } from "@/components/ui/button";
 import { TagSelector } from "./TagSelector";
 import { useDebounce } from "@/hooks/use-debounce";
-import NextImage from "next/image";
 import { useRouter } from "next/navigation";
 import { useSearchParams } from "next/navigation";
 import { Template } from "@/utils/dtos/template.dto";
-// Import the Skeleton component
 import { TemplateGallerySkeleton } from "./TemplateSkeleton"; 
+import { Footer } from "@/sections/Footer";
 
 export function TemplateGallery() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const initialPage = parseInt(searchParams.get("page") ?? "1");
-  const per_page = parseInt(searchParams.get("limit") ?? "4");
+  const per_page = parseInt(searchParams.get("limit") ?? "10");
   const initialSearch = searchParams.get("search") ?? "";
   const initialTags = searchParams.getAll("tags") ?? [];
 
@@ -58,7 +57,7 @@ export function TemplateGallery() {
   return (
     <>
       <div className="w-full bg-white">
-        <div className="max-w-[108rem] mx-auto px-4">
+        <div className="max-w-[110rem] mx-auto px-4">
       
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <NavbarSearch
@@ -77,7 +76,7 @@ export function TemplateGallery() {
         </div>
       </div>
     
-      <div className="max-w-7xl mx-auto px-4 py-6">
+      <div className="max-w-7xl mx-auto px-4 py-6 mb-5">
       
         {/* Conditional Rendering Block */}
         {isFetching ? (
@@ -130,6 +129,7 @@ export function TemplateGallery() {
           </div>
         )}
       </div>
-      </>
+      <Footer/>
+    </>
   );
 }

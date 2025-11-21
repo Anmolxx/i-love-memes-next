@@ -141,6 +141,7 @@ const ImageSelector: React.FC<Props> = ({
   };
 
   const hasTemplates = templates && templates.length > 0;
+  const showNoResultsMessage = debouncedSearchQuery.length > 0 && !hasTemplates;
 
   return (
     <div className="bg-white rounded-lg h-full flex flex-col p-1 max-h-screen">
@@ -202,7 +203,7 @@ const ImageSelector: React.FC<Props> = ({
 
       <div className="flex-1 p-4 overflow-y-auto min-h-0">
         {/* Conditional Humourous Message for No Results */}
-        {!hasTemplates && (
+        {showNoResultsMessage && (
           <div className="flex flex-col items-center justify-center h-full py-10 text-center text-gray-500">
             <Search className="w-10 h-10 mb-4 text-gray-400" />
             <p className="text-xl font-semibold mb-2">

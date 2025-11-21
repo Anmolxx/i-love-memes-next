@@ -11,6 +11,8 @@ import NextImage from "next/image";
 import { useRouter } from "next/navigation";
 import { useSearchParams } from "next/navigation";
 import { Template } from "@/utils/dtos/template.dto";
+// Import the Skeleton component
+import { TemplateGallerySkeleton } from "./TemplateSkeleton"; 
 
 export function TemplateGallery() {
   const searchParams = useSearchParams();
@@ -77,7 +79,10 @@ export function TemplateGallery() {
     
       <div className="max-w-7xl mx-auto px-4 py-6">
       
-        {templates.length === 0 && !isFetching ? (
+        {/* Conditional Rendering Block */}
+        {isFetching ? (
+          <TemplateGallerySkeleton />
+        ) : templates.length === 0 ? (
           <p className="text-gray-500 text-center mt-6">No templates found</p>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">

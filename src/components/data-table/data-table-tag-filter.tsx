@@ -18,6 +18,8 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { useGetAllTagsQuery } from "@/redux/services/tag";
 import { useDebounce } from "@/hooks/use-debounce";
 
+type TagFilterVariant = 'filter' | 'dialog';
+
 interface MemeTag {
   id: string;
   name: string;
@@ -36,18 +38,41 @@ interface TagOption {
   label: string;
 }
 
-interface DataTableTagFilterProps {
-  selectedTags: string[];
-  setSelectedTags: (tags: string[]) => void;
+interface DataTableTagFilterProps extends React.HTMLAttributes<HTMLButtonElement>{
+  selectedTags?: string[];
+  setSelectedTags?: (tags: string[]) => void;
+  variant?: TagFilterVariant;
 }
 
 export function DataTableTagFilter({
-  selectedTags,
-  setSelectedTags,
+  selectedTags: initialSelectedTags = [],
+  setSelectedTags: setExternalSelectedTags,
+  variant = 'filter',
+  className,
+  ...props
 }: DataTableTagFilterProps) {
-  const [search, setSearch] = React.useState("");
-  const debouncedSearch = useDebounce(search,600);
+  const isControlled = !!setExternalSelectedTags;
+  
+  const [internalSelectedTags, setInternalSelectedTags] = React.useState<string[]>(initialSelectedTags);
+  
+  const tags = isControlled ? initialSelectedTags : internalSelectedTags;
+  const setTags = React.useCallback((newTags: string[]) => {
+    if (isControlled && setExternalSelectedTags) {
+      setExternalSelectedTags(newTags);
+    } else {
+      setInternalSelectedTags(newTags);
+    }
+  }, [isControlled, setExternalSelectedTags]);
 
+  React.useEffect(() => {
+    if (!isControlled) {
+      setInternalSelectedTags(initialSelectedTags);
+    }
+  }, [initialSelectedTags, isControlled]);
+
+  const [search, setSearch] = React.useState("");
+  const debouncedSearch = useDebounce(search, 600);
+  const maxDisplayCount = variant === 'dialog' ? 5 : 2;
   const { data: tagsData, isLoading } = useGetAllTagsQuery({ search: debouncedSearch });
 
   const [allKnownTags, setAllKnownTags] = React.useState<Map<string, string>>(new Map());
@@ -61,11 +86,11 @@ export function DataTableTagFilter({
   }, [tagsData]);
 
   const selectedTagOptions = React.useMemo(() => {
-    return selectedTags.map((tagValue) => ({
+    return tags.map((tagValue) => ({
       value: tagValue,
       label: allKnownTags.get(tagValue) || `#${tagValue}`,
     }));
-  }, [selectedTags, allKnownTags]);
+  }, [tags, allKnownTags]);
 
   React.useEffect(() => {
     if (tagsData?.items) {
@@ -102,19 +127,23 @@ export function DataTableTagFilter({
   return (
     <Popover>
       <PopoverTrigger asChild>
-        <Button variant="outline" size="sm" className="h-8 border-dashed cursor-pointer">
+        <Button variant="outline" size="sm" 
+        className={cn("h-8 border-dashed cursor-pointer", className,
+          variant === 'dialog' && "w-full justify-start overflow-hidden")}
+          {...props}>
           <PlusCircle className="mr-2 h-4 w-4" />
           Tags
-          {selectedTags.length > 0 && (
+          {tags.length > 0 && (
             <>
-              <div className="mx-2 h-4 w-px bg-border sm:block hidden" />
+              <div className="mx-2 h-4 w-px bg-border sm:block hidden" /> 
               <div className="hidden space-x-1 lg:flex">
-                {selectedTags.length > 2 ? (
+                {tags.length > maxDisplayCount ? ( 
                   <Badge variant="secondary" className="rounded-sm px-1 font-normal">
-                    {selectedTags.length} selected
+                    {tags.length} selected
                   </Badge>
                 ) : (
                   selectedTagOptions
+                    .slice(0, maxDisplayCount) 
                     .map((option) => (
                       <Badge
                         variant="secondary"
@@ -141,20 +170,18 @@ export function DataTableTagFilter({
           <CommandList>
             <CommandEmpty>No results found.</CommandEmpty>
             
-            {/* Group for all tags (selected + search results) */}
             <CommandGroup>
               {allDisplayTags.map((tag) => {
-                const isSelected = selectedTags.includes(tag.value);
+                const isSelected = tags.includes(tag.value);
                 return (
                   <CommandItem
                     key={tag.value}
-                  
                     value={tag.label} 
                     onSelect={() => {
                       const newTags = isSelected
-                        ? selectedTags.filter((t) => t !== tag.value)
-                        : [...selectedTags, tag.value];
-                      setSelectedTags(newTags);
+                        ? tags.filter((t) => t !== tag.value)
+                        : [...tags, tag.value];
+                      setTags(newTags);
                       setSearch(""); 
                     }}
                   >
@@ -174,12 +201,12 @@ export function DataTableTagFilter({
               })}
             </CommandGroup>
             
-            {selectedTags.length > 0 && (
+            {tags.length > 0 && (
               <>
                 <CommandSeparator />
                 <CommandGroup>
                   <CommandItem
-                    onSelect={() => setSelectedTags([])}
+                    onSelect={() => setTags([])}
                     className="justify-center text-center"
                   >
                     Clear filters

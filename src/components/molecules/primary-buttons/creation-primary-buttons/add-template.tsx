@@ -8,8 +8,7 @@ export function AddTemplateDialog() {
   const router = useRouter();
 
   const handleAddTemplate = () => {
-    // Redirect to meme page for template creation
-    router.push("/meme");
+    window.open("/meme", "_blank");
   };
 
   return (

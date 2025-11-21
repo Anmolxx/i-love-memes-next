@@ -1,5 +1,5 @@
 // app/page.tsx
-import { Navbar } from '@/components/ui/extension/Navbar'
+import { Navbar } from '@/sections/Navbar'
 import { Hero } from '@/sections/Hero'
 import { TextCarousel } from '@/sections/TextCarousel'
 import { ImageCarousel } from '@/sections/ImageCarousel'

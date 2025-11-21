@@ -5,8 +5,9 @@ import { Button } from "@/components/ui/button";
 import { Edit } from "lucide-react";
 import { Canvas } from "fabric";
 import { toast } from "sonner";
-import { EditDialog } from "@/components/dialog/edit-template";
+import { EditDialog } from "@/components/dialog/edit-dialog";
 import {  useGetTemplateByIdOrSlugQuery, useUpdateTemplateMutation } from "@/redux/services/template";
+import { Template } from "@/utils/dtos/template.dto";
 
 interface UpdateTemplateButtonProps {
   canvasRef: React.RefObject<Canvas | null>;
@@ -19,10 +20,12 @@ export default function UpdateTemplateButton({
   templateSlug,
   backgroundImageId,
 }: UpdateTemplateButtonProps) {
+  
   const [showDialog, setShowDialog] = useState(false);
   const { data: template, isLoading } =  useGetTemplateByIdOrSlugQuery(templateSlug);
   const [updateTemplate] = useUpdateTemplateMutation();
   
+  const templateData = template?.data;
   if (isLoading) return null;
   if (!template) return null;
 
@@ -39,7 +42,7 @@ export default function UpdateTemplateButton({
       </Button>
 
       <EditDialog
-        data={template}
+        data={templateData as Template}
         open={showDialog}
         onOpenChange={setShowDialog}
         getTags={(t) =>
@@ -54,19 +57,15 @@ export default function UpdateTemplateButton({
           backgroundImageId,
         })}
         onSave={async (payload) => {
-          let imageDataUrl = null;
+          let canvasConfigJson = null;
 
           if (canvasRef?.current) {
-            imageDataUrl = canvasRef.current.toDataURL({
-              format: "png",
-              quality: 1,
-              multiplier: 1,
-            });
+            canvasConfigJson = canvasRef.current.toJSON();
           }
 
           const finalPayload = {
             ...payload,
-            preview: imageDataUrl || undefined,
+            config: canvasConfigJson || undefined,
           };
 
           await updateTemplate({

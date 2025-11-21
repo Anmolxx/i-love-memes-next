@@ -5,3 +5,4 @@ export const TAG_MEME_INTERACTION_SUMMARY = "TAG_MEME_INTERACTIONS_SUMMARY" as c
 export const TAGS_API = "TAGS_API" as const;
 export const TAG_GET_UPLOADED_FILES = "TAGS_GET_UPLOADED_FILES" as const;
 export const TAG_GET_COMMENTS = "TAG_GET_COMMENTS" as const;
+export const TAG_COMMENT_REPLIES = "TAG_COMMENT_REPLIES" as const;

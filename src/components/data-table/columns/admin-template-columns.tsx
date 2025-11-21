@@ -17,7 +17,7 @@ import { useDeleteTemplateMutation, useUpdateTemplateMutation } from "@/redux/se
 import { toast } from "sonner";
 import { Template } from "@/utils/dtos/template.dto";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { EditDialog } from "@/components/dialog/edit-template";
+import { EditDialog } from "@/components/dialog/edit-dialog";
 import { Popover, PopoverTrigger } from "@/components/ui/popover";
 import { ImagePopover } from "@/components/ui/extension/image-popover";
 import React from "react";
@@ -86,46 +86,66 @@ export function adminTemplateColumns(): ColumnDef<Template>[] {
           const tags = row.original.tags?.filter(tag => !tag.deletedAt) ?? [];
           const displayedTags = tags.slice(0, 2);
           const hiddenTags = tags.slice(2);
-        
           return (
-            <div className="flex items-center gap-1">
-              {displayedTags.map(tag => (
-                <span
-                  key={tag.id}
-                  className="text-xs px-2 py-1.5 rounded-lg font-medium dark:bg-[#28282B] dark:text-white border dark:border-gray-200 border-gray-900 bg-gray-200"
-                >
-                  #{tag.name}
-                </span>
-              ))}
-              
-              {hiddenTags.length > 0 && (
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <CirclePlus className="cursor-pointer text-black dark:text-white" size={18} />
-                  </TooltipTrigger>
-                  <TooltipContent
-                    side="top"
-                    className="bg-white text-black dark:bg-[#202020] dark:text-white shadow-lg p-2 rounded-md border border-gray-200 dark:border-none"
-                  >
-                    <div className="flex flex-wrap gap-1 max-w-[200px]">
-                      {hiddenTags.map(tag => (
-                        <span
-                          key={tag.id}
-                          className="text-xs px-2 py-1 rounded-lg font-medium border border-transparent bg-gray-200 text-gray-800 dark:bg-black dark:text-white"
-                        >
-                          #{tag.name}
-                        </span>
-                      ))}
-                    </div>
-                  </TooltipContent>
-                </Tooltip>
-              )}
-            </div> 
-          )
-        },
-        enableSorting: false, 
-        enableHiding: false,
-      },
+                <div className="flex items-center gap-1">
+                  {displayedTags.map(tag => {
+                    const hasName = tag.name && tag.name.length > 0;
+                    const tagClassName =
+                      "text-xs px-2 py-1.5 rounded-lg font-medium dark:bg-[#28282B] dark:text-white border dark:border-gray-200 border-gray-900 bg-gray-200";
+                    return hasName ? (
+                      <Link
+                        key={tag.id}
+                        href={`/templates/?tags=${tag.name}`}
+                        target="_blank"
+                        className="hover:opacity-80 transition-opacity"
+                      >
+                        <span className={tagClassName}>#{tag.name}</span>
+                      </Link>
+                    ) : (
+                      <span key={tag.id} className={tagClassName}>
+                        #Invalid Tag
+                      </span>
+                    );
+                  })}
+                   {hiddenTags.length > 0 && (
+                     <Tooltip>
+                       <TooltipTrigger asChild>
+                         <CirclePlus className="cursor-pointer text-black dark:text-white" size={18} />
+                       </TooltipTrigger>
+                       <TooltipContent
+                         side="top"
+                         className="bg-white text-black dark:bg-[#202020] dark:text-white shadow-lg p-2 rounded-md border border-gray-200 dark:border-none"
+                       >
+                         <div className="flex flex-wrap gap-2 max-w-[200px]">
+                           {hiddenTags.map(tag => {
+                             const hasName = tag.name && tag.name.length > 0;
+          
+                             return hasName ? (
+                               <Link key={tag.id}
+                                   href={`/templates/?tags=${tag.name}`}
+                                   target="_blank"
+                                   className="hover:opacity-80 transition-opacity py-2"
+                                 ><span
+                               key={tag.id}
+                               className="text-xs px-2 py-1 rounded-lg font-medium border border-transparent bg-gray-200 text-gray-800 dark:bg-black dark:text-white"
+                             >#{tag.name}
+                             </span></Link>
+                           ): (
+                           <span key={tag.id} className="text-xs px-2 py-1 rounded-lg font-medium border border-transparent bg-gray-200 text-gray-800 dark:bg-black dark:text-white">
+                             #Invalid Tag
+                           </span>
+                         );
+                         })}
+                         </div>
+                       </TooltipContent>
+                     </Tooltip>
+                   )}
+                 </div>  
+               );
+             },
+      enableSorting: false,
+      enableHiding: false, 
+    },
     {
       accessorKey: "createdAt",
       header: ({ column }) => (
@@ -150,9 +170,7 @@ export function adminTemplateColumns(): ColumnDef<Template>[] {
 const ActionCell = ({ row }: { row: any }) => {
   const template: Template = row.original;
   const [deleteTemplate] = useDeleteTemplateMutation();
-  const [updateTemplate] = useUpdateTemplateMutation();
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
-  const [showEditDialog, setShowEditDialog] = useState(false);
 
   const handleDeleteTemplate = useCallback(async () => {
     try {
@@ -199,22 +217,6 @@ const ActionCell = ({ row }: { row: any }) => {
         deleteTitle="Delete Template"
         deleteDescription={`Are you sure you want to delete "${template.title}"? This action cannot be undone.`}
         action={handleDeleteTemplate}
-      />
-
-      <EditDialog
-        data={template}
-        open={showEditDialog}
-        onOpenChange={setShowEditDialog}
-        getTags={(t) => t.tags?.filter((tag) => !tag.deletedAt).map((tag) => tag.name) || []}
-        buildPayload={(t, title, description, tags) => ({
-          title,
-          description,
-          tags,
-        })}
-        onSave={async (payload) => {
-          await updateTemplate({ slugOrId: template.id, body: payload });
-          toast.success("Template updated!");
-        }}
       />
     </div>
   );

@@ -7,6 +7,7 @@ import { Edit, Trash2, Send, CornerDownRight, User, Loader2 } from "lucide-react
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { useGetCommentRepliesQuery } from "@/redux/services/comment"
 import { toast } from 'sonner'
+import useAuthentication from "@/hooks/use-authentication";
 
 const COMMENTS_PER_LOAD = 5
 
@@ -22,6 +23,14 @@ interface CommentItemProps {
   isLoggedIn: boolean
   actions: CommentActions
   isReply: boolean
+}
+
+const handleApiError = (err: any) => {
+  const apiError = err?.data
+  if (apiError?.errors && typeof apiError.errors === "object") {
+    Object.values(apiError.errors).forEach((msg: any) => { if (typeof msg === "string") toast.error(msg) })
+  } else if (apiError?.message) toast.error(apiError.message)
+  else toast.error("Failed to update user")
 }
 
 const CommentItem: React.FC<CommentItemProps> = ({ comment, isLoggedIn, actions, isReply }) => {
@@ -55,22 +64,34 @@ const CommentItem: React.FC<CommentItemProps> = ({ comment, isLoggedIn, actions,
     setReplyingToCommentId(null)
   }
 
-  const handleEditSubmit = () => {
-    actions.onUpdateComment(comment.id, editingContent)
-    setEditingCommentId(null)
+  const handleEditSubmit = async () => {
+    try {
+      await actions.onUpdateComment(comment.id, editingContent)
+      setEditingCommentId(null)
+    } catch (err: any) {
+      handleApiError(err)
+    }
   }
 
-  const handleDelete = (id: string, isReply: boolean) => {
-    actions.onDeleteComment(id); 
-    const message = isReply ? 'Reply deleted' : 'Comment deleted';
-    toast.success(message);
-  };
+  const handleDelete = async (id: string, isReply: boolean) => {
+    try {
+      await actions.onDeleteComment(id)
+      const message = isReply ? 'Reply deleted' : 'Comment deleted'
+      toast.success(message)
+    } catch (err: any) {
+      handleApiError(err)
+    }
+  }
 
-  const handleReplySubmit = () => {
+  const handleReplySubmit = async () => {
     if (!replyContent.trim()) return
-    actions.onAddComment(replyContent, comment.id)
-    setReplyingToCommentId(null)
-    setReplyContent("")
+    try {
+      await actions.onAddComment(replyContent, comment.id)
+      setReplyingToCommentId(null)
+      setReplyContent("")
+    } catch (err: any) {
+      handleApiError(err)
+    }
   }
 
   const authorName =
@@ -78,7 +99,7 @@ const CommentItem: React.FC<CommentItemProps> = ({ comment, isLoggedIn, actions,
       ? `${comment.author.firstName} ${comment.author.lastName}`
       : comment.author.username || comment.author.email
 
-  const isAuthor = isLoggedIn && comment.meme.id === actions.memeId
+  const isAuthor = isLoggedIn && comment.author.id === actions.memeId
 
   const contentClasses = isReply ? "text-sm text-gray-700 mt-1" : "text-base text-gray-700 mt-1"
 
@@ -98,8 +119,13 @@ const CommentItem: React.FC<CommentItemProps> = ({ comment, isLoggedIn, actions,
 
         {editingCommentId === comment.id ? (
           <div className="flex gap-2 items-start mt-1 pl-9">
-            <Input value={editingContent} onChange={(e) => setEditingContent(e.target.value)} className="flex-grow" />
-            <Button onClick={handleEditSubmit} disabled={!editingContent.trim()} size="sm">Save</Button>
+            <Input value={editingContent} 
+            onChange={(e) => setEditingContent(e.target.value)} className="flex-grow" 
+            onKeyDown={(e) => {
+                if (e.key === "Enter" && editingContent.trim()) handleEditSubmit()
+              }}/>
+            <Button className="cursor-pointer" onClick={handleEditSubmit} 
+            disabled={!editingContent.trim()} size="sm">Save</Button>
             <Button variant="ghost" size="sm" onClick={() => setEditingCommentId(null)}>Cancel</Button>
           </div>
         ) : (
@@ -110,7 +136,7 @@ const CommentItem: React.FC<CommentItemProps> = ({ comment, isLoggedIn, actions,
           <Button
             variant="link"
             size="sm"
-            className="text-gray-500 hover:text-blue-500 p-0 h-auto"
+            className="text-gray-500 hover:text-blue-500 p-0 h-auto cursor-pointer"
             onClick={() => {
               setReplyingToCommentId(replyingToCommentId === comment.id ? null : comment.id)
               setEditingCommentId(null)
@@ -125,7 +151,7 @@ const CommentItem: React.FC<CommentItemProps> = ({ comment, isLoggedIn, actions,
               <Button
                 variant="link"
                 size="sm"
-                className="text-gray-500 hover:text-yellow-600 p-0 h-auto"
+                className="text-gray-500 hover:text-yellow-600 p-0 h-auto cursor-pointer"
                 onClick={handleStartEditing}
                 disabled={editingCommentId === comment.id}
               >
@@ -136,7 +162,7 @@ const CommentItem: React.FC<CommentItemProps> = ({ comment, isLoggedIn, actions,
               <Button
                 variant="link"
                 size="sm"
-                className="text-gray-500 hover:text-red-500 p-0 h-auto"
+                className="text-gray-500 hover:text-red-500 p-0 h-auto cursor-pointer"
                 onClick={() => handleDelete(comment.id, isReply)}
               >
                 <Trash2 className="w-3 h-3 mr-1" />
@@ -153,8 +179,11 @@ const CommentItem: React.FC<CommentItemProps> = ({ comment, isLoggedIn, actions,
               value={replyContent}
               onChange={(e) => setReplyContent(e.target.value)}
               className="flex-grow"
+              onKeyDown={(e) => {
+                  if (e.key === "Enter" && replyContent.trim()) handleReplySubmit()
+                }}
             />
-            <Button onClick={handleReplySubmit} disabled={!replyContent.trim()} size="sm">
+            <Button className="cursor-pointer" onClick={handleReplySubmit} disabled={!replyContent.trim()} size="sm">
               Reply
             </Button>
           </div>
@@ -231,10 +260,14 @@ export default function CommentsSection({ comments, isLoggedIn }: CommentsSectio
     setVisibleCommentCount((prev) => prev + COMMENTS_PER_LOAD)
   }
 
-  const handleTopLevelSubmit = () => {
+  const handleTopLevelSubmit = async () => {
     if (!newComment.trim()) return
-    actions.onAddComment(newComment)
-    setNewComment("")
+    try {
+      await actions.onAddComment(newComment)
+      setNewComment("")
+    } catch (err: any) {
+      handleApiError(err)
+    }
   }
 
   return (
@@ -252,7 +285,7 @@ export default function CommentsSection({ comments, isLoggedIn }: CommentsSectio
               if (e.key === "Enter" && newComment.trim()) handleTopLevelSubmit()
             }}
           />
-          <Button onClick={handleTopLevelSubmit} disabled={!newComment.trim()}>
+          <Button className="cursor-pointer" onClick={handleTopLevelSubmit} disabled={!newComment.trim()}>
             <Send className="w-4 h-4 mr-2" />
             Post
           </Button>

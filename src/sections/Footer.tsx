@@ -82,7 +82,7 @@ export function Footer() {
                 </Link>
               </li>
               <li>
-                <Link href="https://www.jewelrycandles.com/" className="hover:text-black">
+                <Link href="https://www.jewelrycandles.com/" className="hover:text-black" target="_blank">
                   Meme Merch
                 </Link>
               </li>

@@ -17,6 +17,7 @@ import { FlagDialog } from "./FlagDialog";
 import { CommunityPagination } from "@/components/data-table/data-table-community-gallery-pagination";
 import { TagSelector } from "./TagsSelector";
 import { Meme } from "@/utils/dtos/meme.dto";
+import { Footer } from "@/sections/Footer";
 
 type VoteStatus = InteractionType.UPVOTE | InteractionType.DOWNVOTE | "NONE";
 
@@ -24,7 +25,7 @@ export default function CommunityGallery(): JSX.Element {
   const searchParams = useSearchParams();
   const router = useRouter();
   const initialPage = parseInt(searchParams.get("page") ?? "1");
-  const per_page = parseInt(searchParams.get("limit") ?? "4");
+  const per_page = parseInt(searchParams.get("limit") ?? "10");
   const initialSearch = searchParams.get("search") ?? "";
   const initialTags = searchParams.getAll("tags") ?? [];
 
@@ -137,9 +138,9 @@ export default function CommunityGallery(): JSX.Element {
           await postInteraction({ memeId: meme.id, type: targetVoteType });
 
           if (targetVoteType === InteractionType.UPVOTE) {
-            scoreChange = isChangingVote && currentVote === InteractionType.DOWNVOTE ? 2 : 1;
+            scoreChange = isChangingVote && currentVote === InteractionType.DOWNVOTE ? 1 : -1;
           } else {
-            scoreChange = isChangingVote && currentVote === InteractionType.UPVOTE ? -2 : -1;
+            scoreChange = isChangingVote && currentVote === InteractionType.UPVOTE ? 1 : -1;
           }
 
           setMemes(memes.map(m =>
@@ -226,86 +227,90 @@ export default function CommunityGallery(): JSX.Element {
         }, null as Meme | null)
       : null;
 
-  return (
-    <div className="flex flex-col h-full">
-      <div className="relative">
-        <nav className="w-full sticky top-0 z-50 bg-white/70 backdrop-blur">
-          <div className="max-w-6xl px-4 py-2 flex items-center gap-6 mx-auto">
-            <Link href="/">
-              <div className="relative h-15 w-30 flex-shrink-0">
-                <NextImage src="/brand/ilovememes-logo.png" alt="I Love Memes" fill className="object-contain" priority />
-              </div>
-            </Link>
-            <NavbarSearch
-              searchQuery={searchQuery}
-              setSearchQuery={setSearchQuery}
-              handleSearch={handleSearch}
-              isFetching={isFetching}
-              selectedTags={selectedTags}
-              setSelectedTags={setSelectedTags}
-              availableTags={availableTags}
-            />
-            <TagSelector setAvailableTags={setAvailableTags} />
-          </div>
-        </nav>
-      </div>
-
-      <div className="max-w-[110rem] mx-auto p-4 flex flex-col gap-6">
-        <div className="grid grid-cols-1 md:grid-cols-[3fr_1fr] gap-6 h-[calc(100vh-150px)]">
-          <div ref={scrollContainerRef} className="overflow-y-auto pr-2 hide-scrollbar">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-              {memes.length === 0 ? (
-                <div className="text-center text-gray-500 mt-10">
-                  <p className="text-xl mb-2">
-                    Oops! We couldn’t find any memes
-                    {searchQuery ? ` for "${searchQuery}"` : ""}
-                    {selectedTags.length > 0 ? ` with tags: ${selectedTags.join(", ")}` : ""} 😅
-                  </p>
-                  <p className="text-sm">Try another search or create your own meme!</p>
-                </div>
-              ) : (
-                memes.map((meme) => (
-                  <MemeCard
-                    key={meme.id}
-                    meme={meme}
-                    handleVote={handleVote}
-                    shareMeme={shareMeme}
-                    setFlagMemeId={setFlagMemeId}
-                    isPosting={isPostingInteraction}
-                    isDeleting={isDeletingInteraction}
-                  />
-                ))
-              )}
-            </div>
-
-            {memes.length > 0 && (
-              <div className="mt-4">
-                <CommunityPagination
-                  page={currentPage}
-                  pageCount={data?.meta?.totalPages ?? 0}
-                  onPageChange={handlePageChange}
-                />
-              </div>
-            )}
-          </div>
-
-          <aside className="flex flex-col gap-6 pt-4 sticky top-0 h-[calc(100vh-200px)] overflow-y-auto">
-            <CreateMemeCard />
-            {topMeme && <TopMemeSidebar topMeme={topMeme} />}
-          </aside>
-        </div>
-      </div>
-
-      <FlagDialog
-        flagMemeId={flagMemeId}
-        flagReason={flagReason}
-        setFlagReason={setFlagReason}
-        flagComment={flagComment}
-        setFlagComment={setFlagComment}
-        submitFlag={submitFlag}
-        resetFlagDialog={resetFlagDialog}
-        isSubmittingFlag={isSubmittingFlag}
-      />
-    </div>
-  );
-}
+ return (
+     <div className="flex flex-col h-full min-h-screen">
+       {/* Navbar */}
+       <div className="relative">
+         <nav className="w-full sticky top-0 z-50 bg-white/70 backdrop-blur">
+           <div className="max-w-[110rem] px-4 flex items-center gap-6 mx-auto mb-5">
+             <NavbarSearch
+               searchQuery={searchQuery}
+               setSearchQuery={setSearchQuery}
+               handleSearch={handleSearch}
+               isFetching={isFetching}
+               selectedTags={selectedTags}
+               setSelectedTags={setSelectedTags}
+               availableTags={availableTags}
+             />
+             <TagSelector setAvailableTags={setAvailableTags} />
+           </div>
+         </nav>
+       </div>
+ 
+       {/* Content */}
+       <div className="max-w-[110rem] mx-auto p-4 flex flex-col gap-6 flex-1">
+         <div className="grid grid-cols-1 md:grid-cols-[3fr_1fr] gap-6 h-[calc(100vh-250px)]">
+           {/* Scrollable memes */}
+           <div ref={scrollContainerRef} className="overflow-y-auto pr-2 hide-scrollbar max-h-[calc(100vh-250px)]">
+             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+               {memes.length === 0 ? (
+                 <div className="text-center text-gray-500 mt-10">
+                   <p className="text-xl mb-2">
+                     Oops! We couldn’t find any memes
+                     {searchQuery ? ` for "${searchQuery}"` : ""}
+                     {selectedTags.length > 0 ? ` with tags: ${selectedTags.join(", ")}` : ""} 😅
+                   </p>
+                   <p className="text-sm">Try another search or create your own meme!</p>
+                 </div>
+               ) : (
+                 memes.map((meme) => (
+                   <MemeCard
+                     key={meme.id}
+                     meme={meme}
+                     handleVote={handleVote}
+                     shareMeme={shareMeme}
+                     setFlagMemeId={setFlagMemeId}
+                     isPosting={isPostingInteraction}
+                     isDeleting={isDeletingInteraction}
+                   />
+                 ))
+               )}
+             </div>
+           </div>
+ 
+           {/* Sidebar */}
+           <aside className="flex flex-col gap-6 pt-4 sticky top-0 h-[calc(100vh-250px)] overflow-y-auto">
+             <CreateMemeCard />
+             {topMeme && <TopMemeSidebar topMeme={topMeme} />}
+           </aside>
+         </div>
+ 
+         {/* Static Pagination */}
+         {memes.length > 0 && (
+           <div className="sticky bottom-0 bg-white/70 z-20 px-2 py-2">
+             <CommunityPagination
+               page={currentPage}
+               pageCount={data?.meta?.totalPages ?? 0}
+               onPageChange={handlePageChange}
+             />
+           </div>
+         )}
+       </div>
+ 
+       {/* Flag Dialog */}
+       <FlagDialog
+         flagMemeId={flagMemeId}
+         flagReason={flagReason}
+         setFlagReason={setFlagReason}
+         flagComment={flagComment}
+         setFlagComment={setFlagComment}
+         submitFlag={submitFlag}
+         resetFlagDialog={resetFlagDialog}
+         isSubmittingFlag={isSubmittingFlag}
+       />
+ 
+       {/* Footer */}
+       <Footer />
+     </div>
+   );
+ }

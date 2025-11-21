@@ -65,6 +65,7 @@ export function Hero() {
                   style={{
                     backgroundImage: "linear-gradient(90deg,#CD01BA,#E20317)",
                   }}
+                  target="_blank"
                 >
                   Generate Meme
                   <Rocket className="w-4 h-4" />

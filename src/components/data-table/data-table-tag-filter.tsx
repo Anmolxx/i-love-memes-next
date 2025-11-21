@@ -38,7 +38,7 @@ interface TagOption {
   label: string;
 }
 
-interface DataTableTagFilterProps {
+interface DataTableTagFilterProps extends React.HTMLAttributes<HTMLButtonElement>{
   selectedTags?: string[];
   setSelectedTags?: (tags: string[]) => void;
   variant?: TagFilterVariant;
@@ -48,6 +48,8 @@ export function DataTableTagFilter({
   selectedTags: initialSelectedTags = [],
   setSelectedTags: setExternalSelectedTags,
   variant = 'filter',
+  className,
+  ...props
 }: DataTableTagFilterProps) {
   const isControlled = !!setExternalSelectedTags;
   
@@ -126,8 +128,9 @@ export function DataTableTagFilter({
     <Popover>
       <PopoverTrigger asChild>
         <Button variant="outline" size="sm" 
-        className={cn("h-8 border-dashed cursor-pointer",
-          variant === 'dialog' && "w-full justify-start overflow-hidden")}>
+        className={cn("h-8 border-dashed cursor-pointer", className,
+          variant === 'dialog' && "w-full justify-start overflow-hidden")}
+          {...props}>
           <PlusCircle className="mr-2 h-4 w-4" />
           Tags
           {tags.length > 0 && (

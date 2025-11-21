@@ -230,12 +230,7 @@ export default function CommunityGallery(): JSX.Element {
     <div className="flex flex-col h-full">
       <div className="relative">
         <nav className="w-full sticky top-0 z-50 bg-white/70 backdrop-blur">
-          <div className="max-w-6xl px-4 py-2 flex items-center gap-6 mx-auto">
-            <Link href="/">
-              <div className="relative h-15 w-30 flex-shrink-0">
-                <NextImage src="/brand/ilovememes-logo.png" alt="I Love Memes" fill className="object-contain" priority />
-              </div>
-            </Link>
+          <div className="max-w-[108rem] px-4 flex items-center gap-6 mx-auto mb-5">
             <NavbarSearch
               searchQuery={searchQuery}
               setSearchQuery={setSearchQuery}

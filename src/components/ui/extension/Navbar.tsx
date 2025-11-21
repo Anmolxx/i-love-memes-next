@@ -10,7 +10,7 @@ export function Navbar() {
 
     return (
         <nav className="w-full sticky top-0 z-50 border-b border-black/10 bg-white/70 backdrop-blur">
-            <div className="mx-auto max-w-7xl px-4 py-3">
+            <div className="mx-auto max-w-[92rem] px-4 py-3">
                 <div className="flex items-center justify-between">
                     {/* Mobile menu button */}
                     <button
@@ -22,7 +22,7 @@ export function Navbar() {
                     </button>
 
                     {/* Desktop navigation - left side */}
-                    <div className="hidden md:flex items-center gap-6 text-base font-medium font-serif">
+                    <div className="hidden md:flex items-center gap-4 text-base font-bold font-serif">
                       <Link 
                         href="/" 
                         className="text-[#4b087ea5] hover:text-[#4b087e] transition-colors duration-200"
@@ -83,6 +83,7 @@ export function Navbar() {
                           href="/meme"
                           className="flex items-center justify-center gap-2 px-3 py-2 md:px-4 rounded-full text-xs md:text-sm font-medium text-white shadow-sm"
                           style={{ backgroundImage: 'linear-gradient(90deg,#CD01BA,#E20317)' }}
+                          target='_blank'
                         >
                           <span className="hidden sm:inline">Generate Meme</span>
                           <span className="sm:hidden">Generate</span>

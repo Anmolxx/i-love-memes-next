@@ -1,11 +1,10 @@
-// components/Header.tsx
 "use client";
 
 import React, { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { Download } from "lucide-react";
+import { Download, ExternalLink } from "lucide-react";
 import { Canvas } from "fabric";
 import { useAppDispatch } from "@/redux/store";
 import { useParams, useRouter } from "next/navigation";
@@ -56,30 +55,62 @@ const Header: React.FC<HeaderProps> = ({
     setIsExportModalOpen(true);
   };
 
-  return (
-    <header className="w-full bg-white border-b border-gray-200 flex flex-col md:flex-row items-center justify-between px-4 md:px-6 py-6 space-y-3 md:space-y-0">
-      {/* Left: Logo */}
-      <div className="flex items-center space-x-3 w-full md:w-auto justify-center md:justify-start">
-        <Link href="/" aria-label="I Love Memes">
-          <div className="relative h-8 w-[140px] md:w-[180px]">
-            <Image
-              src="/brand/ilovememes-logo.png"
-              alt="I Love Memes"
-              fill
-              className="object-contain"
-              sizes="(max-width: 768px) 140px, 180px"
-              priority
-            />
-          </div>
-        </Link>
-      </div>
+  const linkClassName = "text-[#4b087ea5] hover:text-[#4b087e] transition-colors duration-200 text-sm font-semibold whitespace-nowrap";
 
-      {/* Right: Buttons */}
-      <div className="flex items-center space-x-3 w-full md:w-auto justify-center md:justify-end">
-        {/* 1. Reset Button (Modular Component) */}
+  return (
+    <header className="relative w-full bg-white border-b border-gray-200 flex items-center justify-between px-4 md:px-6 py-4 h-20">
+      <nav className="flex items-center gap-6 flex-1 justify-start min-w-[30%] text-sm font-medium font-serif">
+        {isAdmin ? (
+          <Link href="/admin/meme" className={linkClassName}>
+            Admin
+          </Link>
+        ) : (
+          <Link href="/" className={linkClassName}>
+            Home
+          </Link>
+        )}
+        
+        <Link 
+          href="/templates" 
+          className={linkClassName}
+        >
+          Templates
+        </Link>
+        
+        <Link 
+          href="/community" 
+          className={linkClassName}
+        >
+          Community
+        </Link>
+        
+        <Link 
+          href="https://www.jewelrycandles.com/" 
+          target="_blank"
+          rel="noopener noreferrer"
+          className={`${linkClassName} flex items-center gap-1`}
+        >
+          Meme Merch
+          <ExternalLink className="w-3 h-3" />
+        </Link>
+      </nav>
+
+      <Link href="/" className="absolute left-1/2 transform -translate-x-1/2 z-10">
+        <div className="relative h-10 w-[160px] flex-shrink-0">
+          <Image
+            src="/brand/ilovememes-logo.png"
+            alt="I Love Memes"
+            fill
+            className="object-contain"
+            sizes="160px"
+            priority
+          />
+        </div>
+      </Link>
+
+      <div className="flex items-center space-x-3 flex-1 justify-end min-w-[30%]">
         <MemeResetButton onReset={onReset} />
 
-        {/* 2. Logout Button */}
         {mounted && isLoggedIn && (
           <Button
             onClick={handleLogout}
@@ -103,14 +134,6 @@ const Header: React.FC<HeaderProps> = ({
           />
         ) : null)}
         
-        {/* { isAdmin && (
-          <SaveTemplateButton
-              canvasRef={canvasRef}
-              backgroundImageId={backgroundImageId}
-            />
-        )} */}
-
-        {/* 4. Save & Download Button (Opens the Modal, the Modal handles all logic) */}
         <Button
           onClick={handleOpenExportModal}
           className="rounded-full h-10 px-6 md:px-8 text-white shadow-md text-sm md:text-base cursor-pointer"
@@ -125,7 +148,6 @@ const Header: React.FC<HeaderProps> = ({
         </Button>
       </div>
 
-      {/* 5. Export Modal (Modular Component) */}
       <MemeExportModal
         isOpen={isExportModalOpen}
         onOpenChange={setIsExportModalOpen}

@@ -7,7 +7,7 @@ import { CommentDto } from "@/utils/dtos/comment.dto";
 interface MemeContentProps {
   meme: Meme;
   vote: (newVote: number) => void;
-  shareMeme: () => Promise<void>;
+  shareMeme: (meme: Meme) => Promise<void>;
   setFlagMemeId: (id: string | null) => void;
   comments: CommentDto[];
   isLoggedIn: boolean;

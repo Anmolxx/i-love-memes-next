@@ -180,15 +180,61 @@ export default function CommunityGallery(): JSX.Element {
     updateUrl(1, searchQuery, selectedTags);
   }, [selectedTags, searchQuery, updateUrl]);
 
-  const shareMeme = (meme: Meme) => {
-    const shareData = {
-      title: meme.title,
-      text: `Check out this meme: ${meme.title}`,
-      url: `${window.location.origin}/community/${meme.slug}`,
-    };
-    if (navigator.share)
-      navigator.share(shareData).catch(() => navigator.clipboard.writeText(shareData.url).then(() => toast.info("Link copied!")));
-    else navigator.clipboard.writeText(shareData.url).then(() => toast.info("Link copied!"));
+  const getSharableFile = async (url: string, title: string): Promise<File | undefined> => {
+      try {
+          const response = await fetch(url);
+          if (!response.ok) return undefined;
+          const blob = await response.blob();
+          const extension = url.split('.').pop()?.toLowerCase() || 'jpg';
+          const mimeType = response.headers.get('content-type') || `image/${extension}`;
+          return new File([blob], `${title}.${extension}`, { type: mimeType });
+      } catch (error) {
+          return undefined;
+      }
+  };
+  
+  const shareMeme = async (meme: Meme) => {
+      const fileUrl = meme?.file?.path;
+      const title = meme?.title || meme.title;
+      const shareUrl = `${window.location.origin}/community/${meme.slug}`;
+  
+      if (!fileUrl) {
+          toast.error("No meme file found");
+          return;
+      }
+  
+      const shareData: ShareData = {
+          title: title,
+          text: `Check out this meme: ${title}`,
+          url: shareUrl
+      };
+  
+      const copyToClipboard = async (text: string) => {
+          try {
+              await navigator.clipboard.writeText(text);
+              toast.success("Link copied to clipboard! 🔗");
+          } catch (err) {
+              toast.error("Failed to copy link.");
+          }
+      };
+  
+      if (navigator.share) {
+          const file = await getSharableFile(fileUrl, title);
+          try {
+              if (file){ 
+                  await navigator.share({ ...shareData, files: [file] });
+              } else {
+                  await navigator.share(shareData);
+              }
+          } catch (error) {
+              if (error instanceof Error && error.name === 'AbortError') {
+                  return;
+              }
+              await copyToClipboard(shareUrl);
+          }
+      } else {
+          await copyToClipboard(shareUrl);
+      }
   };
 
   const submitFlag = useCallback(async () => {

@@ -188,7 +188,7 @@ export default function MemeLayout({ children }: LayoutProps) {
  useEffect(() => {
      const canvas = canvasRef.current;
      if (!currentSlug || !canvasReady || !canvas || !templateData) return;
-     console.log("2", templateData)
+    
      setSelectedImage(templateData.data.config.backgroundImage.src);
      setSelectedImageId(templateData.id);
      setSelectedTemplate(templateData.data.config || null);
@@ -398,7 +398,7 @@ export default function MemeLayout({ children }: LayoutProps) {
           canvasRef={canvasRef}
           onReset={resetCanvas}
           backgroundImageId={selectedImageId}
-          templateSlugToEdit={currentSlug}
+          templateId={templateData?.data?.id}
         />
 
         <div className="flex flex-1 flex-col md:flex-row relative overflow-hidden items-stretch">

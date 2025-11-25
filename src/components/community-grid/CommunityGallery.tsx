@@ -252,7 +252,7 @@ export default function CommunityGallery(): JSX.Element {
          <div className="grid grid-cols-1 md:grid-cols-[3fr_1fr] gap-6 h-[calc(100vh-250px)]">
            {/* Scrollable memes */}
            <div ref={scrollContainerRef} className="overflow-y-auto pr-2 hide-scrollbar max-h-[calc(100vh-250px)]">
-             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                {memes.length === 0 ? (
                  <div className="text-center text-gray-500 mt-10">
                    <p className="text-xl mb-2">
@@ -279,7 +279,7 @@ export default function CommunityGallery(): JSX.Element {
            </div>
  
            {/* Sidebar */}
-           <aside className="flex flex-col gap-6 pt-4 sticky top-0 h-[calc(100vh-250px)] overflow-y-auto">
+           <aside className="flex flex-col gap-6  sticky top-0 h-[calc(100vh-250px)] overflow-y-auto">
              <CreateMemeCard />
              {topMeme && <TopMemeSidebar topMeme={topMeme} />}
            </aside>

@@ -16,12 +16,12 @@ export function CreateMemeCard() {
   if (!hydrated) return null; 
 
   return (
-    <div className="bg-gray-100 p-4 rounded-2xl shadow">
+    <div className="bg-gradient-to-r from-[#CD01BA] to-[#E20317] backdrop-blur-md p-4 rounded-2xl shadow border-1 text-white">
       {isLoggedIn ? (
         <div className="flex flex-col gap-3 text-center">
-          <p className="text-gray-700 font-medium">Create your own meme!</p>
+          <p className="text-base sm:text-lg font-semibold text-white">Create your own meme!</p>
           <Link href="/meme">
-            <Button variant="default" className="w-full cursor-pointer">
+            <Button variant="default" className="w-full cursor-pointer rounded-full bg-white text-[#E20317] hover:bg-white ">
               <Plus className="w-4 h-4 mr-2" /> Create Meme
             </Button>
           </Link>

@@ -37,31 +37,33 @@ export function MemeCard({ meme, handleVote, shareMeme, setFlagMemeId, isPosting
   const netScore = meme.interactionSummary?.netScore ?? 0;
 
   return (
-      <article className="bg-gray-100 rounded-xl shadow-md p-2 flex flex-col hover:shadow-lg transition-shadow">
+      <article className="border-1 border-[#D6C2FF] rounded-xl shadow-md p-2 flex flex-col hover:shadow-lg transition-shadow">
         {/* Meme Image */}
         <Link
           href={`/community/${meme.slug}`}
-          className="relative w-full pb-[70%] overflow-hidden rounded-lg mb-2 bg-gray-200"
+          className="relative w-full pb-[70%] overflow-hidden rounded-lg mb-2 bg-black"
         >
           <img
             src={meme.file?.path}
             alt={meme.title}
-            className="absolute inset-0 w-full h-full object-cover"
+            className="absolute inset-0 w-full h-full object-contain"
             loading="lazy"
           />
         </Link>
   
         {/* Title & Author */}
-        <div className="flex-1 flex flex-col">
-          <div className="text-md font-semibold text-gray-800 truncate">{meme.title}</div>
-          <div className="text-base text-gray-500">
+        <div className="flex-1 flex flex-col px-1 py-2">
+          <div className="text-base sm:text-lg font-semibold text-[#1F1147]
+          ">{meme.title}</div>
+          <div className="text-xs sm:text-sm leading-4 sm:leading-5 text-[#4A3A7A]">
             by {meme.author ? ((meme.author.firstName || meme.author.lastName) ? `${meme.author.firstName ?? ""} ${meme.author.lastName ?? ""}`.trim() : meme.author.email) : "Anonymous"}
           </div>
   
           {/* Tags */}
-          <div className="flex flex-wrap items-center gap-1 mt-1 min-h-[1.5rem]">
+          <div className="flex flex-wrap items-center gap-1">
             {displayedTags.map(tag => (
-              <span key={tag.id} className="text-[12px] bg-purple-100 text-purple-800 px-2 py-0.5 rounded-full font-medium mt-5">
+              <span key={tag.id} className="text-[14px] bg-purple-100 text-purple-800 px-6 py-1 rounded-full font-medium mb-2 mt-4       
+              ">
                 #{tag.name}
               </span>
             ))}
@@ -82,7 +84,7 @@ export function MemeCard({ meme, handleVote, shareMeme, setFlagMemeId, isPosting
                 className={`flex items-center gap-1 px-2 py-0.5 rounded-full hover:bg-gray-200 cursor-pointer disabled:opacity-50 ${userVoteType === InteractionType.UPVOTE ? "bg-green-100 text-green-700" : ""}`}
               >
                 <ThumbsUp size={16} />
-                <span className="text-xs">{userVoteType === InteractionType.UPVOTE ? "You" : "Up"}</span>
+                <span className="text-[14px]">{userVoteType === InteractionType.UPVOTE ? "You" : "Up"}</span>
               </button>
   
               <button
@@ -92,7 +94,7 @@ export function MemeCard({ meme, handleVote, shareMeme, setFlagMemeId, isPosting
                 className={`flex items-center gap-1 px-2 py-0.5 rounded-full hover:bg-gray-200 cursor-pointer disabled:opacity-50 ${userVoteType === InteractionType.DOWNVOTE ? "bg-red-100 text-red-700" : ""}`}
               >
                 <ThumbsDown size={16} />
-                <span className="text-xs">Down</span>
+                <span className="text-[14px]">Down</span>
               </button>
   
               <div className="text-xs font-medium text-gray-700 px-2 py-0.5 rounded-full border border-gray-200">{netScore}</div>

@@ -69,7 +69,7 @@ const MemeExportModal: React.FC<MemeExportModalProps> = ({
       description: "",
     },
   });
-  console.log("templateId AT HOOK:", templateId);
+
   const handleSetSelectedTags = useCallback((newTags: string[]) => {
     if (!isAdmin && newTags.length > 2) {
       toast.error("You can only add a maximum of 2 tags to a meme.");

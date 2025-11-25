@@ -9,7 +9,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import { EllipsisVertical, Eye, Trash2, Edit, CirclePlus } from "lucide-react";
+import { EllipsisVertical, Eye, Trash2, Edit, CirclePlus, BarChart3 } from "lucide-react";
 import Link from "next/link";
 import { useState, useCallback } from "react";
 import { DeleteDialog } from "@/components/dialog/delete-dialog";
@@ -20,6 +20,7 @@ import { Meme } from "@/utils/dtos/meme.dto";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Popover, PopoverTrigger } from "@/components/ui/popover";
 import { ImagePopover } from "@/components/ui/extension/image-popover";
+import { InteractionSummaryDialog } from "@/components/dialog/InteractionSummary";
 
 const MemeTitleCell = ({ meme }: { meme: Meme }) => {
   const path = meme.file?.path;
@@ -105,6 +106,24 @@ export function adminMemeColumns(): ColumnDef<Meme>[] {
       enableHiding: false,
     },
     {
+      id: "interactionReason",
+      accessorFn: (row) => {
+        const summary = row.interactionSummary;
+        if (!summary?.userInteractions?.length) return "";
+        const reasons = summary.userInteractions
+          .map((i) => i.reason)
+          .filter((r) => r); 
+        return reasons.join(",");
+      },
+      header: () => null,  
+      cell: () => null,   
+      enableSorting: false,
+      enableHiding: true,
+      size: 0, 
+      maxSize: 0, 
+      minSize: 0,
+    },
+    {
       id: "tags",
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title="Tags" />
@@ -175,6 +194,26 @@ export function adminMemeColumns(): ColumnDef<Meme>[] {
       enableHiding: false, 
     },
     {
+      id: "interactionSummaryCounts", 
+      accessorFn: (row) => {
+        const summary = row.interactionSummary;
+        if (!summary) return "";
+        const counts: string[] = [];
+        if (summary.upvoteCount > 0) counts.push("UPVOTE");
+        if (summary.downvoteCount > 0) counts.push("DOWNVOTE");
+        if (summary.reportCount > 0) counts.push("REPORT");
+        if (summary.flagCount > 0) counts.push("FLAG");
+        return counts.join(",");
+      },
+      header: () => null, 
+      cell: () => null,    
+      enableSorting: false,
+      enableHiding: true,
+      size: 0, 
+      minSize: 0,
+      maxSize: 0, 
+    },
+    {
       accessorKey: "createdAt",
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title="Created At" />
@@ -184,6 +223,21 @@ export function adminMemeColumns(): ColumnDef<Meme>[] {
         return <p>{date.toLocaleString()}</p>;
       },
       enableSorting: false,
+    },
+    {
+      id: "reported",
+      accessorFn: (row) => {
+        const summary = row.interactionSummary;
+        if (!summary) return "";
+        return summary?.reportCount > 0;
+      },
+      header: () => null, 
+      cell: () => null,   
+      enableSorting: false,
+      enableHiding: true,
+      size: 0, 
+      maxSize: 0,
+      minSize: 0, 
     },
     {
       id: "actions",
@@ -208,6 +262,7 @@ const ActionCell = ({ row }: { row: any }) => {
   const [patchMeme] = useUpdateMemeMutation();
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
+  const [showStats, setShowStats] = useState(false);
 
   const handleDeleteMeme = useCallback(async () => {
     try {
@@ -228,6 +283,12 @@ const ActionCell = ({ row }: { row: any }) => {
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
+          <DropdownMenuItem
+              className="cursor-pointer"
+              onClick={() => setShowStats(true)}
+            >
+              <BarChart3 size={16} /> <span>View Analytics</span>
+            </DropdownMenuItem>
           <DropdownMenuItem className="cursor-pointer" asChild>
             <Link href={`/community/${meme.slug}`} target="_blank">
               <Eye size={16} /> View Meme
@@ -269,6 +330,12 @@ const ActionCell = ({ row }: { row: any }) => {
           await patchMeme({ slugOrId: meme.id, body: payload });
           toast.success("Meme updated!");
         }}
+      />
+
+      <InteractionSummaryDialog
+        open={showStats}
+        onOpenChange={setShowStats}
+        summary={meme.interactionSummary}
       />
     </div>
   );

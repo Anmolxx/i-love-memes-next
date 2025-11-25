@@ -102,7 +102,8 @@ export default function MemeLayout({ children }: LayoutProps) {
      const canvasWrapper = document.getElementById("meme-canvas")?.parentElement;
      const canvasWidth = canvasWrapper?.clientWidth || 600;
      const canvasHeight = canvasWrapper?.clientHeight || 600;
- 
+
+    //  console.log("Canvas Size:", canvasWidth, canvasHeight);
      canvas.setWidth(canvasWidth);
      canvas.setHeight(canvasHeight);
      canvas.backgroundImage = undefined;
@@ -179,6 +180,68 @@ export default function MemeLayout({ children }: LayoutProps) {
    },
    [canvasReady, setLayers]
  );
+
+  const keepObjectInBounds = (obj: FabricObject, canvas: Canvas): boolean => {
+    const cw = canvas.getWidth();
+    const ch = canvas.getHeight();
+    
+    let deltaX = 0;
+    let deltaY = 0;
+    let scaleClamped = false;
+    
+    const bound = obj.getBoundingRect(); 
+    
+    if (bound.width > cw && obj.width > 0) { 
+        const originalWidth = obj.width;
+        const maxScaleX = cw / originalWidth;
+
+        if (obj.scaleX > maxScaleX) {
+            obj.scaleX = maxScaleX;
+            obj.scaleY = maxScaleX; 
+            scaleClamped = true;
+        }
+    }
+    
+    if (bound.height > ch && obj.height > 0) {
+        const originalHeight = obj.height;
+        const maxScaleY = ch / originalHeight;
+
+        if (obj.scaleY > maxScaleY) {
+            obj.scaleX = maxScaleY; 
+            obj.scaleY = maxScaleY;
+            scaleClamped = true;
+        }
+    }
+
+    const finalBound = obj.getBoundingRect(); 
+
+    if (finalBound.left < 0) {
+        deltaX = -finalBound.left;
+    } else if (finalBound.left + finalBound.width > cw) {
+        deltaX = -(finalBound.left + finalBound.width - cw);
+    }
+
+    if (finalBound.top < 0) {
+        deltaY = -finalBound.top;
+    } else if (finalBound.top + finalBound.height > ch) {
+        deltaY = -(finalBound.top + finalBound.height - ch);
+    }
+    
+    if (deltaX !== 0) {
+        obj.left = (obj.left ?? 0) + deltaX;
+    }
+    if (deltaY !== 0) {
+        obj.top = (obj.top ?? 0) + deltaY;
+    }
+
+    if (deltaX !== 0 || deltaY !== 0 || scaleClamped) {
+        obj.setCoords();
+        canvas.requestRenderAll(); 
+    }
+    
+    return scaleClamped;
+  };
+
  useEffect(() => {
      if (selectedImage) {
        loadBackgroundImage(selectedImage, zoom, rotation);
@@ -241,12 +304,49 @@ export default function MemeLayout({ children }: LayoutProps) {
           nonScaling: true,
         }),
         editable: true,
-        lockUniScaling: true,
+        lockScalingY: false,
         textAlign: "center",
       });
 
     text.set("id", uuidv4());
-    text.on("scaling", () => (text.scaleY = text.scaleX));
+    text.on("scaling", () => {
+        text.scaleY = text.scaleX;
+      });
+      
+    canvas.on("object:moving", (e) => {
+      const obj = e.target;
+      if (!obj) return;
+      keepObjectInBounds(obj, canvas);
+    });
+    
+    canvas.on("object:moving", (e) => {
+        const obj = e.target;
+        if (!obj) return;
+        keepObjectInBounds(obj, canvas);
+    });
+    
+    canvas.on("object:scaling", (e) => {
+        const obj = e.target;
+        if (!obj) return;
+        
+        obj.scaleY = obj.scaleX; 
+        
+        const scaleClamped = keepObjectInBounds(obj, canvas);
+        
+        if (scaleClamped) {
+            obj.setControlsVisibility({
+                mt: false, mb: false, ml: false, mr: false, 
+                tr: false, tl: false, br: false, bl: false
+            });
+            obj.hasControls = false;
+        } else {
+            obj.hasControls = true;
+            obj.setControlsVisibility({
+                mt: true, mb: true, ml: true, mr: true, 
+                tr: true, tl: true, br: true, bl: true
+            });
+        }
+    });
     canvas.add(text);
     canvas.bringObjectToFront(text);
 
@@ -367,7 +467,6 @@ export default function MemeLayout({ children }: LayoutProps) {
   };
 
   const handleTemplateSelect = (template: any) => {
-    console.log("1",template)
     dispatch(setTemplateId(template.id));
     if (template.previewUrl) {
       setSelectedImage(template.previewUrl);

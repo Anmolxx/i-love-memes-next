@@ -21,13 +21,14 @@ interface HeaderProps {
   canvasRef: React.RefObject<Canvas | null>;
   onReset: () => void;
   backgroundImageId?: string | null;
-  templateSlugToEdit?: string;
+  templateId?: string | null;
 }
 
 const Header: React.FC<HeaderProps> = ({
   canvasRef,
   onReset,
   backgroundImageId,
+  templateId
 }) => {
   const appDispatcher = useAppDispatch();
   const router = useRouter();
@@ -142,6 +143,7 @@ const Header: React.FC<HeaderProps> = ({
         onOpenChange={setIsExportModalOpen}
         canvasRef={canvasRef}
         backgroundImageId={backgroundImageId}
+        templateId={templateId}
       />
     </header>
   );

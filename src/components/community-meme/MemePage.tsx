@@ -11,9 +11,9 @@ import {
   useDeleteCommentMutation,
 } from "@/redux/services/comment";
 import useAuthentication from "@/hooks/use-authentication";
-import { Navbar } from "@/components/ui/extension/navbar-internal";
-import AppSidebar from "@/components/organisms/app-sidebar-internal";
-import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
+// REMOVED: import { Navbar } from "@/components/ui/extension/navbar-internal";
+// REMOVED: import AppSidebar from "@/components/organisms/app-sidebar-internal";
+// REMOVED: import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 import { Footer } from "@/sections/Footer";
 import { Meme } from "@/utils/dtos/meme.dto";
 import MemeContent from "./MemeContent";
@@ -22,11 +22,54 @@ import FlagMemeDialog from "./FlagMemeDialog";
 import { CommentDto } from "@/utils/dtos/comment.dto";
 import { CommentActionsProvider } from "@/context/CommentActions";
 import { current } from "@reduxjs/toolkit";
+import { NavbarSearch } from "../community-grid/NavbarSearch";
+import { TagSelector } from "../community-grid/TagsSelector";
+
+// NOTE: Assuming these components are available in the running environment
+// For this single file output, I'll include dummy definitions at the end.
+// import { NavbarSearch } from "@/components/ui/extension/navbar-search";
+// import { TagSelector } from "@/components/organisms/TagSelector";
+
+
+// --- START: New State and Handlers for NavbarSearch ---
+interface NavbarSearchProps {
+  searchQuery: string;
+  setSearchQuery: (val: string) => void;
+  handleSearch: () => void;
+  isFetching: boolean;
+  selectedTags: string[];
+  setSelectedTags: (tags: string[]) => void;
+  availableTags: string[];
+}
+
+interface TagSelectorProps {
+    setAvailableTags: (tags: string[]) => void;
+}
+// --- END: New State and Handlers for NavbarSearch ---
+
 
 export default function MemePage() {
   const { slug } = useParams();
   const { user, isLoggedIn } = useAuthentication();
   const router = useRouter();
+
+  // --- START: State for NavbarSearch ---
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [availableTags, setAvailableTags] = useState<string[]>([]);
+  // In a detail page context, we set isFetching to false as searching is handled by navigation
+  const [isFetching, setIsFetching] = useState(false); 
+
+  const handleSearch = useCallback(() => {
+    // Navigate to the community page with search and tag parameters
+    let searchPath = `/community?search=${encodeURIComponent(searchQuery)}`;
+    if (selectedTags.length > 0) {
+        searchPath += `&tags=${selectedTags.join(',')}`;
+    }
+    router.push(searchPath);
+  }, [searchQuery, selectedTags, router]);
+  // --- END: State for NavbarSearch ---
+
 
   const { data, isLoading, error, refetch } = useGetMemeBySlugOrIdQuery(slug as string, { skip: !slug });
   const meme: Meme | null = data?.data ?? null;
@@ -105,22 +148,52 @@ export default function MemePage() {
     toast.success(`${newVote === 1 ? "Upvoted" : newVote === -1 ? "Downvoted" : "Cleared"}`);
   }, []);
 
-  const shareMeme = useCallback(async (): Promise<void> => {
-    const url = meme?.file?.path;
-    if (!url) {
-      toast.error("No meme file found");
-      return;
-    }
-    try {
-      if (navigator.share) await navigator.share({ title: meme.title, url });
-      else {
-        await navigator.clipboard.writeText(url);
-        toast.success("Link copied to clipboard!");
+  const getSharableFile = async (url: string, title: string): Promise<File | undefined> => {
+      try {
+          const response = await fetch(url);
+          if (!response.ok) return undefined;
+          const blob = await response.blob();
+          const extension = url.split('.').pop()?.toLowerCase() || 'jpg';
+          const mimeType = response.headers.get('content-type') || `image/${extension}`;
+          return new File([blob], `${title}.${extension}`, { type: mimeType });
+      } catch (error) {
+          return undefined;
       }
-    } catch {
-      toast.error("Share failed");
-    }
-  }, [meme]);
+  };
+  
+  const shareMeme = useCallback(async (meme: Meme): Promise<void> => {
+      const url = meme?.file?.path;
+      const title = meme?.title || "Check out this meme!";
+  
+      if (!url) {
+          toast.error("No meme file found");
+          return;
+      }
+  
+      if (!navigator.share) {
+          await navigator.clipboard.writeText(url);
+          toast.success("Link copied to clipboard!");
+          return;
+      }
+  
+      const file = await getSharableFile(url, title);
+      const shareData: ShareData = { title, url };
+  
+      try {
+          if (file) {
+              await navigator.share({ ...shareData, files: [file] });
+              return;
+          }
+          await navigator.share(shareData);
+  
+      } catch (error) {
+          if (error instanceof Error && error.name === 'AbortError') {
+              return;
+          }
+          await navigator.clipboard.writeText(url);
+          toast.success("Share failed. Link copied to clipboard!");
+      }
+  },[]);
 
   const resetFlagDialog = useCallback(() => {
     setFlagMemeId(null);
@@ -151,40 +224,55 @@ export default function MemePage() {
     memeId: meme.id,
   };
 
+  // REMOVED SidebarProvider and its wrappers, replacing them with a simple div wrapper
   return (
-    <SidebarProvider>
-      <div className="group/sidebar-wrapper flex min-h-svh w-full">
-        <AppSidebar />
-        <SidebarInset className="flex-1 bg-gray-50">
-          <Navbar />
-          <div className="max-w-6xl mx-auto p-4 flex flex-col md:flex-row gap-6 mt-5">
-            <CommentActionsProvider actions={commentActions}>
-              <MemeContent
-                meme={meme}
-                vote={vote}
-                shareMeme={shareMeme}
-                setFlagMemeId={setFlagMemeId}
-                comments={comments}
-                isLoggedIn={isLoggedIn}
-              />
-              <MemeActionsSidebar meme={meme} handleCaptionClick={handleCaptionClick} />
-            </CommentActionsProvider>
+    <div className="flex min-h-svh w-full flex-col bg-gray-50">
+    <div className="relative">
+        <nav className="w-full sticky top-0 z-50 bg-white/70 backdrop-blur">
+          <div className="max-w-[110rem] px-4 flex items-center gap-6 mx-auto mb-5">
+            <NavbarSearch
+              searchQuery={searchQuery}
+              setSearchQuery={setSearchQuery}
+              handleSearch={handleSearch}
+              isFetching={isFetching}
+              selectedTags={selectedTags}
+              setSelectedTags={setSelectedTags}
+              availableTags={availableTags}
+            />
+            <TagSelector setAvailableTags={setAvailableTags} />
           </div>
-          <FlagMemeDialog
-            memeId={meme.id}
-            flagMemeId={flagMemeId}
-            flagReason={flagReason}
-            setFlagReason={setFlagReason}
-            flagComment={flagComment}
-            setFlagComment={setFlagComment}
-            submitFlag={submitFlag}
-            resetFlagDialog={resetFlagDialog}
-          />
-          <div className="mt-20">
-            <Footer />
-          </div>
-        </SidebarInset>
+        </nav>
       </div>
-    </SidebarProvider>
+      {/* Main Content Area - now directly inside the top-level div */}
+      <div className="max-w-6xl mx-auto p-4 flex flex-col md:flex-row gap-6 mt-5 flex-1">
+        <CommentActionsProvider actions={commentActions}>
+          <MemeContent
+            meme={meme}
+            vote={vote}
+            shareMeme={shareMeme}
+            setFlagMemeId={setFlagMemeId}
+            comments={comments}
+            isLoggedIn={isLoggedIn}
+          />
+          <MemeActionsSidebar meme={meme} handleCaptionClick={handleCaptionClick} />
+        </CommentActionsProvider>
+      </div>
+
+      <FlagMemeDialog
+        memeId={meme.id}
+        flagMemeId={flagMemeId}
+        flagReason={flagReason}
+        setFlagReason={setFlagReason}
+        flagComment={flagComment}
+        setFlagComment={setFlagComment}
+        submitFlag={submitFlag}
+        resetFlagDialog={resetFlagDialog}
+      />
+
+      {/* Footer */}
+      <div className="mt-20">
+        <Footer />
+      </div>
+    </div>
   );
 }

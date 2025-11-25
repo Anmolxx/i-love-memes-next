@@ -193,7 +193,7 @@ export default function MemePage() {
           await navigator.clipboard.writeText(url);
           toast.success("Share failed. Link copied to clipboard!");
       }
-  }, [toast]);
+  },[]);
 
   const resetFlagDialog = useCallback(() => {
     setFlagMemeId(null);

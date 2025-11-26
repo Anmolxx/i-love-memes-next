@@ -25,7 +25,7 @@ export default function CommunityGallery(): JSX.Element {
   const searchParams = useSearchParams();
   const router = useRouter();
   const initialPage = parseInt(searchParams.get("page") ?? "1");
-  const per_page = parseInt(searchParams.get("limit") ?? "10");
+  const per_page = parseInt(searchParams.get("limit") ?? "9");
   const initialSearch = searchParams.get("search") ?? "";
   const initialTags = searchParams.getAll("tags") ?? [];
 
@@ -181,61 +181,61 @@ export default function CommunityGallery(): JSX.Element {
   }, [selectedTags, searchQuery, updateUrl]);
 
   const getSharableFile = async (url: string, title: string): Promise<File | undefined> => {
-      try {
-          const response = await fetch(url);
-          if (!response.ok) return undefined;
-          const blob = await response.blob();
-          const extension = url.split('.').pop()?.toLowerCase() || 'jpg';
-          const mimeType = response.headers.get('content-type') || `image/${extension}`;
-          return new File([blob], `${title}.${extension}`, { type: mimeType });
-      } catch (error) {
-          return undefined;
-      }
-  };
-  
-  const shareMeme = async (meme: Meme) => {
-      const fileUrl = meme?.file?.path;
-      const title = meme?.title || meme.title;
-      const shareUrl = `${window.location.origin}/community/${meme.slug}`;
-  
-      if (!fileUrl) {
-          toast.error("No meme file found");
-          return;
-      }
-  
-      const shareData: ShareData = {
-          title: title,
-          text: `Check out this meme: ${title}`,
-          url: shareUrl
-      };
-  
-      const copyToClipboard = async (text: string) => {
-          try {
-              await navigator.clipboard.writeText(text);
-              toast.success("Link copied to clipboard! 🔗");
-          } catch (err) {
-              toast.error("Failed to copy link.");
-          }
-      };
-  
-      if (navigator.share) {
-          const file = await getSharableFile(fileUrl, title);
-          try {
-              if (file){ 
-                  await navigator.share({ ...shareData, files: [file] });
-              } else {
-                  await navigator.share(shareData);
-              }
-          } catch (error) {
-              if (error instanceof Error && error.name === 'AbortError') {
-                  return;
-              }
-              await copyToClipboard(shareUrl);
-          }
-      } else {
-          await copyToClipboard(shareUrl);
-      }
-  };
+        try {
+            const response = await fetch(url);
+            if (!response.ok) return undefined;
+            const blob = await response.blob();
+            const extension = url.split('.').pop()?.toLowerCase() || 'jpg';
+            const mimeType = response.headers.get('content-type') || `image/${extension}`;
+            return new File([blob], `${title}.${extension}`, { type: mimeType });
+        } catch (error) {
+            return undefined;
+        }
+    };
+    
+    const shareMeme = async (meme: Meme) => {
+        const fileUrl = meme?.file?.path;
+        const title = meme?.title || meme.title;
+        const shareUrl = `${window.location.origin}/community/${meme.slug}`;
+    
+        if (!fileUrl) {
+            toast.error("No meme file found");
+            return;
+        }
+    
+        const shareData: ShareData = {
+            title: title,
+            text: `Check out this meme: ${title}`,
+            url: shareUrl
+        };
+    
+        const copyToClipboard = async (text: string) => {
+            try {
+                await navigator.clipboard.writeText(text);
+                toast.success("Link copied to clipboard! 🔗");
+            } catch (err) {
+                toast.error("Failed to copy link.");
+            }
+        };
+    
+        if (navigator.share) {
+            const file = await getSharableFile(fileUrl, title);
+            try {
+                if (file){ 
+                    await navigator.share({ ...shareData, files: [file] });
+                } else {
+                    await navigator.share(shareData);
+                }
+            } catch (error) {
+                if (error instanceof Error && error.name === 'AbortError') {
+                    return;
+                }
+                await copyToClipboard(shareUrl);
+            }
+        } else {
+            await copyToClipboard(shareUrl);
+        }
+    };
 
   const submitFlag = useCallback(async () => {
     if (!flagMemeId || !flagReason || isSubmittingFlag) return;
@@ -298,7 +298,7 @@ export default function CommunityGallery(): JSX.Element {
          <div className="grid grid-cols-1 md:grid-cols-[3fr_1fr] gap-6 h-[calc(100vh-250px)]">
            {/* Scrollable memes */}
            <div ref={scrollContainerRef} className="overflow-y-auto pr-2 hide-scrollbar max-h-[calc(100vh-250px)]">
-             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                {memes.length === 0 ? (
                  <div className="text-center text-gray-500 mt-10">
                    <p className="text-xl mb-2">
@@ -325,7 +325,7 @@ export default function CommunityGallery(): JSX.Element {
            </div>
  
            {/* Sidebar */}
-           <aside className="flex flex-col gap-6 pt-4 sticky top-0 h-[calc(100vh-250px)] overflow-y-auto">
+           <aside className="flex flex-col gap-6  sticky top-0 h-[calc(100vh-250px)] overflow-y-auto">
              <CreateMemeCard />
              {topMeme && <TopMemeSidebar topMeme={topMeme} />}
            </aside>

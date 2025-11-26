@@ -7,67 +7,67 @@ import { useState } from "react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "../ui/tooltip";
 
 interface MemeCardProps {
-    meme: any;
-    handleVote: (id: string, type: InteractionType.UPVOTE | InteractionType.DOWNVOTE) => void;
-    shareMeme: (meme: any) => void;
-    setFlagMemeId: (id: string) => void;
-    isPosting: boolean;
-    isDeleting: boolean;
+  meme: any;
+  handleVote: (id: string, type: InteractionType.UPVOTE | InteractionType.DOWNVOTE) => void;
+  shareMeme: (meme: any) => void;
+  setFlagMemeId: (id: string) => void;
+  isPosting: boolean;
+  isDeleting: boolean;
 }
 
 interface UserInteraction {
-    type: InteractionType;
-    createdAt: string;
-    reason?: string | null;
-    note?: string | null;
+  type: InteractionType;
+  createdAt: string;
+  reason?: string | null;
+  note?: string | null;
 }
 
 export function MemeCard({ meme, handleVote, shareMeme, setFlagMemeId, isPosting, isDeleting }: MemeCardProps) {
-    const activeTags: Tag[] = meme.tags?.filter((tag: Tag) => !tag.deletedAt) ?? [];
-    const displayedTags = activeTags.slice(0, 3);
-    const hiddenTags = activeTags.slice(3);
+  const activeTags: Tag[] = meme.tags?.filter((tag: Tag) => !tag.deletedAt) ?? [];
+  const displayedTags = activeTags.slice(0, 3);
+  const hiddenTags = activeTags.slice(3);
 
-    const interactions: UserInteraction[] = meme.interactionSummary?.userInteractions ?? [];
+  const interactions: UserInteraction[] = meme.interactionSummary?.userInteractions ?? [];
 
-    const vote = interactions.find(
-        (i): i is UserInteraction & { type: InteractionType.UPVOTE | InteractionType.DOWNVOTE } =>
-            i.type === InteractionType.UPVOTE || i.type === InteractionType.DOWNVOTE
-    );
+  const vote = interactions.find(
+    (i): i is UserInteraction & { type: InteractionType.UPVOTE | InteractionType.DOWNVOTE } =>
+      i.type === InteractionType.UPVOTE || i.type === InteractionType.DOWNVOTE
+  );
 
-    const userVoteType: InteractionType.UPVOTE | InteractionType.DOWNVOTE | "NONE" = vote?.type ?? "NONE";
-    const userHasFlagged = (meme.interactionSummary?.flagCount ?? 0) > 0;
-    const netScore = meme.interactionSummary?.netScore ?? 0;
+  const userVoteType: InteractionType.UPVOTE | InteractionType.DOWNVOTE | "NONE" = vote?.type ?? "NONE";
+  const userHasFlagged = (meme.interactionSummary?.flagCount ?? 0) > 0;
+  const netScore = meme.interactionSummary?.netScore ?? 0;
 
-    return (
-        <article className="bg-gray-100 rounded-xl shadow-md p-2 flex flex-col hover:shadow-lg transition-shadow group">
-            <Link
-                href={`/community/${meme.slug}`}
-                className="relative w-full pb-[70%] overflow-hidden rounded-lg mb-2 bg-gray-200"
-            >
-                <img
-                    src={meme.file?.path}
-                    alt={meme.title}
-                    className="absolute inset-0 w-full h-full object-cover"
-                    loading="lazy"
-                />
+  return (
+      <article className="border-1 border-[#D6C2FF] rounded-xl shadow-md p-2 flex flex-col hover:shadow-lg transition-shadow group">
+        {/* Meme Image */}
+        <Link
+          href={`/community/${meme.slug}`}
+          className="relative w-full pb-[70%] overflow-hidden rounded-lg mb-2 bg-black"
+        >
+          <img
+            src={meme.file?.path}
+            alt={meme.title}
+            className="absolute inset-0 w-full h-full object-contain"
+            loading="lazy"
+          />
+        </Link>
+  
+        {/* Title & Author */}
+        <div className="flex-1 flex flex-col px-1 py-2">
+          <Link
+              href={`/community/${meme.slug}`}
+               className="inline-block text-md font-semibold text-gray-800 hover:text-pink-600 hover:underline transition-colors w-fit"
+              >
+              {meme.title}
             </Link>
-
-            <div className="flex flex-col">
-                <Link
-                    href={`/community/${meme.slug}`}
-                    className="inline-block text-md font-semibold text-gray-800 hover:text-pink-600 hover:underline transition-colors w-fit"
-                >
-                    {meme.title}
-                </Link>
-
-                <div className="text-sm text-gray-500 mt-1">
-                    by {meme.author ? ((meme.author.firstName || meme.author.lastName) ? `${meme.author.firstName ?? ""} ${meme.author.lastName ?? ""}`.trim() : meme.author.email) : "Anonymous"}
-                </div>
-            </div>
-
-            {/* Tags */}
-            <div className="flex flex-wrap items-center gap-2 mt-2 relative">
-                {displayedTags.map((tag) => (
+          <div className="text-xs sm:text-sm leading-4 sm:leading-5 text-[#4A3A7A]">
+            by {meme.author ? ((meme.author.firstName || meme.author.lastName) ? `${meme.author.firstName ?? ""} ${meme.author.lastName ?? ""}`.trim() : meme.author.email) : "Anonymous"}
+          </div>
+  
+          {/* Tags */}
+          <div className="flex flex-wrap items-center gap-1">
+            {displayedTags.map((tag) => (
                     <Link
                         key={tag.id}
                         href={`/community/?tags=${tag.name}`}
@@ -116,47 +116,49 @@ export function MemeCard({ meme, handleVote, shareMeme, setFlagMemeId, isPosting
                         </Tooltip>
                     </TooltipProvider>
                 )}
+          </div>
+  
+          {/* Actions */}
+          <div className="mt-2 flex items-center justify-between opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+            <div className="flex items-center gap-1">
+              <button
+                aria-pressed={userVoteType === InteractionType.UPVOTE}
+                onClick={() => handleVote(meme.id, InteractionType.UPVOTE)}
+                disabled={isPosting || isDeleting}
+                className={`flex items-center gap-1 px-2 py-0.5 rounded-full hover:bg-gray-200 cursor-pointer disabled:opacity-50 ${userVoteType === InteractionType.UPVOTE ? "bg-green-100 text-green-700" : ""}`}
+              >
+                <ThumbsUp size={16} />
+                <span className="text-[14px]">{userVoteType === InteractionType.UPVOTE ? "You" : "Up"}</span>
+              </button>
+  
+              <button
+                aria-pressed={userVoteType === InteractionType.DOWNVOTE}
+                onClick={() => handleVote(meme.id, InteractionType.DOWNVOTE)}
+                disabled={isPosting || isDeleting}
+                className={`flex items-center gap-1 px-2 py-0.5 rounded-full hover:bg-gray-200 cursor-pointer disabled:opacity-50 ${userVoteType === InteractionType.DOWNVOTE ? "bg-red-100 text-red-700" : ""}`}
+              >
+                <ThumbsDown size={16} />
+                <span className="text-[14px]">Down</span>
+              </button>
+  
+              <div className="text-xs font-medium text-gray-700 px-2 py-0.5 rounded-full border border-gray-200">{netScore}</div>
             </div>
-
-            <div className="mt-2 flex items-center justify-between opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                <div className="flex items-center gap-1">
-                    <button
-                        aria-pressed={userVoteType === InteractionType.UPVOTE}
-                        onClick={() => handleVote(meme.id, InteractionType.UPVOTE)}
-                        disabled={isPosting || isDeleting}
-                        className={`flex items-center gap-1 px-2 py-0.5 rounded-full hover:bg-gray-200 cursor-pointer disabled:opacity-50 ${userVoteType === InteractionType.UPVOTE ? "bg-green-100 text-green-700" : ""}`}
-                    >
-                        <ThumbsUp size={16} />
-                        <span className="text-xs">{userVoteType === InteractionType.UPVOTE ? "You" : "Up"}</span>
-                    </button>
-
-                    <button
-                        aria-pressed={userVoteType === InteractionType.DOWNVOTE}
-                        onClick={() => handleVote(meme.id, InteractionType.DOWNVOTE)}
-                        disabled={isPosting || isDeleting}
-                        className={`flex items-center gap-1 px-2 py-0.5 rounded-full hover:bg-gray-200 cursor-pointer disabled:opacity-50 ${userVoteType === InteractionType.DOWNVOTE ? "bg-red-100 text-red-700" : ""}`}
-                    >
-                        <ThumbsDown size={16} />
-                        <span className="text-xs">Down</span>
-                    </button>
-
-                    <div className="text-xs font-medium text-gray-700 px-2 py-0.5 rounded-full border border-gray-200">{netScore}</div>
-                </div>
-
-                <div className="flex items-center gap-1">
-                    <button onClick={() => shareMeme(meme)} title="Share" className="p-1 rounded-full hover:bg-gray-200 cursor-pointer">
-                        <Share2 size={16} />
-                    </button>
-
-                    <button
-                        onClick={() => setFlagMemeId(meme.id)}
-                        title={userHasFlagged ? "Meme flagged" : "Flag"}
-                        className={`p-1 rounded-full cursor-pointer transition-colors ${userHasFlagged ? "text-red-600 bg-red-200 hover:bg-red-300" : "hover:bg-gray-200"}`}
-                    >
-                        <Flag size={16} fill={userHasFlagged ? "currentColor" : "none"} />
-                    </button>
-                </div>
+  
+            <div className="flex items-center gap-1">
+              <button onClick={() => shareMeme(meme)} title="Share" className="p-1 rounded-full hover:bg-gray-200 cursor-pointer">
+                <Share2 size={16} />
+              </button>
+  
+              <button
+                onClick={() => setFlagMemeId(meme.id)}
+                title={userHasFlagged ? "Meme flagged" : "Flag"}
+                className={`p-1 rounded-full cursor-pointer transition-colors ${userHasFlagged ? "text-red-600 bg-red-200 hover:bg-red-300" : "hover:bg-gray-200"}`}
+              >
+                <Flag size={16} fill={userHasFlagged ? "currentColor" : "none"} />
+              </button>
             </div>
-        </article>
+          </div>
+        </div>
+      </article>
     );
-}
+  }

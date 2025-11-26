@@ -1,15 +1,14 @@
 // src/components/MemePage/TagDisplay.tsx
 import React from 'react';
 import Link from 'next/link';
-// import { CirclePlus } from 'lucide-react'; // Not needed anymore
 import {
-    Tooltip,
-    TooltipContent,
-    TooltipProvider,
-    TooltipTrigger,
-} from "@/components/ui/tooltip"; 
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
-interface Tag {
+interface Tag { // Assuming Tag structure
     id: string;
     name: string;
     deletedAt: string | null;
@@ -29,6 +28,7 @@ export default function TagDisplay({ displayedTags, hiddenTags }: TagDisplayProp
                     <Link
                         key={tag.id}
                         href={`/community/?tags=${tag.name}`}
+                        target="_blank"
                         className="text-xs bg-purple-100 text-purple-800 px-2 py-1 rounded-md font-medium hover:bg-purple-200 transition"
                     >
                         #{tag.name}

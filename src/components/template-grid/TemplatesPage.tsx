@@ -91,25 +91,25 @@ export function TemplateGallery() {
               return (
                 <div
                   key={template.id}
-                  className="border rounded-lg shadow-sm overflow-hidden flex flex-col"
+                  className="rounded-lg shadow-sm overflow-hidden flex flex-col border-1 border-[#D6C2FF] hover:shadow-lg transition-shadow"
                 >
                   {bgImage ? (
                     <div className="w-full h-56 relative">
                       <img
                         src={bgImage}
                         alt={template.title}
-                        className="w-full h-full object-cover"
+                        className="w-full h-full object-contain bg-gray-10 bg-black"
                       />
                     </div>
                   ) : (
-                    <div className="w-full h-56 bg-gray-200 flex items-center justify-center">
+                    <div className="w-full h-56 bg-gray-100 flex items-center justify-center">
                       No Image
                     </div>
                   )}
       
                   <div className="p-4 flex flex-col gap-2 flex-1">
-                    <h3 className="font-semibold text-lg">{template.title}</h3>
-                    <p className="text-gray-600 text-sm line-clamp-2">
+                    <h3 className="text-base sm:text-lg font-semibold text-[#1F1147]   ">{template.title}</h3>
+                    <p className="text-gray-600 text-sm line-clamp-2 pb-3">
                       {template.description}
                     </p>
       
@@ -118,7 +118,7 @@ export function TemplateGallery() {
                       target="_blank"
                       className="mt-auto"
                     >
-                      <Button className="w-full cursor-pointer">
+                      <Button className="w-full cursor-pointer rounded-full text-white bg-[#300458] hover:bg-[#300458]">
                         Use this template
                       </Button>
                     </Link>

@@ -14,7 +14,7 @@ enum InteractionType {
 interface MemeCardProps {
     meme: Meme;
     vote: (newVote: number) => void;
-    shareMeme: (mmee: Meme) => Promise<void>;
+    shareMeme: (meme: Meme) => Promise<void>;
     setFlagMemeId: (id: string | null) => void;
 }
 

@@ -21,7 +21,19 @@ interface LayoutProps {
 interface MemeObject extends FabricObject {
   id?: string;
 }
-type LayerItem = { id: string; type: string; object: any };
+type LayerItem = { id: string; type: string; object: FabricObject };
+
+const getCanvasLayers = (canvas: Canvas): LayerItem[] => {
+    return canvas.getObjects()
+      .filter((obj): obj is FabricObject & { id: string } => {
+          return !!obj.id && obj.id !== "background-image";
+      })
+      .map((obj) => ({
+        id: obj.id,
+        type: obj.type || "unknown",
+        object: obj,
+    }));
+};
 
 export default function MemeLayout({ children }: LayoutProps) {
   const canvasRef = useRef<Canvas | null>(null);
@@ -36,16 +48,14 @@ export default function MemeLayout({ children }: LayoutProps) {
   const [backgroundImageLoaded, setBackgroundImageLoaded] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState<any | null>(null);
   const [hasCanvasObjects, setHasCanvasObjects] = useState(false);
-  const [layers, setLayers] = useState<
-    { id: string; type: string; object: any }[]
-  >([]);
+  const [layers, setLayers] = useState<{ id: string; type: string; object: any }[]>([]);
 
   const router = useRouter();
   const params = useParams();
   const currentSlug = (params as any)?.slug as string;
   const dispatch = useAppDispatch();
   const { data: templateData, isLoading, error } = useGetTemplateByIdOrSlugQuery(currentSlug, {
-    skip: !currentSlug, 
+    skip: !currentSlug,
   });
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -79,6 +89,33 @@ export default function MemeLayout({ children }: LayoutProps) {
     canvas.on("selection:updated", handleSelection);
     canvas.on("selection:cleared", handleClear);
 
+    canvas.on("object:moving", (e) => {
+      const obj = e.target;
+      console.log(obj);
+      if (!obj) return;
+      keepObjectInBounds(obj, canvas);
+    });
+    
+    canvas.on("object:scaling", (e) => {
+      const obj = e.target;
+      if (!obj) return;
+      obj.scaleY = obj.scaleX; 
+      const scaleClamped = keepObjectInBounds(obj, canvas);
+      if (scaleClamped) {
+        obj.setControlsVisibility({
+          mt: false, mb: false, ml: false, mr: false, 
+          tr: false, tl: false, br: false, bl: false
+      });
+        obj.hasControls = false;
+        } else {
+          obj.hasControls = true;
+          obj.setControlsVisibility({
+            mt: true, mb: true, ml: true, mr: true, 
+            tr: true, tl: true, br: true, bl: true
+          });
+        }
+    });
+  
     return () => {
       canvas.dispose();
       canvasRef.current = null;
@@ -86,178 +123,181 @@ export default function MemeLayout({ children }: LayoutProps) {
     };
   }, []);
 
-  // --- Load Background ---
- const loadBackgroundImage = useCallback(
-   (
-     imageUrl: string,
-     currentZoom: number,
-     currentRotation: number,
-     config?: any
-   ) => {
-     const canvas = canvasRef.current;
-     if (!canvas || !imageUrl || !canvasReady) return;
- 
-     setBackgroundImageLoaded(false);
- 
-     const canvasWrapper = document.getElementById("meme-canvas")?.parentElement;
-     const canvasWidth = canvasWrapper?.clientWidth || 600;
-     const canvasHeight = canvasWrapper?.clientHeight || 600;
+  const loadBackgroundImage = useCallback(
+    (imageUrl: string, currentZoom: number, currentRotation: number, config?: any) => {
+      const canvas = canvasRef.current;
+      if (!canvas || !imageUrl || !canvasReady) return;
 
-    //  console.log("Canvas Size:", canvasWidth, canvasHeight);
-     canvas.setWidth(canvasWidth);
-     canvas.setHeight(canvasHeight);
-     canvas.backgroundImage = undefined;
-     canvas.backgroundColor = config?.background || "#e5e7eb";
- 
-     // Remove all objects except background
-     canvas.getObjects().forEach((obj) => {
-       if (obj !== canvas.backgroundImage) canvas.remove(obj);
-     });
- 
-     FabricImage.fromURL(imageUrl, { crossOrigin: "anonymous" })
-       .then((img) => {
-         const scaleX = canvasWidth / img.width!;
-         const scaleY = canvasHeight / img.height!;
-         const scale = Math.min(scaleX, scaleY) * currentZoom;
- 
-         img.set({
-           scaleX: scale,
-           scaleY: scale,
-           left: canvasWidth / 2,
-           top: canvasHeight / 2,
-           angle: currentRotation,
-           selectable: false,
-           originX: "center",
-           originY: "center",
-         });
- 
-         backgroundImageRef.current = img;
-         canvas.backgroundImage = img;
-         canvas.backgroundColor = config?.background || "black";
-         const newLayers: { id: string; type: string; object: any }[] = [];
- 
-         // --- Add template objects immediately ---
-         (config?.objects || []).forEach((obj: any) => {
-           if (obj.type === "Textbox") {
-             const objectId = uuidv4();
-             const text = new Textbox(obj.text || "Text", {
-               left: obj.left || canvasWidth / 2,
-               top: obj.top || canvasHeight / 2,
-               width: obj.width || 200,
-               fontSize: obj.fontSize || 40,
-               fontWeight: obj.fontWeight || "bold",
-               fontFamily: obj.fontFamily || "Impact",
-               fill: obj.fill || "#FFD700",
-               stroke: obj.stroke || "#FF0000",
-               strokeWidth: obj.strokeWidth || 1,
-               textAlign: obj.textAlign || "center",
-               shadow: obj.shadow
-                 ? new Shadow(obj.shadow)
-                 : new Shadow({ color: "rgba(0,0,0,1)", blur: 2, offsetX: 2, offsetY: 2 }),
-               editable: true,
-               lockUniScaling: true,
-               originX: "center",
-               originY: "center",
-             });
- 
-             text.set("id", obj.id || uuidv4());
-             canvas.add(text);
-             canvas.bringObjectToFront(text);
-             newLayers.push({ id: objectId, type: "textbox", object: text });
-           }
-         });
- 
-         canvas.renderAll();
-         setBackgroundImageLoaded(true);
-         if (newLayers.length > 0) {
-                 setLayers(newLayers);
-          } else { setLayers([]); }
-       })
-       .catch((error) => {
-         console.error("Failed to load Fabric background image:", error);
-         setBackgroundImageLoaded(false);
-       });
-   },
-   [canvasReady, setLayers]
- );
+      setBackgroundImageLoaded(false);
+
+      const canvasWrapper = document.getElementById("meme-canvas")?.parentElement;
+      const canvasWidth = canvasWrapper?.clientWidth || 600;
+      const canvasHeight = canvasWrapper?.clientHeight || 600;
+
+      canvas.setWidth(canvasWidth);
+      canvas.setHeight(canvasHeight);
+      canvas.backgroundImage = undefined;
+      canvas.backgroundColor = config?.background || "#e5e7eb";
+
+      canvas.getObjects().forEach((obj) => {
+        if (obj !== backgroundImageRef.current) canvas.remove(obj);
+      });
+
+      setLayers([]);
+      setActiveObject(null);
+
+      FabricImage.fromURL(imageUrl, { crossOrigin: "anonymous" })
+        .then((img) => {
+          const scaleX = canvasWidth / img.width!;
+          const scaleY = canvasHeight / img.height!;
+          const scale = Math.min(scaleX, scaleY) * currentZoom;
+
+          img.set({
+            scaleX: scale,
+            scaleY: scale,
+            left: canvasWidth / 2,
+            top: canvasHeight / 2,
+            angle: currentRotation,
+            selectable: false,
+            originX: "center",
+            originY: "center",
+          });
+
+          backgroundImageRef.current = img;
+          canvas.backgroundImage = img;
+          canvas.backgroundColor = config?.background || "black";
+
+          (config?.objects || []).forEach((obj: any) => {
+            if (obj.type === "Textbox") {
+              const defaultProps = {
+                text: obj.text || "Text",
+                left: obj.left || canvasWidth / 2,
+                top: obj.top || canvasHeight / 2,
+                width: obj.width || 200,
+                fontSize: obj.fontSize || 40,
+                fontWeight: obj.fontWeight || "bold",
+                fontFamily: obj.fontFamily || "Impact",
+                fill: obj.fill || "#FFD700",
+                stroke: obj.stroke || "#FF0000",
+                strokeWidth: obj.strokeWidth || 1,
+                textAlign: obj.textAlign || "center",
+                shadow: obj.shadow
+                  ? new Shadow(obj.shadow)
+                  : new Shadow({ color: "rgba(0,0,0,1)", blur: 2, offsetX: 2, offsetY: 2 }),
+                editable: true,
+                lockUniScaling: true,
+                originX: "center",
+                originY: "center",
+              };
+
+              const textContent = obj.text;
+              const { type, text, ...savedProps } = obj;
+              const finalProps = { ...defaultProps, ...savedProps };
+              const textObject = new Textbox(textContent || "Text", finalProps);
+
+              textObject.set("id", uuidv4());
+
+              canvas.add(textObject);
+              canvas.bringObjectToFront(textObject);
+            }
+          });
+
+          const finalLayers = getCanvasLayers(canvas);
+          setLayers(finalLayers);
+
+          if (finalLayers.length > 0) {
+            const firstTextbox = finalLayers.find((l) => l.type === "textbox")?.object as Textbox;
+            if (firstTextbox) {
+              setActiveObject(firstTextbox);
+              canvas.setActiveObject(firstTextbox);
+            }
+          }
+
+          canvas.renderAll();
+          setBackgroundImageLoaded(true);
+        })
+        .catch((error) => {
+          console.error("Failed to load Fabric background image:", error);
+          setBackgroundImageLoaded(false);
+        });
+    },
+    [canvasReady]
+  );
 
   const keepObjectInBounds = (obj: FabricObject, canvas: Canvas): boolean => {
-    const cw = canvas.getWidth();
-    const ch = canvas.getHeight();
-    
-    let deltaX = 0;
-    let deltaY = 0;
-    let scaleClamped = false;
-    
-    const bound = obj.getBoundingRect(); 
-    
-    if (bound.width > cw && obj.width > 0) { 
-        const originalWidth = obj.width;
-        const maxScaleX = cw / originalWidth;
-
-        if (obj.scaleX > maxScaleX) {
-            obj.scaleX = maxScaleX;
-            obj.scaleY = maxScaleX; 
-            scaleClamped = true;
-        }
-    }
-    
-    if (bound.height > ch && obj.height > 0) {
-        const originalHeight = obj.height;
-        const maxScaleY = ch / originalHeight;
-
-        if (obj.scaleY > maxScaleY) {
-            obj.scaleX = maxScaleY; 
-            obj.scaleY = maxScaleY;
-            scaleClamped = true;
-        }
-    }
-
-    const finalBound = obj.getBoundingRect(); 
-
-    if (finalBound.left < 0) {
-        deltaX = -finalBound.left;
-    } else if (finalBound.left + finalBound.width > cw) {
-        deltaX = -(finalBound.left + finalBound.width - cw);
-    }
-
-    if (finalBound.top < 0) {
-        deltaY = -finalBound.top;
-    } else if (finalBound.top + finalBound.height > ch) {
-        deltaY = -(finalBound.top + finalBound.height - ch);
-    }
-    
-    if (deltaX !== 0) {
-        obj.left = (obj.left ?? 0) + deltaX;
-    }
-    if (deltaY !== 0) {
-        obj.top = (obj.top ?? 0) + deltaY;
-    }
-
-    if (deltaX !== 0 || deltaY !== 0 || scaleClamped) {
-        obj.setCoords();
-        canvas.requestRenderAll(); 
-    }
-    
-    return scaleClamped;
+      const el = canvas.getElement();
+      const cw = el.clientWidth;
+      const ch = el.clientHeight;
+      
+      let scaleClamped = false;
+      const boundBeforeScaleCheck = obj.getBoundingRect(); 
+      if (boundBeforeScaleCheck.width > cw || boundBeforeScaleCheck.height > ch) {
+          const maxScaleX = cw / (obj.width || 1);
+          const maxScaleY = ch / (obj.height || 1);
+          const maxScale = Math.min(maxScaleX, maxScaleY); 
+  
+          if (obj.scaleX > maxScale) {
+              obj.scaleX = maxScale;
+              obj.scaleY = maxScale;
+              scaleClamped = true;
+          }
+      }
+      if (scaleClamped) {
+          obj.setControlsVisibility({
+              mt: false, mb: false, ml: false, mr: false, 
+              tr: false, tl: false, br: false, bl: false,
+              mtr: false 
+          });
+          obj.hasControls = false; 
+      } else {
+          obj.hasControls = true;
+          obj.setControlsVisibility({
+              mt: true, mb: true, ml: true, mr: true, 
+              tr: true, tl: true, br: true, bl: true,
+              mtr: true 
+          });
+      }
+      const objHalfWidth = obj.getScaledWidth() / 2;
+      const objHalfHeight = obj.getScaledHeight() / 2;
+      const maxLeft = cw - objHalfWidth; 
+      const minLeft = objHalfWidth;
+      const maxTop = ch - objHalfHeight;
+      const minTop = objHalfHeight;
+      
+      const currentLeft = obj.left || 0;
+      const currentTop = obj.top || 0;
+  
+      const newLeft = Math.max(minLeft, Math.min(maxLeft, currentLeft));
+      const newTop = Math.max(minTop, Math.min(maxTop, currentTop));
+  
+      const positionClamped = (newLeft !== currentLeft || newTop !== currentTop);
+      if (positionClamped) {
+          obj.set({
+              left: newLeft,
+              top: newTop,
+          });
+      }
+      if (positionClamped || scaleClamped) {
+          obj.setCoords();
+          canvas.requestRenderAll();
+      }
+      return scaleClamped;
   };
 
- useEffect(() => {
-     if (selectedImage) {
-       loadBackgroundImage(selectedImage, zoom, rotation);
-     }
-   }, [selectedImage, zoom, rotation, loadBackgroundImage]);
-   
- useEffect(() => {
-     const canvas = canvasRef.current;
-     if (!currentSlug || !canvasReady || !canvas || !templateData) return;
-    
-     setSelectedImage(templateData.data.config.backgroundImage.src);
-     setSelectedImageId(templateData.id);
-     setSelectedTemplate(templateData.data.config || null);
-   }, [templateData, canvasReady, currentSlug]);
+  useEffect(() => {
+    if (selectedImage) {
+      loadBackgroundImage(selectedImage, zoom, rotation);
+    }
+  }, [selectedImage, zoom, rotation, loadBackgroundImage]);
 
-  // --- Layer Utilities (Fabric v6-safe) ---
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!currentSlug || !canvasReady || !canvas || !templateData) return;
+    setSelectedImage(templateData.data.config.backgroundImage.src);
+    setSelectedImageId(templateData.data.id);
+    setSelectedTemplate(templateData.data.config || null);
+  }, [templateData, canvasReady, currentSlug]);
+
   const enforceLayerOrder = () => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -278,79 +318,45 @@ export default function MemeLayout({ children }: LayoutProps) {
     setHasCanvasObjects(objects.length > 0);
   };
 
-  // --- Add Textbox ---
   const addTextBox = () => {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
     const text = new Textbox("New Text", {
-        left: 250,
-        top: 250,
-        originX: "center",
-        originY: "center",
-        width: 200,
-        fontSize: 50, 
-        fontWeight: "bold",
-        fontFamily: "Impact",
-        fill: "#FFD700", 
-        stroke: "#FF0000",
-        strokeWidth: 1,
-        shadow: new Shadow({
-          color: "rgba(0, 0, 0, 1)",
-          blur: 2,
-          offsetX: 2,
-          offsetY: 2,
-          affectStroke: true,
-          nonScaling: true,
-        }),
-        editable: true,
-        lockScalingY: false,
-        textAlign: "center",
-      });
+      left: 250,
+      top: 250,
+      originX: "center",
+      originY: "center",
+      width: 200,
+      fontSize: 50,
+      fontWeight: "bold",
+      fontFamily: "Impact",
+      fill: "#FFD700",
+      stroke: "#FF0000",
+      strokeWidth: 1,
+      shadow: new Shadow({
+        color: "rgba(0, 0, 0, 1)",
+        blur: 2,
+        offsetX: 2,
+        offsetY: 2,
+        affectStroke: true,
+        nonScaling: true,
+      }),
+      editable: true,
+      lockUniScaling: true,
+      textAlign: "center",
+    });
 
     text.set("id", uuidv4());
     text.on("scaling", () => {
-        text.scaleY = text.scaleX;
-      });
-      
-    canvas.on("object:moving", (e) => {
-      const obj = e.target;
-      if (!obj) return;
-      keepObjectInBounds(obj, canvas);
+      text.scaleY = text.scaleX;
     });
-    
-    canvas.on("object:moving", (e) => {
-        const obj = e.target;
-        if (!obj) return;
-        keepObjectInBounds(obj, canvas);
-    });
-    
-    canvas.on("object:scaling", (e) => {
-        const obj = e.target;
-        if (!obj) return;
-        
-        obj.scaleY = obj.scaleX; 
-        
-        const scaleClamped = keepObjectInBounds(obj, canvas);
-        
-        if (scaleClamped) {
-            obj.setControlsVisibility({
-                mt: false, mb: false, ml: false, mr: false, 
-                tr: false, tl: false, br: false, bl: false
-            });
-            obj.hasControls = false;
-        } else {
-            obj.hasControls = true;
-            obj.setControlsVisibility({
-                mt: true, mb: true, ml: true, mr: true, 
-                tr: true, tl: true, br: true, bl: true
-            });
-        }
-    });
+
     canvas.add(text);
     canvas.bringObjectToFront(text);
 
-    setLayers((prev) => [...prev, { id: text.get("id") as string, type: "textbox", object: text }]);
+    setLayers(getCanvasLayers(canvas));
+
     setActiveObject(text);
     canvas.setActiveObject(text);
     canvas.requestRenderAll();
@@ -359,11 +365,12 @@ export default function MemeLayout({ children }: LayoutProps) {
     updateCanvasObjectsState();
   };
 
-  // --- Update and Delete Text ---
   const updateActiveText = (updates: Partial<Textbox>) => {
     if (activeObject && canvasRef.current) {
       activeObject.set(updates);
       canvasRef.current.renderAll();
+
+      setLayers(getCanvasLayers(canvasRef.current));
     }
   };
 
@@ -371,13 +378,14 @@ export default function MemeLayout({ children }: LayoutProps) {
     const canvas = canvasRef.current;
     if (!canvas || !activeObject) return;
     canvas.remove(activeObject);
-    setLayers((prev) => prev.filter((l) => l.id !== activeObject.get("id")));
+
+    setLayers(getCanvasLayers(canvas));
+
     setActiveObject(null);
     canvas.renderAll();
     updateCanvasObjectsState();
   };
 
-  // --- Add Sticker (Text or Image) ---
   const addSticker = (sticker: string) => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -394,7 +402,9 @@ export default function MemeLayout({ children }: LayoutProps) {
 
     canvas.add(stickerText);
     canvas.bringObjectToFront(stickerText);
-    setLayers((prev) => [...prev, { id: stickerText.get("id") as string, type: "sticker", object: stickerText }]);
+
+    setLayers(getCanvasLayers(canvas));
+
     canvas.setActiveObject(stickerText);
     canvas.requestRenderAll();
     enforceLayerOrder();
@@ -411,21 +421,15 @@ export default function MemeLayout({ children }: LayoutProps) {
 
       const maxStickerWidth = 150;
       const maxStickerHeight = 150;
-      const scale = Math.min(
-        maxStickerWidth / img.width!,
-        maxStickerHeight / img.height!,
-        1
-      );
+      const scale = Math.min(maxStickerWidth / img.width!, maxStickerHeight / img.height!, 1);
 
       img.set({
         scaleX: scale,
         scaleY: scale,
         left:
-          Math.random() * (canvasWidth - img.width! * scale) +
-          (img.width! * scale) / 2,
+          Math.random() * (canvasWidth - img.width! * scale) + (img.width! * scale) / 2,
         top:
-          Math.random() * (canvasHeight - img.height! * scale) +
-          (img.height! * scale) / 2,
+          Math.random() * (canvasHeight - img.height! * scale) + (img.height! * scale) / 2,
         selectable: true,
         hasControls: true,
         originX: "center",
@@ -436,7 +440,9 @@ export default function MemeLayout({ children }: LayoutProps) {
 
       canvas.add(img);
       canvas.bringObjectToFront(img);
-      setLayers((prev) => [...prev, { id: img.get("id") as string, type: "sticker-image", object: img }]);
+
+      setLayers(getCanvasLayers(canvas));
+
       canvas.setActiveObject(img);
       canvas.requestRenderAll();
       enforceLayerOrder();
@@ -444,11 +450,10 @@ export default function MemeLayout({ children }: LayoutProps) {
     });
   };
 
-  // --- Reset Canvas ---
   const resetCanvas = () => {
     const canvas = canvasRef.current;
     if (!canvas) {
-      console.error("Canvas reference is missing!")
+      console.error("Canvas reference is missing!");
       return;
     }
     canvas.getObjects().forEach((obj) => {
@@ -460,7 +465,6 @@ export default function MemeLayout({ children }: LayoutProps) {
     setLayers([]);
   };
 
-  // --- Template & Image Handlers ---
   const handleImageSelect = (imageUrl: string, imageId?: string) => {
     setSelectedImage(imageUrl);
     setSelectedImageId(imageId || null);
@@ -475,11 +479,11 @@ export default function MemeLayout({ children }: LayoutProps) {
     setFirstVisit(false);
     setSelectedTemplate(template?.config ? { ...template.config } : null);
     if (template.slug && template.slug !== currentSlug) {
-        router.push(`/meme/${template.slug}`);
-        return;
-      }
+      router.push(`/meme/${template.slug}`);
+      return;
+    }
   };
-  
+
   useEffect(() => {
     if (!selectedImage || !selectedTemplate) return;
     loadBackgroundImage(selectedImage, zoom, rotation, selectedTemplate);
@@ -501,7 +505,6 @@ export default function MemeLayout({ children }: LayoutProps) {
         />
 
         <div className="flex flex-1 flex-col md:flex-row relative overflow-hidden items-stretch">
-          {/* Left Sidebar */}
           <div className="order-1 md:order-none z-10 w-full md:w-88 border-b md:border-b-0 md:border-r border-gray-200 bg-white md:overflow-y-auto">
             <ImageSelector
               onSelect={handleImageSelect}
@@ -511,7 +514,6 @@ export default function MemeLayout({ children }: LayoutProps) {
             />
           </div>
 
-          {/* Canvas Area */}
           <div className="order-2 md:order-none z-0 flex justify-center items-center bg-gray-50 relative overflow-hidden p-4 flex-1 min-h-0">
             <div
               className="relative bg-white rounded-lg shadow-lg p-1 border-2 border-black flex-shrink-0 
@@ -527,21 +529,23 @@ export default function MemeLayout({ children }: LayoutProps) {
               />
             </div>
 
-            {!hasCanvasObjects && !selectedImage && !backgroundImageLoaded && firstVisit &&(
-              <div className="absolute inset-0 flex flex-col items-center justify-center text-gray-500 pointer-events-none p-4 z-20 bg-gray-50/80">
-                <div className="flex flex-col items-center justify-center">
-                  <div className="w-32 h-32 sm:w-40 sm:h-40 bg-gray-100 rounded-lg flex items-center justify-center mb-4">
-                    <span className="text-3xl sm:text-4xl md:text-5xl">🖼️</span>
+            {!hasCanvasObjects &&
+              !selectedImage &&
+              !backgroundImageLoaded &&
+              firstVisit && (
+                <div className="absolute inset-0 flex flex-col items-center justify-center text-gray-500 pointer-events-none p-4 z-20 bg-gray-50/80">
+                  <div className="flex flex-col items-center justify-center">
+                    <div className="w-32 h-32 sm:w-40 sm:h-40 bg-gray-100 rounded-lg flex items-center justify-center mb-4">
+                      <span className="text-3xl sm:text-4xl md:text-5xl">🖼️</span>
+                    </div>
+                    <p className="text-center text-sm sm:text-base md:text-lg max-w-xs sm:max-w-md">
+                      Select a template from the left to get started
+                    </p>
                   </div>
-                  <p className="text-center text-sm sm:text-base md:text-lg max-w-xs sm:max-w-md">
-                    Select a template from the left to get started
-                  </p>
                 </div>
-              </div>
-            )}
+              )}
           </div>
 
-          {/* Right Sidebar */}
           <div className="order-3 md:order-none z-10 w-full md:w-88 border-t md:border-t-0 md:border-l border-gray-200 bg-gray-50 p-4 md:overflow-y-auto">
             <div className="flex flex-col gap-4 pb-8">
               <TextStyles
@@ -552,13 +556,13 @@ export default function MemeLayout({ children }: LayoutProps) {
                 onDeleteText={deleteActiveText}
               />
 
-                <ImageControls
-                  zoom={zoom}
-                  rotation={rotation}
-                  onZoomChange={setZoom}
-                  onRotationChange={setRotation}
-                  onResetImage={resetImage}
-                />
+              <ImageControls
+                zoom={zoom}
+                rotation={rotation}
+                onZoomChange={setZoom}
+                onRotationChange={setRotation}
+                onResetImage={resetImage}
+              />
 
               <Stickers
                 onStickerSelect={addSticker}

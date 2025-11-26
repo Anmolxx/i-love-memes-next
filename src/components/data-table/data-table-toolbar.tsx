@@ -181,7 +181,7 @@ export function DataTableToolbar<TData, TOrderBy extends string>({
                                     variant={showDeleted ? "default" : "outline"}
                                     size="sm"
                                     onClick={toggleDeletedView}
-                                    className="h-8 px-2 text-xs font-semibold"
+                                    className="h-8 px-2 text-xs font-semibold cursor-pointer"
                                 >
                                     {showDeleted ? (
                                         <FolderOpen className="h-4 w-4 me-1" />
@@ -191,8 +191,9 @@ export function DataTableToolbar<TData, TOrderBy extends string>({
                                     {showDeleted ? "Active" : "Deleted"}
                                 </Button>
                             </TooltipTrigger>
-                            <TooltipContent sideOffset={4}>
-                                {showDeleted ? "Switch to Active Memes View" : "Switch to Deleted Memes View"}
+                            <TooltipContent sideOffset={4} side="bottom"
+                            className="bg-white text-black dark:bg-[#202020] dark:text-white shadow-lg p-2 rounded-md border border-gray-200 dark:border-none">
+                                {showDeleted ? "Switch to Active Memes View" : "Switch to Recycled Memes View"}
                             </TooltipContent>
                         </Tooltip>
                     )}

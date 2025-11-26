@@ -12,7 +12,7 @@ import { Button } from "@/components/ui/button";
 import { EllipsisVertical, Eye, Trash2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useCallback, useState } from "react";
-import { DeleteDialog } from "@/components/dialog/delete-dialog";
+import { ConfirmationDialog } from "@/components/dialog/confirmation-dialog";
 import EditUserDialog from "@/components/dialog/edit-user";
 import { useDeleteUserMutation } from "@/redux/services/user";
 import { toast } from "sonner";
@@ -161,7 +161,7 @@ const ActionCell = ({ row }: any) => {
                     </DropdownMenuContent>
                 </DropdownMenu>
             </div>
-            <DeleteDialog
+            <ConfirmationDialog
                 open={showDeleteDialog}
                 showTrigger={false}
                 onOpenChange={setShowDeleteDialog}

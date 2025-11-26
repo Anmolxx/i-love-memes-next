@@ -73,7 +73,7 @@ function MemesContent() {
   const [searchQuery, setSearchQuery] = useState(initialSearch);
   const debouncedSearch = useDebounce(searchQuery, 600);
   const [reported, setReported] = useState<boolean>(initialReported === "true");
-  // const [showDeleted, setShowDeleted] = useState<boolean>(initialDeleted);
+  const [showDeleted, setShowDeleted] = useState<boolean>(false);
 
   const updateUrl = useCallback(
     (
@@ -128,7 +128,7 @@ function MemesContent() {
   const interactionTypeForQuery = selectedInteractionType || undefined;
   const reasonForQuery = selectedReason || undefined;
 
-  const { data, isLoading } = useGetMemesQuery({
+  const queryArgs = {
     page,
     limit,
     search: debouncedSearch || undefined,
@@ -138,7 +138,15 @@ function MemesContent() {
     reported,
     interactionType: interactionTypeForQuery as InteractionType | undefined,
     reasons: reasonForQuery as ReasonType | undefined,
+  };
+
+  const { data: activeData, isLoading } = useGetMemesQuery(queryArgs, {
+      skip: showDeleted, 
   });
+  const { data: deletedData } = useGetDeletedMemesQuery(queryArgs, {
+      skip: !showDeleted, 
+  });
+  const data = showDeleted ? deletedData : activeData;
 
   const tableData = data?.items ?? [];
   const pageCount = data?.meta?.totalPages ?? 0;
@@ -151,7 +159,7 @@ function MemesContent() {
     
   });
 
-  const handleReset = () => {
+  const handleReset = useCallback(() => {
     setSearchQuery("");
     setSelectedInteractionType("");
     setSelectedReason("");
@@ -167,7 +175,12 @@ function MemesContent() {
       order: "DESC", 
     });
     table.resetColumnFilters();
-  };
+  },[table, updateUrl]);
+
+  const toggleDeletedView = useCallback(() => {
+    setShowDeleted(prev => !prev);
+    handleReset(); 
+  }, [handleReset]);
 
   const filters: DataTableToolbarFilters[] = [
     {
@@ -245,6 +258,8 @@ function MemesContent() {
       orderBy={orderBy}
       setOrderBy={(ob) => updateUrl({ orderBy: ob })}
       sortableFields={VALID_ORDER_BY}
+      showDeleted={showDeleted}
+      toggleDeletedView={toggleDeletedView}
       onReset={handleReset}
     />
   );

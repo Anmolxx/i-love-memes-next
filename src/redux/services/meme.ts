@@ -1,6 +1,6 @@
 import { iLoveMemesApi } from ".";
-import { TAG_GET_MEMES } from "@/contracts/iLoveMemesApiTags";
-import { GetMemesArgs, GetMemesResponse } from "@/utils/dtos/meme.dto";
+import { TAG_GET_MEMES, TAG_GET_DELETED_MEMES } from "@/contracts/iLoveMemesApiTags";
+import { GetMemesArgs, GetMemesResponse, DeleteMemeArgs, DeleteMemeResponse, EmptyResponse, MemeMutationArg} from "@/utils/dtos/meme.dto";
 import { Meme } from "@/utils/dtos/meme.dto";
 
 export const memesApi = iLoveMemesApi.injectEndpoints({
@@ -79,8 +79,8 @@ export const memesApi = iLoveMemesApi.injectEndpoints({
       }),
     }),
 
-    deleteMeme: builder.mutation<any, string>({
-      invalidatesTags:[TAG_GET_MEMES],
+    deleteMeme: builder.mutation<DeleteMemeResponse, DeleteMemeArgs>({
+      invalidatesTags:[TAG_GET_MEMES, TAG_GET_DELETED_MEMES],
       query: (slugOrId) => ({
         url: `/memes/${slugOrId}`,
         method: "DELETE",
@@ -100,7 +100,7 @@ export const memesApi = iLoveMemesApi.injectEndpoints({
         GetMemesResponse,
         GetMemesArgs
       >({
-        providesTags: [TAG_GET_MEMES],
+        providesTags: [TAG_GET_DELETED_MEMES],
         query: (params = {}) => {
           const { 
             page = 1, 
@@ -152,8 +152,24 @@ export const memesApi = iLoveMemesApi.injectEndpoints({
           };
         },
       }),
+
+      restoreMeme: builder.mutation<EmptyResponse, MemeMutationArg>({
+        query: (slugOrId) => ({
+          url: `/memes/${slugOrId}/restore`,
+          method: "PATCH",
+        }),
+        invalidatesTags: [TAG_GET_MEMES, TAG_GET_DELETED_MEMES], 
+      }),
+
+      permanentDeleteMeme: builder.mutation<EmptyResponse, MemeMutationArg>({
+        query: (slugOrId) => ({
+          url: `/memes/${slugOrId}/permanent`,
+          method: "DELETE", 
+        }),
+        invalidatesTags: [TAG_GET_DELETED_MEMES], 
+      }),
   }),
   overrideExisting: true
 });
 
-export const { useGetMemesQuery, useGetMemeBySlugOrIdQuery, usePostMemeMutation, useDeleteMemeMutation,useUpdateMemeMutation, useGetDeletedMemesQuery } = memesApi;
+export const { useGetMemesQuery, useGetMemeBySlugOrIdQuery, usePostMemeMutation, useDeleteMemeMutation,useUpdateMemeMutation, useGetDeletedMemesQuery, useRestoreMemeMutation, usePermanentDeleteMemeMutation, } = memesApi;

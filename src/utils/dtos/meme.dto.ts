@@ -6,7 +6,7 @@ interface Template {
   slug: string;
   title: string;
 }
-
+//api-response
 export interface Meme {
   id: string;
   title: string;
@@ -35,10 +35,9 @@ export interface PaginatedResponse<T> {
   items: T[];
   meta: {
     totalItems: number;
-    itemCount: number;
-    itemsPerPage: number;
     totalPages: number;
     currentPage: number;
+    limit: number;
   };
 }
 
@@ -68,6 +67,7 @@ export type InteractionReason =
   | "VIOLENCE" 
   | "OTHER";
 
+  //get memes
 export interface GetMemesArgs {
   page?: number;
   limit?: number;
@@ -80,3 +80,10 @@ export interface GetMemesArgs {
   reasons?: InteractionReason;        
 }
 
+//delete memes
+export type DeleteMemeArgs = string;
+export type DeleteMemeResponse = void;
+
+//permanent-delete | restore memes;
+export type MemeMutationArg = string;
+export type EmptyResponse = void;

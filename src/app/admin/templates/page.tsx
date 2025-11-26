@@ -16,7 +16,7 @@ import {
   DataTableToolbarFilters,
 } from "@/components/data-table/data-table-toolbar";
 import { TemplatesTableSkeleton } from "@/components/data-table/skeletons/template-skeleton";
-import { useGetTemplatesQuery } from "@/redux/services/template";
+import { useGetTemplatesQuery, useGetDeletedTemplatesQuery } from "@/redux/services/template";
 import { Template } from "@/utils/dtos/template.dto";
 import { useDebounce } from "@/hooks/use-debounce";
 
@@ -45,6 +45,7 @@ function TemplatesContent() {
 
   const [searchQuery, setSearchQuery] = useState(initialSearch);
   const debouncedSearch = useDebounce(searchQuery, 600);
+  const [showDeleted, setShowDeleted] = useState<boolean>(false);
 
   const updateUrl = useCallback(
     (
@@ -87,15 +88,23 @@ useEffect(() => {
   }
 }, [debouncedSearch, initialSearch, updateUrl]);
 
-  const { data, isLoading } = useGetTemplatesQuery({
+  const queryArgs = {
     page,
     limit,
     search: debouncedSearch || undefined,
     tags: tags.length ? tags : undefined,
     orderBy,
     order,
-  });
+  };
 
+  const { data: activeData, isLoading } = useGetTemplatesQuery(queryArgs, {
+        skip: showDeleted, 
+    });
+    const { data: deletedData } = useGetDeletedTemplatesQuery(queryArgs, {
+        skip: !showDeleted, 
+    });
+    const data = showDeleted ? deletedData : activeData;
+  
   const tableData = data?.items ?? [];
   const pageCount = data?.meta?.totalPages ?? 0;
   const columns = useMemo(() => adminTemplateColumns(), []);
@@ -105,6 +114,23 @@ useEffect(() => {
     defaultPerPage: limit,
     pageCount,
   });
+
+  const handleReset = useCallback(() => {
+      setSearchQuery("");
+      updateUrl({
+        page: 1, 
+        search: "",
+        tags: [],
+        orderBy: "createdAt",
+        order: "DESC", 
+      });
+      table.resetColumnFilters();
+    },[table, updateUrl]);
+  
+    const toggleDeletedView = useCallback(() => {
+      setShowDeleted(prev => !prev);
+      handleReset(); 
+    }, [handleReset]);
 
   const filters: DataTableToolbarFilters[] = [];
 
@@ -122,6 +148,8 @@ useEffect(() => {
       orderBy={orderBy}
       setOrderBy={(ob) => updateUrl({ orderBy: ob })}
       sortableFields={VALID_ORDER_BY}
+      showDeleted={showDeleted}
+      toggleDeletedView={toggleDeletedView}
     />
   );
 

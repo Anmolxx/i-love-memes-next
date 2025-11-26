@@ -11,15 +11,15 @@ export default function SlugPage() {
     window.scrollTo(0, 0);
   }, []);
 
-  useEffect(() => {
-    if (isInitialMount.current) {
-      isInitialMount.current = false;
-    } else {
-      if (typeof window !== 'undefined') {
-        window.location.reload(); 
-      }
-    }
-  }, [pathname]);
+  // useEffect(() => {
+  //   if (isInitialMount.current) {
+  //     isInitialMount.current = false;
+  //   } else {
+  //     if (typeof window !== 'undefined') {
+  //       window.location.reload(); 
+  //     }
+  //   }
+  // }, [pathname]);
 
   return <div />;
 }

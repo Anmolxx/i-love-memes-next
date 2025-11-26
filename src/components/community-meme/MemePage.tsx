@@ -11,9 +11,6 @@ import {
   useDeleteCommentMutation,
 } from "@/redux/services/comment";
 import useAuthentication from "@/hooks/use-authentication";
-// REMOVED: import { Navbar } from "@/components/ui/extension/navbar-internal";
-// REMOVED: import AppSidebar from "@/components/organisms/app-sidebar-internal";
-// REMOVED: import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 import { Footer } from "@/sections/Footer";
 import { Meme } from "@/utils/dtos/meme.dto";
 import MemeContent from "./MemeContent";
@@ -21,55 +18,27 @@ import MemeActionsSidebar from "./MemeActionsSidebar";
 import FlagMemeDialog from "./FlagMemeDialog";
 import { CommentDto } from "@/utils/dtos/comment.dto";
 import { CommentActionsProvider } from "@/context/CommentActions";
-import { current } from "@reduxjs/toolkit";
 import { NavbarSearch } from "../community-grid/NavbarSearch";
 import { TagSelector } from "../community-grid/TagsSelector";
-
-// NOTE: Assuming these components are available in the running environment
-// For this single file output, I'll include dummy definitions at the end.
-// import { NavbarSearch } from "@/components/ui/extension/navbar-search";
-// import { TagSelector } from "@/components/organisms/TagSelector";
-
-
-// --- START: New State and Handlers for NavbarSearch ---
-interface NavbarSearchProps {
-  searchQuery: string;
-  setSearchQuery: (val: string) => void;
-  handleSearch: () => void;
-  isFetching: boolean;
-  selectedTags: string[];
-  setSelectedTags: (tags: string[]) => void;
-  availableTags: string[];
-}
-
-interface TagSelectorProps {
-    setAvailableTags: (tags: string[]) => void;
-}
-// --- END: New State and Handlers for NavbarSearch ---
-
 
 export default function MemePage() {
   const { slug } = useParams();
   const { user, isLoggedIn } = useAuthentication();
   const router = useRouter();
 
-  // --- START: State for NavbarSearch ---
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [availableTags, setAvailableTags] = useState<string[]>([]);
-  // In a detail page context, we set isFetching to false as searching is handled by navigation
   const [isFetching, setIsFetching] = useState(false); 
 
   const handleSearch = useCallback(() => {
-    // Navigate to the community page with search and tag parameters
+
     let searchPath = `/community?search=${encodeURIComponent(searchQuery)}`;
     if (selectedTags.length > 0) {
         searchPath += `&tags=${selectedTags.join(',')}`;
     }
     router.push(searchPath);
   }, [searchQuery, selectedTags, router]);
-  // --- END: State for NavbarSearch ---
-
 
   const { data, isLoading, error, refetch } = useGetMemeBySlugOrIdQuery(slug as string, { skip: !slug });
   const meme: Meme | null = data?.data ?? null;

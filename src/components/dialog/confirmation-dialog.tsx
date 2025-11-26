@@ -25,27 +25,34 @@ import {
   DrawerTrigger,
 } from "@/components/ui/drawer";
 
-interface DeleteDialogProps
+type ConfirmationVariant = "destructive" | "default" | "secondary" | "primary";
+
+interface ConfirmationDialogProps
   extends React.ComponentPropsWithoutRef<typeof Dialog> {
   showTrigger?: boolean;
   onSuccess?: () => void;
   deleteDescription?: string;
   deleteTitle?: string;
   action: () => Promise<any>;
+  confirmButtonText?: string;
+  variant?: ConfirmationVariant;
 }
 
-export function DeleteDialog({
+export function ConfirmationDialog({
   showTrigger = true,
   onSuccess,
   action,
   deleteTitle = "Are you absolutely sure?",
   deleteDescription = "This action cannot be undone. This will permanently delete this item from our servers.",
+  confirmButtonText = "Confirm",
+  variant = "destructive",
   ...props
-}: DeleteDialogProps) {
-  const [isDeletePending, startDeleteTransition] = useTransition();
+}: ConfirmationDialogProps) {
+  const [isActionPending, startActionTransition] = useTransition();
   const isDesktop = useMediaQuery("(min-width: 640px)");
-  function onDelete() {
-    startDeleteTransition(async () => {
+
+  function onConfirmAction() {
+    startActionTransition(async () => {
       await action();
       props.onOpenChange?.(false);
       onSuccess?.();
@@ -58,7 +65,7 @@ export function DeleteDialog({
         {showTrigger ? (
           <DialogTrigger asChild>
             <Button variant="outline" size="sm">
-              Delete
+              Trigger Action
             </Button>
           </DialogTrigger>
         ) : null}
@@ -74,13 +81,13 @@ export function DeleteDialog({
               <Button variant="outline">No, Cancel</Button>
             </DialogClose>
             <Button
-              aria-label="Delete selected rows"
-              variant="destructive"
-              onClick={onDelete}
-              disabled={isDeletePending}
+              aria-label={`Confirm ${confirmButtonText}`}
+              variant={variant as "destructive"}
+              onClick={onConfirmAction}
+              disabled={isActionPending}
               className="w-1/2 cursor-pointer"
             >
-              Yes, Confirm
+              {confirmButtonText}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -93,13 +100,13 @@ export function DeleteDialog({
       {showTrigger ? (
         <DrawerTrigger asChild>
           <Button variant="outline" size="sm">
-            Delete
+            Trigger Action
           </Button>
         </DrawerTrigger>
       ) : null}
       <DrawerContent>
         <DrawerHeader>
-          <DrawerTitle>Are you absolutely sure?</DrawerTitle>
+          <DrawerTitle>{deleteTitle}</DrawerTitle>
           <DrawerDescription>{deleteDescription}</DrawerDescription>
         </DrawerHeader>
         <DrawerFooter className="gap-2 sm:space-x-0">
@@ -107,12 +114,12 @@ export function DeleteDialog({
             <Button variant="outline">No, Cancel</Button>
           </DrawerClose>
           <Button
-            aria-label="Delete selected rows"
-            variant="destructive"
-            onClick={onDelete}
-            disabled={isDeletePending}
+            aria-label={`Confirm ${confirmButtonText}`}
+            variant={variant as "destructive"}
+            onClick={onConfirmAction}
+            disabled={isActionPending}
           >
-            Yes, Confirm
+            {confirmButtonText}
           </Button>
         </DrawerFooter>
       </DrawerContent>

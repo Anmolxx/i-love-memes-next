@@ -31,7 +31,7 @@ export function DataTableFacetedFilter<TData, TValue>({
   onChange,
   onReset,
 }: DataTableFacetedFilterProps<TData, TValue>) {
-  // Single value instead of a Set
+  
   const selectedValue = column?.getFilterValue() as string | undefined;
 
   return (

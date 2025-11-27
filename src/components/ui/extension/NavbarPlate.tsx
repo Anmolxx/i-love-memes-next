@@ -42,7 +42,7 @@ export default function Navbar({
 
   return (
     <nav className={cn("sticky top-0 z-50 bg-white/70 backdrop-blur-md", className)}>
-      <div className="mx-auto max-w-7xl px-4 py-4 flex items-center justify-between relative">
+      <div className="mx-auto max-w-[76rem] px-4 py-4 flex items-center justify-between relative">
         
         {/* Left Links (Desktop) */}
         <div className="hidden md:flex items-center gap-6 font-medium text-base font-serif">

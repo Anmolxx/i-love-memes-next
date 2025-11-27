@@ -10,7 +10,7 @@ import {
 } from "@/components/layout/dashboard/layout";
 import { DataTable } from "@/components/data-table/data-table";
 import { useDataTable } from "@/hooks/use-data-table";
-import { useGetMemesQuery } from "@/redux/services/meme";
+import { useGetMemesQuery, useGetDeletedMemesQuery } from "@/redux/services/meme";
 import { adminMemeColumns } from "@/components/data-table/columns/admin-memes-columns";
 import { CreateMemeDialog } from "@/components/molecules/primary-buttons/creation-primary-buttons/create-meme";
 import { Meme } from "@/utils/dtos/meme.dto";
@@ -34,6 +34,9 @@ const VALID_ORDER_BY = [
 
 type MemeOrderByKey = typeof VALID_ORDER_BY[number];
 type SortOrder = "ASC" | "DESC";
+type InteractionType = "UPVOTE" | "DOWNVOTE" | "REPORT" | "FLAG";
+type ReasonType = "SPAM" | "INAPPROPRIATE" | "COPYRIGHT" | "NSFW" | "HARASSMENT" | "VIOLENCE" | "OTHER";
+
 
 function MemesContent() {
   const searchParams = useSearchParams();
@@ -45,7 +48,7 @@ function MemesContent() {
   const limit = rawLimit > 50 ? 10 : rawLimit;
 
   const tags = searchParams.getAll("tags");
-
+  const initialReported = searchParams.get("reported") ?? "false";
   const rawOrderBy = searchParams.get("orderBy");
   const orderBy: MemeOrderByKey =
     rawOrderBy && VALID_ORDER_BY.includes(rawOrderBy as MemeOrderByKey)
@@ -56,10 +59,22 @@ function MemesContent() {
   const order: SortOrder =
     rawOrder === "ASC" || rawOrder === "DESC" ? rawOrder : "DESC";
 
+  const INTERACTION_TYPES = ["UPVOTE", "DOWNVOTE", "REPORT", "FLAG"];
+  const REASONS = ["SPAM","INAPPROPRIATE","COPYRIGHT","NSFW","HARASSMENT","VIOLENCE","OTHER"];
+  const initialInteraction = searchParams.get("interactionType") ?? "";
+  const initialReason = searchParams.get("reasons") ?? "";
+
+  const [selectedInteractionType, setSelectedInteractionType] = useState<string>(initialInteraction);
+  const [selectedReason, setSelectedReason] = useState<string>(initialReason);
+  const [showReasonFilter, setShowReasonFilter] = useState<boolean>(
+      initialInteraction === "REPORT" || initialInteraction === "FLAG"
+    );
   const initialSearch = searchParams.get("search") ?? "";
   const [searchQuery, setSearchQuery] = useState(initialSearch);
   const debouncedSearch = useDebounce(searchQuery, 600);
-  
+  const [reported, setReported] = useState<boolean>(initialReported === "true");
+  const [showDeleted, setShowDeleted] = useState<boolean>(false);
+
   const updateUrl = useCallback(
     (
       newParams: Partial<{
@@ -69,15 +84,20 @@ function MemesContent() {
         tags: string[];
         orderBy: MemeOrderByKey;
         order: SortOrder;
+        reported: boolean;
+        interactionType: string;
+        reasons: string;
       }>,
       resetPage = true
     ) => {
-      const params = new URLSearchParams(searchParams.toString());
+      const params = new URLSearchParams(window.location.search);
 
-      if (resetPage) params.set("page", "1");
+     if (resetPage) params.set("page", "1");
 
       Object.entries(newParams).forEach(([key, value]) => {
-        if (!value || (Array.isArray(value) && value.length === 0)) {
+        if (key === "reported") {
+          params.set(key, String(value));
+        } else if (!value || (Array.isArray(value) && value.length === 0)) {
           params.delete(key);
         } else if (Array.isArray(value)) {
           params.delete(key);
@@ -89,7 +109,7 @@ function MemesContent() {
 
       router.replace(`${pathname}?${params.toString()}`, { scroll: false });
     },
-    [searchParams, pathname, router]
+    [pathname, router]
   );
 
   useEffect(() => {
@@ -98,14 +118,35 @@ function MemesContent() {
     }
   }, [debouncedSearch, updateUrl, initialSearch]);
   
-  const { data, isLoading } = useGetMemesQuery({
+  useEffect(() => {
+    setShowReasonFilter(selectedInteractionType === "REPORT");
+    if (selectedInteractionType !== "REPORT") {
+      setSelectedReason("");
+    }
+  }, [selectedInteractionType]);
+  
+  const interactionTypeForQuery = selectedInteractionType || undefined;
+  const reasonForQuery = selectedReason || undefined;
+
+  const queryArgs = {
     page,
     limit,
     search: debouncedSearch || undefined,
     tags: tags.length ? tags : undefined,
     orderBy,
     order,
+    reported,
+    interactionType: interactionTypeForQuery as InteractionType | undefined,
+    reasons: reasonForQuery as ReasonType | undefined,
+  };
+
+  const { data: activeData, isLoading } = useGetMemesQuery(queryArgs, {
+      skip: showDeleted, 
   });
+  const { data: deletedData } = useGetDeletedMemesQuery(queryArgs, {
+      skip: !showDeleted, 
+  });
+  const data = showDeleted ? deletedData : activeData;
 
   const tableData = data?.items ?? [];
   const pageCount = data?.meta?.totalPages ?? 0;
@@ -115,9 +156,93 @@ function MemesContent() {
     columns: tableColumns,
     defaultPerPage: limit,
     pageCount,
+    
   });
 
-  const filters: DataTableToolbarFilters[] = [];
+  const handleReset = useCallback(() => {
+    setSearchQuery("");
+    setSelectedInteractionType("");
+    setSelectedReason("");
+    setReported(false);
+    updateUrl({
+      page: 1, 
+      search: "",
+      tags: [],
+      interactionType: "", 
+      reasons: "",
+      reported: false,
+      orderBy: "createdAt",
+      order: "DESC", 
+    });
+    table.resetColumnFilters();
+  },[table, updateUrl]);
+
+  const toggleDeletedView = useCallback(() => {
+    setShowDeleted(prev => !prev);
+    handleReset(); 
+  }, [handleReset]);
+
+  const filters: DataTableToolbarFilters[] = [
+    {
+      columnName: "interactionSummaryCounts",
+      title: "Interaction Type",
+      options: INTERACTION_TYPES.map((i) => ({ label: i, value: i })),
+      onChange: (selected: string[]) => {
+           const newInteractionType = selected[0] || "";
+           setSelectedInteractionType(newInteractionType)
+           const shouldBeReported = newInteractionType === "REPORT";
+           setReported(shouldBeReported);
+           updateUrl({ 
+            interactionType: newInteractionType,
+            reported: shouldBeReported
+          });
+           if (!newInteractionType) {
+                setSelectedReason("");
+                updateUrl({ reasons: "" });
+           }
+       },
+      onReset: () => {
+        setSelectedInteractionType("");
+        setSelectedReason(""); 
+        updateUrl({ interactionType: "", reasons: "" });
+      }
+    },
+    ...(showReasonFilter
+      ? [
+          {
+            columnName: "interactionReason",
+            title: "Reason",
+            options: REASONS.map((r) => ({ label: r, value: r })),
+            onChange: (selected: string[]) => {
+                const newReason = selected[0] || "";
+                setSelectedReason(newReason);
+                updateUrl({ reasons: newReason });
+            },
+            onReset: () => {
+              setSelectedReason("");
+              updateUrl({ reasons: "" });
+            }
+          },
+        ]
+      : []),
+    {
+        columnName: "reported",
+        title: "Reported",
+        options: [
+          { label: "Yes", value: "REPORT" },
+          { label: "No", value: "NO_REPORT" }, 
+        ],
+        onChange: (selected: string[]) => {
+          const showReport = selected[0] === "REPORT";
+          setReported(showReport);
+          updateUrl({ reported: showReport });
+        },
+        onReset: () => {
+          setReported(false);
+          updateUrl({ reported: false });
+        },
+      },
+  ];
 
   const MemeToolbar = (
     <DataTableToolbar<Meme, MemeOrderByKey>
@@ -133,6 +258,9 @@ function MemesContent() {
       orderBy={orderBy}
       setOrderBy={(ob) => updateUrl({ orderBy: ob })}
       sortableFields={VALID_ORDER_BY}
+      showDeleted={showDeleted}
+      toggleDeletedView={toggleDeletedView}
+      onReset={handleReset}
     />
   );
 

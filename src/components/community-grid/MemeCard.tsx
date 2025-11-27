@@ -3,6 +3,8 @@ import Link from "next/link";
 import { ThumbsUp, ThumbsDown, Flag, Share2 } from "lucide-react";
 import { InteractionType } from "@/utils/dtos/interaction.dto";
 import { Tag } from "@/utils/dtos/tag.dto";
+import { useState } from "react";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "../ui/tooltip";
 
 interface MemeCardProps {
   meme: any;
@@ -37,7 +39,7 @@ export function MemeCard({ meme, handleVote, shareMeme, setFlagMemeId, isPosting
   const netScore = meme.interactionSummary?.netScore ?? 0;
 
   return (
-      <article className="border-1 border-[#D6C2FF] rounded-xl shadow-md p-2 flex flex-col hover:shadow-lg transition-shadow">
+      <article className="border-1 border-[#D6C2FF] rounded-lg shadow-md p-2 flex flex-col hover:shadow-lg transition-shadow group">
         {/* Meme Image */}
         <Link
           href={`/community/${meme.slug}`}
@@ -52,30 +54,72 @@ export function MemeCard({ meme, handleVote, shareMeme, setFlagMemeId, isPosting
         </Link>
   
         {/* Title & Author */}
-        <div className="flex-1 flex flex-col px-1 py-2">
-          <div className="text-base sm:text-lg font-semibold text-[#1F1147]
-          ">{meme.title}</div>
-          <div className="text-xs sm:text-sm leading-4 sm:leading-5 text-[#4A3A7A]">
+        <div className="flex-1 flex flex-col px-1 py-2 gap-1 justify-between">
+          <Link
+              href={`/community/${meme.slug}`}
+               className="inline-block  transition-colors w-fit  text-base sm:text-lg font-semibold text-[#1F1147]    "
+              >
+              {meme.title}
+            </Link>
+          <div className="text-gray-600 text-sm line-clamp-2 pb-3">
             by {meme.author ? ((meme.author.firstName || meme.author.lastName) ? `${meme.author.firstName ?? ""} ${meme.author.lastName ?? ""}`.trim() : meme.author.email) : "Anonymous"}
           </div>
   
           {/* Tags */}
           <div className="flex flex-wrap items-center gap-1">
-            {displayedTags.map(tag => (
-              <span key={tag.id} className="text-[14px] bg-purple-100 text-purple-800 px-6 py-1 rounded-full font-medium mb-2 mt-4       
-              ">
-                #{tag.name}
-              </span>
-            ))}
-            {hiddenTags.length > 0 && (
-              <span className="text-[10px] bg-gray-200 text-gray-700 px-2 py-0.5 rounded-full font-medium cursor-pointer">
-                +{hiddenTags.length} more
-              </span>
-            )}
+            {displayedTags.map((tag) => (
+                    <Link
+                        key={tag.id}
+                        href={`/community/?tags=${tag.name}`}
+                        className="text-sm bg-purple-100 text-purple-800 px-6 py-1  rounded-xl font-medium hover:bg-purple-200 transition"
+                    >
+                        #{tag.name}
+                    </Link>
+                ))}
+            
+                {hiddenTags.length > 0 && (
+                    <TooltipProvider>
+                        <Tooltip>
+                            <TooltipTrigger asChild>
+                                <span className="text-xs bg-gray-200 text-gray-700 px-2 py-1 rounded-md font-medium cursor-pointer hover:bg-gray-300 transition">
+                                    +{hiddenTags.length} more
+                                </span>
+                            </TooltipTrigger>
+                            <TooltipContent
+                                side="top"
+                                className="bg-white text-black shadow-lg p-2 rounded-md border border-gray-200"
+                            >
+                                <div className="flex flex-wrap gap-2 max-w-[200px]">
+                                    {hiddenTags.map((tag) => {
+                                        const hasName = tag.name && tag.name.length > 0;
+                                        return hasName ? (
+                                            <Link
+                                                key={tag.id}
+                                                href={`/community/?tags=${tag.name}`}
+                                                target="_blank"
+                                                className="hover:opacity-80 transition-opacity py-0.5"
+                                            >
+                                                <span
+                                                    className="text-xs px-2 py-1 rounded-lg font-medium border border-transparent bg-gray-200 text-gray-800"
+                                                >
+                                                    #{tag.name}
+                                                </span>
+                                            </Link>
+                                        ) : (
+                                            <span key={tag.id} className="text-xs px-2 py-1 rounded-lg font-medium border border-transparent bg-gray-200 text-gray-800">
+                                                #Invalid Tag
+                                            </span>
+                                        );
+                                    })}
+                                </div>
+                            </TooltipContent>
+                        </Tooltip>
+                    </TooltipProvider>
+                )}
           </div>
   
           {/* Actions */}
-          <div className="mt-2 flex items-center justify-between">
+          <div className="mt-3 flex items-center justify-between opacity-0 group-hover:opacity-100 transition-opacity duration-300">
             <div className="flex items-center gap-1">
               <button
                 aria-pressed={userVoteType === InteractionType.UPVOTE}

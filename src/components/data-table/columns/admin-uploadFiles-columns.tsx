@@ -6,7 +6,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Button } from "@/components/ui/button";
 import { EllipsisVertical, Eye, Trash2 } from "lucide-react";
 import { useState, useCallback } from "react";
-import { DeleteDialog } from "@/components/dialog/delete-dialog";
+import { ConfirmationDialog } from "@/components/dialog/confirmation-dialog";
 import { useDeleteFileMutation } from "@/redux/services/uploadfile";
 import { toast } from "sonner";
 import React from "react";
@@ -116,7 +116,7 @@ const ActionCell = ({ row }: { row: any }) => {
         </DropdownMenuContent>
       </DropdownMenu>
 
-      <DeleteDialog
+      <ConfirmationDialog
         open={showDeleteDialog}
         onOpenChange={setShowDeleteDialog}
         showTrigger={false}

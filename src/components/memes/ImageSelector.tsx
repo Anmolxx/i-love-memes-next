@@ -38,7 +38,7 @@ const ImageSelector: React.FC<Props> = ({
   const { data: templates } = useGetTemplatesQuery(
     {
       page: 1,
-      limit: 10,
+      limit: 50,
       search: debouncedSearchQuery,
       tags: tags,
       orderBy: "createdAt",

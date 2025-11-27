@@ -1,4 +1,4 @@
-import { X, ListChevronsUpDown, Table as TableIcon, Grid, Images } from "lucide-react";
+import { X, ListChevronsUpDown, Table as TableIcon, Grid, Images, FolderOpen, Trash2 } from "lucide-react";
 import { type Table } from "@tanstack/react-table";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -24,6 +24,7 @@ export type DataTableToolbarFilters = {
     title: string;
     options: FilterOption[];
     onChange?: (selected: string[]) => void;
+    onReset?: () => void;
 };
 
 const FIELD_LABELS: Record<string, string> = {
@@ -50,6 +51,8 @@ type DataTableToolbarProps<TData, TOrderBy extends string> = {
     sortableFields?: readonly TOrderBy[];
     view?: "table" | "gallery"; 
     setView?: (view: "table" | "gallery") => void;
+    showDeleted?: boolean;
+    toggleDeletedView?: () => void;
     onReset?: () => void; 
 };
 
@@ -71,6 +74,8 @@ export function DataTableToolbar<TData, TOrderBy extends string>({
     sortableFields,
     view = "table",
     setView,
+    showDeleted = false,
+    toggleDeletedView,
     onReset,
 }: DataTableToolbarProps<TData, TOrderBy>) {
     const isFiltered =
@@ -169,6 +174,30 @@ export function DataTableToolbar<TData, TOrderBy extends string>({
                     <DataTableViewOptions table={table} />
                 )}
 
+                {toggleDeletedView && (
+                        <Tooltip>
+                            <TooltipTrigger asChild>
+                                <Button
+                                    variant={showDeleted ? "default" : "outline"}
+                                    size="sm"
+                                    onClick={toggleDeletedView}
+                                    className="h-8 px-2 text-xs font-semibold cursor-pointer"
+                                >
+                                    {showDeleted ? (
+                                        <FolderOpen className="h-4 w-4 me-1" />
+                                    ) : (
+                                        <Trash2 className="h-4 w-4 me-1" />
+                                    )}
+                                    {showDeleted ? "Active" : "Deleted"}
+                                </Button>
+                            </TooltipTrigger>
+                            <TooltipContent sideOffset={4} side="bottom"
+                            className="bg-white text-black dark:bg-[#202020] dark:text-white shadow-lg p-2 rounded-md border border-gray-200 dark:border-none">
+                                {showDeleted ? "Switch to Active Memes View" : "Switch to Recycled Memes View"}
+                            </TooltipContent>
+                        </Tooltip>
+                    )}
+                    
                 {setView && (
                     <div className="flex items-center gap-2">
                         {view === "gallery" ? (

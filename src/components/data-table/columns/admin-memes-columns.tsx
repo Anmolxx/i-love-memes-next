@@ -9,17 +9,27 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import { EllipsisVertical, Eye, Trash2, Edit, CirclePlus } from "lucide-react";
+import { EllipsisVertical, Eye, Trash2, Edit, CirclePlus, BarChart3, Undo2, Eraser } from "lucide-react";
 import Link from "next/link";
 import { useState, useCallback } from "react";
-import { DeleteDialog } from "@/components/dialog/delete-dialog";
+import { ConfirmationDialog } from "@/components/dialog/confirmation-dialog";
 import { EditDialog } from "@/components/dialog/edit-dialog";
-import { useDeleteMemeMutation, useUpdateMemeMutation } from "@/redux/services/meme";
+import { useDeleteMemeMutation, usePermanentDeleteMemeMutation, useRestoreMemeMutation, useUpdateMemeMutation } from "@/redux/services/meme";
 import { toast } from "sonner";
 import { Meme } from "@/utils/dtos/meme.dto";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Popover, PopoverTrigger } from "@/components/ui/popover";
 import { ImagePopover } from "@/components/ui/extension/image-popover";
+import { InteractionSummaryDialog } from "@/components/dialog/InteractionSummary";
+
+interface UpdateMemePayload {
+  title?: string;
+  description?: string;
+  tags?: string[];
+  templateId?: string;
+  file?: { id: string };
+  audience?: string;
+}
 
 const MemeTitleCell = ({ meme }: { meme: Meme }) => {
   const path = meme.file?.path;
@@ -60,7 +70,6 @@ export function adminMemeColumns(): ColumnDef<Meme>[] {
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title="Meme Title" />
       ),
-      // 💡 FIX: Use the new React component here
       cell: ({ row }) => <MemeTitleCell meme={row.original} />, 
       enableSorting: false,
     },
@@ -103,6 +112,24 @@ export function adminMemeColumns(): ColumnDef<Meme>[] {
       cell: ({ row }) => <span className="text-sm">{row.original.author.email}</span>,
       enableSorting: false, 
       enableHiding: false,
+    },
+    {
+      id: "interactionReason",
+      accessorFn: (row) => {
+        const summary = row.interactionSummary;
+        if (!summary?.userInteractions?.length) return "";
+        const reasons = summary.userInteractions
+          .map((i) => i.reason)
+          .filter((r) => r); 
+        return reasons.join(",");
+      },
+      header: () => null,  
+      cell: () => null,   
+      enableSorting: false,
+      enableHiding: false,
+      size: 0, 
+      maxSize: 0, 
+      minSize: 0,
     },
     {
       id: "tags",
@@ -175,6 +202,26 @@ export function adminMemeColumns(): ColumnDef<Meme>[] {
       enableHiding: false, 
     },
     {
+      id: "interactionSummaryCounts", 
+      accessorFn: (row) => {
+        const summary = row.interactionSummary;
+        if (!summary) return "";
+        const counts: string[] = [];
+        if (summary.upvoteCount > 0) counts.push("UPVOTE");
+        if (summary.downvoteCount > 0) counts.push("DOWNVOTE");
+        if (summary.reportCount > 0) counts.push("REPORT");
+        if (summary.flagCount > 0) counts.push("FLAG");
+        return counts.join(",");
+      },
+      header: () => null, 
+      cell: () => null,    
+      enableSorting: false,
+      enableHiding: false,
+      size: 0, 
+      minSize: 0,
+      maxSize: 0, 
+    },
+    {
       accessorKey: "createdAt",
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title="Created At" />
@@ -186,37 +233,126 @@ export function adminMemeColumns(): ColumnDef<Meme>[] {
       enableSorting: false,
     },
     {
+      id: "reported",
+      accessorFn: (row) => {
+        const summary = row.interactionSummary;
+        if (!summary) return "";
+        return summary?.reportCount > 0;
+      },
+      header: () => null, 
+      cell: () => null,   
+      enableSorting: false,
+      enableHiding: false,
+      size: 0, 
+      maxSize: 0,
+      minSize: 0, 
+    },
+    {
       id: "actions",
-      cell: ({ row }) => <ActionCell row={row} />,
+      cell: ({ row }) => <MemeActionCell row={row} />,
       size: 40,
     },
   ];
 };
 
-interface UpdateMemePayload {
-  title?: string;
-  description?: string;
-  tags?: string[];
-  templateId?: string;
-  file?: { id: string };
-  audience?: string;
-}
-
-const ActionCell = ({ row }: { row: any }) => {
+const MemeActionCell = ({ row }: { row: any }) => {
   const meme: Meme = row.original;
+  const isDeleted = !!meme.deletedAt;
+
   const [deleteMeme] = useDeleteMemeMutation();
   const [patchMeme] = useUpdateMemeMutation();
+
+  const [restoreMeme] = useRestoreMemeMutation();
+  const [permanentDeleteMeme] = usePermanentDeleteMemeMutation();
+
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
+  const [showStats, setShowStats] = useState(false);
+  const [showRestoreDialog, setShowRestoreDialog] = useState(false);
+  const [showPermanentDeleteDialog, setShowPermanentDeleteDialog] =
+    useState(false);
 
-  const handleDeleteMeme = useCallback(async () => {
+  const handleSoftDeleteMeme = useCallback(async () => {
     try {
       await deleteMeme(meme.id).unwrap();
-      toast.success("Meme deleted successfully!");
+      toast.success("Meme deleted successfully! (Sent to trash)");
     } catch (err: any) {
-      toast.error(err?.data?.error?.message || "Something went wrong");
+      const apiError = err?.data;
+      if (apiError?.errors && typeof apiError.errors === "object") {
+        Object.values(apiError.errors).forEach((msg: any) => { if (typeof msg === "string") toast.error(msg); });
+      } else if (apiError?.message) toast.error(apiError.message);
+      else toast.error("Failed to update user");
     }
   }, [meme.id, deleteMeme]);
+
+  const handleRestoreMeme = useCallback(async () => {
+    try {
+      await restoreMeme(meme.id).unwrap();
+      toast.success(`Meme "${meme.title}" has been restored!`);
+    } catch (err: any) {
+      const apiError = err?.data;
+      if (apiError?.errors && typeof apiError.errors === "object") {
+        Object.values(apiError.errors).forEach((msg: any) => { if (typeof msg === "string") toast.error(msg); });
+      } else if (apiError?.message) toast.error(apiError.message);
+      else toast.error("Failed to update user");
+    }
+  }, [meme.id, meme.title, restoreMeme]);
+
+  const handlePermanentDeleteMeme = useCallback(async () => {
+    try {
+      await permanentDeleteMeme(meme.id).unwrap();
+      toast.success(`Meme "${meme.title}" has been permanently deleted.`);
+    } catch (err: any) {
+      const apiError = err?.data;
+      if (apiError?.errors && typeof apiError.errors === "object") {
+        Object.values(apiError.errors).forEach((msg: any) => { if (typeof msg === "string") toast.error(msg); });
+      } else if (apiError?.message) toast.error(apiError.message);
+      else toast.error("Failed to update user");
+    }
+  }, [meme.id, meme.title, permanentDeleteMeme]);
+
+  const menuItems = isDeleted ? (
+    <>
+      <DropdownMenuItem
+        className="cursor-pointer"
+        onClick={() => setShowRestoreDialog(true)}
+      >
+        <Undo2 className="text-primary" size={16} />
+        <span className="text-primary">Restore Meme</span>
+      </DropdownMenuItem>
+      <DropdownMenuItem
+        className="cursor-pointer"
+        onClick={() => setShowPermanentDeleteDialog(true)}
+      >
+        <Eraser className="text-destructive" size={16} />
+        <span className="text-destructive">Permanently Erase</span>
+      </DropdownMenuItem>
+    </>
+  ) : (
+    <>
+      <DropdownMenuItem className="cursor-pointer" onClick={() => setShowStats(true)}>
+        <BarChart3 size={16} /> <span>View Analytics</span>
+      </DropdownMenuItem>
+      <DropdownMenuItem className="cursor-pointer" asChild>
+        <Link href={`/community/${meme.slug}`} target="_blank">
+          <Eye size={16} /> View Meme
+        </Link>
+      </DropdownMenuItem>
+      <DropdownMenuItem
+        className="cursor-pointer"
+        onClick={() => setShowEditDialog(true)}
+      >
+        <Edit size={16} /> <span>Edit Meme</span>
+      </DropdownMenuItem>
+      <DropdownMenuItem
+        className="cursor-pointer"
+        onClick={() => setShowDeleteDialog(true)}
+      >
+        <Trash2 className="text-destructive" size={16} />
+        <span className="text-destructive">Delete Meme</span>
+      </DropdownMenuItem>
+    </>
+  );
 
   return (
     <div className="flex flex-col items-end gap-1">
@@ -227,36 +363,49 @@ const ActionCell = ({ row }: { row: any }) => {
             <EllipsisVertical className="h-4 w-4" />
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="end">
-          <DropdownMenuItem className="cursor-pointer" asChild>
-            <Link href={`/community/${meme.slug}`} target="_blank">
-              <Eye size={16} /> View Meme
-            </Link>
-          </DropdownMenuItem>
-          <DropdownMenuItem className="cursor-pointer" onClick={() => setShowEditDialog(true)}>
-              <Edit size={16} /> <span>Edit Meme</span>
-            </DropdownMenuItem>
-          <DropdownMenuItem className="cursor-pointer" onClick={() => setShowDeleteDialog(true)}>
-            <Trash2 className="text-destructive" size={16} /> 
-            <span className="text-destructive">Delete Meme</span>
-          </DropdownMenuItem>
-        </DropdownMenuContent>
+        <DropdownMenuContent align="end">{menuItems}</DropdownMenuContent>
       </DropdownMenu>
 
-      <DeleteDialog
+      <ConfirmationDialog
         open={showDeleteDialog}
         onOpenChange={setShowDeleteDialog}
         showTrigger={false}
         deleteTitle="Delete Meme"
-        deleteDescription={`Are you sure you want to delete "${meme.title}"? This action cannot be undone.`}
-        action={handleDeleteMeme}
+        deleteDescription={`Are you sure you want to move "${meme.title}" to the Recycle Bin.`}
+        action={handleSoftDeleteMeme}
+        confirmButtonText="Delete"
+        variant="destructive"
+      />
+
+      <ConfirmationDialog
+        open={showRestoreDialog}
+        onOpenChange={setShowRestoreDialog}
+        showTrigger={false}
+        deleteTitle="Confirm Restoration"
+        deleteDescription={`Are you sure you want to restore "${meme.title}"? It will become visible in the active memes list again.`}
+        action={handleRestoreMeme}
+        confirmButtonText="Restore"
+        variant="default"
+      />
+
+      <ConfirmationDialog
+        open={showPermanentDeleteDialog}
+        onOpenChange={setShowPermanentDeleteDialog}
+        showTrigger={false}
+        deleteTitle="Permanently Erase Meme"
+        deleteDescription={`WARNING: Are you absolutely sure you want to PERMANENTLY delete "${meme.title}"? This action cannot be undone and the meme will be erased.`}
+        action={handlePermanentDeleteMeme}
+        confirmButtonText="Permanently Erase"
+        variant="destructive"
       />
 
       <EditDialog
         data={meme}
         open={showEditDialog}
         onOpenChange={setShowEditDialog}
-        getTags={(m) => m.tags?.filter((t) => !t.deletedAt).map((t) => t.name) || []}
+        getTags={(m) =>
+          m.tags?.filter((t) => !t.deletedAt).map((t) => t.name) || []
+        }
         buildPayload={(m, title, description, tags): UpdateMemePayload => ({
           title,
           description,
@@ -269,6 +418,12 @@ const ActionCell = ({ row }: { row: any }) => {
           await patchMeme({ slugOrId: meme.id, body: payload });
           toast.success("Meme updated!");
         }}
+      />
+
+      <InteractionSummaryDialog
+        open={showStats}
+        onOpenChange={setShowStats}
+        summary={meme.interactionSummary}
       />
     </div>
   );

@@ -100,7 +100,7 @@ export function ProSection() {
           <div className="h-16 w-16 relative bg-transparent">
             {/* CONFIRMED: This remains an <img> tag as requested. */}
             <img
-              src="/pro/emoji.gif"
+              src="/pro/Love.gif"
               alt="Pro"
               className="object-contain w-full h-full"
             />

@@ -9,15 +9,14 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import { EllipsisVertical, Eye, Trash2, Edit, CirclePlus } from "lucide-react";
+import { EllipsisVertical, Eye, Trash2, Edit, CirclePlus, Eraser, Undo2 } from "lucide-react";
 import Link from "next/link";
 import { useCallback, useState } from "react";
-import { DeleteDialog } from "@/components/dialog/delete-dialog";
-import { useDeleteTemplateMutation, useUpdateTemplateMutation } from "@/redux/services/template";
+import { ConfirmationDialog } from "@/components/dialog/confirmation-dialog";
+import { useDeleteTemplateMutation, usePermanentDeleteTemplateMutation, useRestoreTemplateMutation } from "@/redux/services/template";
 import { toast } from "sonner";
 import { Template } from "@/utils/dtos/template.dto";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { EditDialog } from "@/components/dialog/edit-dialog";
 import { Popover, PopoverTrigger } from "@/components/ui/popover";
 import { ImagePopover } from "@/components/ui/extension/image-popover";
 import React from "react";
@@ -169,18 +168,99 @@ export function adminTemplateColumns(): ColumnDef<Template>[] {
 
 const ActionCell = ({ row }: { row: any }) => {
   const template: Template = row.original;
+  const isDeleted = !!template.deletedAt;
   const [deleteTemplate] = useDeleteTemplateMutation();
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
-  const handleDeleteTemplate = useCallback(async () => {
+  const [restoreTemplate] = useRestoreTemplateMutation();
+  const [permanentDeleteTemplate] = usePermanentDeleteTemplateMutation();
+  const [showRestoreDialog, setShowRestoreDialog] = useState(false);
+    const [showPermanentDeleteDialog, setShowPermanentDeleteDialog] =
+      useState(false);
+
+  const handleSoftDeleteTemplate = useCallback(async () => {
     try {
         await deleteTemplate(template.id).unwrap();
         toast.success("Template deleted successfully!");
       } catch (err: any) {
-        toast.error(err?.data?.error?.message || "Something went wrong");
-      }
+      const apiError = err?.data;
+      if (apiError?.errors && typeof apiError.errors === "object") {
+        Object.values(apiError.errors).forEach((msg: any) => { if (typeof msg === "string") toast.error(msg); });
+      } else if (apiError?.message) toast.error(apiError.message);
+      else toast.error("Failed to update user");
+    }
   }, [template.id, deleteTemplate]);
 
+  const handleRestoreTemplate = useCallback(async () => {
+    try {
+      await restoreTemplate(template.id).unwrap();
+      toast.success(`Template "${template.title}" has been restored!`);
+    } catch (err: any) {
+      const apiError = err?.data;
+      if (apiError?.errors && typeof apiError.errors === "object") {
+        Object.values(apiError.errors).forEach((msg: any) => { if (typeof msg === "string") toast.error(msg); });
+      } else if (apiError?.message) toast.error(apiError.message);
+      else toast.error("Failed to update user");
+    }
+  }, [template.id, template.title, restoreTemplate]);
+
+  const handlePermanentDeleteTemplate = useCallback(async () => {
+    try {
+      await permanentDeleteTemplate(template.id).unwrap();
+      toast.success(`Template "${template.title}" has been permanently deleted.`);
+    } catch (err: any) {
+      const apiError = err?.data;
+      if (apiError?.errors && typeof apiError.errors === "object") {
+        Object.values(apiError.errors).forEach((msg: any) => { if (typeof msg === "string") toast.error(msg); });
+      } else if (apiError?.message) toast.error(apiError.message);
+      else toast.error("Failed to update user");
+    }
+  }, [template.id, template.title, permanentDeleteTemplate]);
+
+  const menuItems = isDeleted ? (
+    <>
+      <DropdownMenuItem
+        className="cursor-pointer"
+        onClick={() => setShowRestoreDialog(true)}
+      >
+        <Undo2 className="text-primary" size={16} />
+        <span className="text-primary">Restore Template</span>
+      </DropdownMenuItem>
+  
+      <DropdownMenuItem
+        className="cursor-pointer"
+        onClick={() => setShowPermanentDeleteDialog(true)}
+      >
+        <Eraser className="text-destructive" size={16} />
+        <span className="text-destructive">Permanently Erase</span>
+      </DropdownMenuItem>
+    </>
+  ) : (
+    <>
+      <DropdownMenuItem className="cursor-pointer" asChild>
+        <Link href={`/meme/${template.slug}`} target="_blank">
+          <Eye size={16} /> View Template
+        </Link>
+      </DropdownMenuItem>
+  
+      <DropdownMenuItem
+        className="cursor-pointer"
+      >
+        <Link href={`/meme/${template.slug}`} target="_blank" className="flex items-center gap-2.5 w-full h-full">
+          <Edit size={16} /> <span>Edit Template</span>
+        </Link>
+      </DropdownMenuItem>
+  
+      <DropdownMenuItem
+        className="cursor-pointer"
+        onClick={() => setShowDeleteDialog(true)}
+      >
+        <Trash2 className="text-destructive" size={16} />
+        <span className="text-destructive">Delete Template</span>
+      </DropdownMenuItem>
+    </>
+  );
+  
   return (
     <div className="flex justify-end">
       <DropdownMenu>
@@ -190,33 +270,40 @@ const ActionCell = ({ row }: { row: any }) => {
             <EllipsisVertical className="h-4 w-4" />
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="end">
-          <DropdownMenuItem className="cursor-pointer" asChild>
-            <Link href={`/meme/${template.slug}`} target="_blank">
-              <Eye size={16} />
-              View Template
-            </Link>
-          </DropdownMenuItem>
-          <DropdownMenuItem className="cursor-pointer" asChild>
-            <Link href={`/meme/${template.slug}`} target="_blank">
-              <Edit size={16} />
-              Edit Template
-            </Link>
-          </DropdownMenuItem>
-          <DropdownMenuItem className="cursor-pointer" onClick={() => setShowDeleteDialog(true)}>
-            <Trash2 className="text-destructive" size={16} />
-            <span className="text-destructive cursor-pointer">Delete Template</span>
-          </DropdownMenuItem>
-        </DropdownMenuContent>
+        <DropdownMenuContent align="end">{menuItems}</DropdownMenuContent>
       </DropdownMenu>
-
-      <DeleteDialog
+  
+      <ConfirmationDialog
         open={showDeleteDialog}
         onOpenChange={setShowDeleteDialog}
         showTrigger={false}
         deleteTitle="Delete Template"
-        deleteDescription={`Are you sure you want to delete "${template.title}"? This action cannot be undone.`}
-        action={handleDeleteTemplate}
+        deleteDescription={`Are you sure you want to move "${template.title}" to the Recycle Bin.`}
+        action={handleSoftDeleteTemplate}
+        confirmButtonText="Delete"
+        variant="destructive"
+      />
+  
+      <ConfirmationDialog
+        open={showRestoreDialog}
+        onOpenChange={setShowRestoreDialog}
+        showTrigger={false}
+        deleteTitle="Confirm Restoration"
+        deleteDescription={`Are you sure you want to restore "${template.title}"? It will become visible in the active list again.`}
+        action={handleRestoreTemplate}
+        confirmButtonText="Restore"
+        variant="default"
+      />
+  
+      <ConfirmationDialog
+        open={showPermanentDeleteDialog}
+        onOpenChange={setShowPermanentDeleteDialog}
+        showTrigger={false}
+        deleteTitle="Permanently Erase Template"
+        deleteDescription={`WARNING: Are you absolutely sure you want to PERMANENTLY erase "${template.title}"? This action cannot be undone.`}
+        action={handlePermanentDeleteTemplate}
+        confirmButtonText="Permanently Erase"
+        variant="destructive"
       />
     </div>
   );

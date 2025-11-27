@@ -97,44 +97,87 @@ export function Hero() {
             {/* hover pop-outs */}
             <div className="pointer-events-none absolute inset-0 hidden md:block">
               <div
-                className={`absolute -left-4 rounded-lg border border-black/10 bg-white/90 px-3 py-2 text-xs shadow transition
-                ${
-                  hovered
-                    ? "opacity-100 -translate-x-2"
-                    : "opacity-0 translate-y-2"
-                }`}
+                className={`absolute left-2 -top-4 rounded-full px-1 py-1 transition-all duration-300 transform
+                  ${
+                    hovered
+                      ? "opacity-100 -translate-x-8"
+                      : "opacity-0 translate-x-4 translate-y-10" 
+                  }`}
               >
-                Too funny not to share
+                <div
+                  className="bg-white/50 absolute inset-0 rounded-full backdrop-blur-sm shadow-md"
+                ></div>
+                <div
+                  className="relative bg-white/80 rounded-full px-1 py-1 text-base font-medium text-gray-800"
+                >
+                 <img
+                     src="/pro/fireworks.gif"
+                     alt="Pro"
+                     className="object-contain w-15 h-15"
+                   />
+                </div>
               </div>
               <div
-                className={`absolute right-4 -bottom-4 rounded-lg border border-black/10 bg-white/90 px-3 py-2 text-xs shadow transition
-                ${
-                  hovered
-                    ? "opacity-100 translate-y-2"
-                    : "opacity-0 -translate-x-2"
-                }`}
+                className={`absolute -right-6 -bottom-12 rounded-3xl px-1 py-1 transition-all duration-300 transform
+                  ${
+                    hovered
+                      ? "opacity-100 translate-x-8 -translate-y-4" 
+                      : "opacity-0 translate-y-0"  
+                  }`}
               >
-                Add Stickers/Emojis
+                <div
+                  className="bg-white/50 absolute inset-0 rounded-3xl backdrop-blur-sm shadow-md"
+                ></div>
+                <div
+                  className="relative bg-white/80 rounded-3xl px-4 py-2 text-base font-medium text-gray-800 flex flex-col items-center justify-center gap-2"
+                >
+                  <img
+                      src="/pro/refresh.gif"
+                      alt="Pro"
+                      className="object-contain w-12 h-12"
+                    />
+                    Rotate / Resize Anything
+                </div>
               </div>
               <div
-                className={`absolute left-50 -top-4 rounded-lg border border-black/10 bg-white/90 px-3 py-2 text-xs shadow transition
-                ${
-                  hovered
-                    ? "opacity-100 -translate-y-4"
-                    : "opacity-0 translate-x-2"
-                }`}
+                  className={`absolute left-1/2 -top-4 rounded-3xl px-1 py-1 transition-all duration-300 transform -translate-x-1/2
+                  ${
+                      hovered
+                        ? "opacity-100 -translate-y-4"
+                        : "opacity-0 translate-y-0"
+                  }`}
               >
-                Rotate/Resize
+                  <div
+                    className="bg-white/50 absolute inset-0 rounded-3xl backdrop-blur-sm shadow-md"
+                  ></div>
+              
+                  <div
+                    className="relative bg-white/80 rounded-3xl px-4 py-2 text-base font-medium text-gray-800"
+                  >
+                    Too Funny not to share
+                  </div>
               </div>
               <div
-                className={`absolute -left-4 bottom-15 rounded-lg border border-black/10 bg-white/90 px-3 py-2 text-xs shadow transition
-                ${
-                  hovered
-                    ? "opacity-100 -translate-x-8"
-                    : "opacity-0 translate-x-10"
-                }`}
+                className={`absolute -left-16 bottom-[2rem] rounded-3xl px-1 py-1 transition-all duration-300 transform
+                  ${
+                    hovered
+                      ? "opacity-100 -translate-x-8" 
+                      : "opacity-0 translate-x-10"  
+                  }`}
               >
-                Rotate / Resize Anything
+                <div
+                  className="bg-white/50 absolute inset-0 rounded-3xl backdrop-blur-sm shadow-md"
+                ></div>
+                <div
+                  className="relative bg-white/80 rounded-3xl px-4 py-2 text-base font-medium text-gray-800 flex flex-col items-center justify-center gap-2"
+                >
+                  <img
+                      src="/pro/emoji.gif"
+                      alt="Pro"
+                      className="object-contain w-12 h-12"
+                    />
+                  Add Stickers/Emojis
+                </div>
               </div>
             </div>
           </div>

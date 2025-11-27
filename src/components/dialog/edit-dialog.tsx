@@ -54,8 +54,12 @@ export function EditDialog<T, Payload>({
       const payload = buildPayload(data, title, description, tagNames);
       await onSave(payload);
       onOpenChange(false);
-    } catch {
-      toast.error("Failed to save");
+    } catch (err: any) {
+      const apiError = err?.data;
+      if (apiError?.errors && typeof apiError.errors === "object") {
+        Object.values(apiError.errors).forEach((msg: any) => { if (typeof msg === "string") toast.error(msg); });
+      } else if (apiError?.message) toast.error(apiError.message);
+      else toast.error("Failed to update user");
     } finally {
       setIsSaving(false);
     }

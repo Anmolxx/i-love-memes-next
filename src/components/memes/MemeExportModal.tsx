@@ -8,7 +8,7 @@ import { Canvas, FabricImage, FabricText } from "fabric";
 import { toast } from "sonner";
 import { useUploadFileMutation } from "@/redux/services/uploadfile";
 import { usePostMemeMutation } from "@/redux/services/meme";
-import { useTypedSelector } from "@/redux/store";
+import { useAppDispatch } from "@/redux/store";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import {
@@ -31,12 +31,14 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import useAuthentication from "@/hooks/use-authentication";
 import { DataTableTagFilter } from "@/components/data-table/data-table-tag-filter";
+import { clearTemplateId } from "@/redux/slices/template";
 
 interface MemeExportModalProps {
   canvasRef: React.RefObject<Canvas | null>;
   backgroundImageId?: string | null;
   onOpenChange: (open: boolean) => void;
   isOpen: boolean;
+  templateId?: string | null;
 }
 
 type MemeFormData = {
@@ -49,6 +51,7 @@ const MemeExportModal: React.FC<MemeExportModalProps> = ({
   backgroundImageId,
   isOpen,
   onOpenChange,
+  templateId,
 }) => {
   const router = useRouter();
   const { isAdmin, isLoggedIn } = useAuthentication();
@@ -58,16 +61,15 @@ const MemeExportModal: React.FC<MemeExportModalProps> = ({
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [isSaveMemeOpen, setIsSaveMemeOpen] = useState(false);
   const [selectedTags, setSelectedTags] = useState<string[]>([]); 
+  const dispatch = useAppDispatch();
   
-  const { selectedTemplateId } = useTypedSelector((state) => state.template);
-
   const memeForm = useForm<MemeFormData>({
     defaultValues: {
       title: "",
       description: "",
     },
   });
-  
+
   const handleSetSelectedTags = useCallback((newTags: string[]) => {
     if (!isAdmin && newTags.length > 2) {
       toast.error("You can only add a maximum of 2 tags to a meme.");
@@ -242,16 +244,17 @@ const MemeExportModal: React.FC<MemeExportModalProps> = ({
       if (!uploadedFileId) {
         throw new Error("Upload failed — missing file ID");
       }
-
       // 3. Post Meme
       const result = await postMemeTrigger({
         title: data.title.trim().slice(0, 20),
         description: data.description.trim() || "No description provided",
         file: { id: uploadedFileId },
-        templateId: selectedTemplateId || "",
+        templateId: templateId,
         tags: selectedTags, 
         ...memeData,
       }).unwrap();
+
+      dispatch(clearTemplateId());
 
       const memeSlug = result.data?.slug;
       toast.success(

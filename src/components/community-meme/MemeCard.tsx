@@ -28,12 +28,12 @@ export default function MemeCard({ meme, vote, shareMeme, setFlagMemeId }: MemeC
     : "Anonymous";
 
   return (
-    <div className="bg-gray-200 rounded-2xl shadow-lg p-3 flex flex-col hover:shadow-xl transition-shadow w-full max-w-[700px] mx-auto">
+    <div className=" border border-[#D6C2FF] rounded-2xl shadow-lg p-3 flex flex-col hover:shadow-xl transition-shadow w-full max-w-[700px] mx-auto">
       <div className="relative w-full h-[500px] overflow-hidden rounded-xl bg-gray-100">
         <img
           src={meme.file?.path}
           alt={meme.title}
-          className="absolute inset-0 w-full h-full object-cover"
+          className="absolute inset-0 w-full h-full object-contain"
         />
       </div>
 

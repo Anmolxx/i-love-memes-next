@@ -24,12 +24,11 @@ export default function TagDisplay({ displayedTags, hiddenTags }: TagDisplayProp
             {displayedTags.map((tag) => (
                 <span
                     key={tag.id}
-                    className="text-xs bg-purple-100 text-purple-800 px-2 py-1 rounded-full font-medium"
+                    className="text-xs bg-[#300458] text-white px-2 py-1 rounded-full font-medium"
                 >
                     #{tag.name}
                 </span>
             ))}
-
             {hiddenTags.length > 0 && (
                 <TooltipProvider>
                     <Tooltip>

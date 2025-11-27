@@ -1,4 +1,4 @@
-type TextCarouselProps = { texts: string[] }
+type TextCarouselProps = { texts: (string | React.ReactNode)[] }
 
 export function TextCarousel({ texts }: TextCarouselProps) {
   const marquee = [...texts, ...texts]
@@ -9,14 +9,15 @@ export function TextCarousel({ texts }: TextCarouselProps) {
         className="whitespace-nowrap flex p-[3px]"
         style={{
           background: 'linear-gradient(90deg,#CD01BA,#E20317)',
-          boxShadow: 'inset 0 2px 2px 4px rgba(205,1,186,0.5), inset 0 -2px 2px 4px rgba(205,1,186,0.5)',
+          boxShadow:
+            'inset 0 2px 2px 4px rgba(205,1,186,0.5), inset 0 -2px 2px 4px rgba(205,1,186,0.5)',
         }}
       >
         <div className="flex gap-8 md:gap-12 py-2 px-4 min-w-max animate-carousel-scroll bg-clip-text text-white rounded-full">
           {marquee.map((t, i) => (
             <span
               key={i}
-              className="text-base sm:text-lg md:text-xl font-semibold"
+              className="text-base sm:text-lg md:text-xl font-semibold flex items-center gap-1"
             >
               {t}
             </span>

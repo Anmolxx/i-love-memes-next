@@ -24,14 +24,14 @@ interface MemeObject extends FabricObject {
 type LayerItem = { id: string; type: string; object: FabricObject };
 
 const getCanvasLayers = (canvas: Canvas): LayerItem[] => {
-    return canvas.getObjects()
-      .filter((obj): obj is FabricObject & { id: string } => {
-          return !!obj.id && obj.id !== "background-image";
-      })
-      .map((obj) => ({
-        id: obj.id,
-        type: obj.type || "unknown",
-        object: obj,
+  return canvas.getObjects()
+    .filter((obj): obj is FabricObject & { id: string } => {
+      return 'id' in obj && typeof (obj as any).id === 'string' && (obj as any).id !== 'background-image';
+    })
+    .map((obj) => ({
+      id: (obj as any).id,
+      type: obj.type || 'unknown',
+      object: obj,
     }));
 };
 

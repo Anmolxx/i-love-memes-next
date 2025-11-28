@@ -39,22 +39,22 @@ export default function MemeCard({ meme, vote, shareMeme, setFlagMemeId }: MemeC
     const userHasFlagged = userInteractions.some((i) => i.type === InteractionType.FLAG);
 
     return (
-        <div className="bg-gray-200 rounded-2xl shadow-lg p-3 flex flex-col hover:shadow-xl transition-shadow w-full max-w-[700px] mx-auto group">
+        <div className="border-1 border-[#D6C2FF] rounded-lg shadow-md p-3 flex flex-col    hover:shadow-lg transition-shadow group relative ">
             <Link 
                 href={`/community/${meme.slug}`}
-                className="relative w-full h-[500px] overflow-hidden rounded-xl bg-gray-100"
+                className="relative w-full h-[500px] overflow-hidden rounded-xl bg-black"
             >
                 <img
                     src={meme.file?.path}
                     alt={meme.title}
-                    className="absolute inset-0 w-full h-full object-cover"
+                    className="absolute inset-0 w-full h-full object-contain"
                 />
             </Link>
 
             <div className="mt-3 flex-1 flex flex-col gap-2">
                 <Link 
                     href={`/community/${meme.slug}`}
-                    className="text-lg font-semibold text-gray-800 hover:text-pink-600 hover:underline transition-colors w-fit truncate"
+                    className="inline-block  transition-colors w-fit  text-base sm:text-lg font-semibold text-[#1F1147]    "
                 >
                     {meme.title}
                 </Link>
@@ -65,7 +65,7 @@ export default function MemeCard({ meme, vote, shareMeme, setFlagMemeId }: MemeC
                     <TagDisplay displayedTags={displayedTags} hiddenTags={hiddenTags} />
                 )}
 
-                <div className="mt-3 flex items-center justify-between opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                <div className="mt-3 flex items-center justify-between  opacity-100 transition-opacity duration-300">
                     <div className="flex items-center gap-2">
                         {/* UPVOTE Button */}
                         <button 

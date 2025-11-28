@@ -272,7 +272,7 @@ export default function CommentsSection({ comments, isLoggedIn }: CommentsSectio
 
   return (
     <div className="flex flex-col gap-4 bg-white p-6 rounded-xl shadow-lg border border-gray-200 w-full">
-      <h3 className="font-bold text-2xl text-gray-800 border-b pb-3 mb-2">Comments ({comments.length})</h3>
+      <h3 className="font-bold text-xl text-gray-800 border-b pb-3 mb-2">Comments ({comments.length})</h3>
 
       {isLoggedIn && (
         <div className="flex gap-2 mb-4 items-start">
@@ -293,11 +293,11 @@ export default function CommentsSection({ comments, isLoggedIn }: CommentsSectio
       )}
 
       {comments.length === 0 ? (
-        <p className="text-gray-500 text-base py-4">Be the first to comment!</p>
+        <p className="text-gray-500 text-base ">Be the first to comment!</p>
       ) : (
         <div className="flex flex-col gap-4">
           {commentsToDisplay.map((c) => (
-            <div key={c.id} className="bg-gray-50 rounded-lg border border-gray-100 flex flex-col p-4">
+            <div key={c.id} className="bg-gray-200 rounded-lg border border-gray-100 flex flex-col p-4">
               <CommentItem comment={c} isLoggedIn={isLoggedIn} actions={actions} isReply={false} />
             </div>
           ))}

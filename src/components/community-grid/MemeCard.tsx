@@ -39,7 +39,8 @@ export function MemeCard({ meme, handleVote, shareMeme, setFlagMemeId, isPosting
   const netScore = meme.interactionSummary?.netScore ?? 0;
 
   return (
-      <article className="border-1 border-[#D6C2FF] rounded-lg shadow-md p-2 flex flex-col hover:shadow-lg transition-shadow group">
+      <article className="border-1 border-[#D6C2FF] rounded-lg shadow-md p-2 flex flex-col 
+hover:shadow-lg transition-shadow group relative ">
         {/* Meme Image */}
         <Link
           href={`/community/${meme.slug}`}
@@ -54,7 +55,7 @@ export function MemeCard({ meme, handleVote, shareMeme, setFlagMemeId, isPosting
         </Link>
   
         {/* Title & Author */}
-        <div className="flex-1 flex flex-col px-1 py-2 gap-1 justify-between">
+        <div className="flex-1 flex flex-col px-1 py-2 gap-1 ">
           <Link
               href={`/community/${meme.slug}`}
                className="inline-block  transition-colors w-fit  text-base sm:text-lg font-semibold text-[#1F1147]    "
@@ -119,13 +120,13 @@ export function MemeCard({ meme, handleVote, shareMeme, setFlagMemeId, isPosting
           </div>
   
           {/* Actions */}
-          <div className="mt-3 flex items-center justify-between opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+          <div className="mt-3 flex items-center justify-between opacity-0 group-hover:opacity-100     transition-opacity duration-300 absolute top-[55%] left-2 right-2 z-20     flex flex-wrap gap-2 bg-black/50 text-white py-2 rounded-md backdrop-blur-sm     max-w-full box-border px-3">
             <div className="flex items-center gap-1">
               <button
                 aria-pressed={userVoteType === InteractionType.UPVOTE}
                 onClick={() => handleVote(meme.id, InteractionType.UPVOTE)}
                 disabled={isPosting || isDeleting}
-                className={`flex items-center gap-1 px-2 py-0.5 rounded-full hover:bg-gray-200 cursor-pointer disabled:opacity-50 ${userVoteType === InteractionType.UPVOTE ? "bg-green-100 text-green-700" : ""}`}
+                className={`flex items-center gap-1 px-2 py-0.5 rounded-full hover:bg-[#7d7d7d] cursor-pointer disabled:opacity-50 ${userVoteType === InteractionType.UPVOTE ? "bg-green-100 text-green-700" : ""}`}
               >
                 <ThumbsUp size={16} />
                 <span className="text-[14px]">{userVoteType === InteractionType.UPVOTE ? "You" : "Up"}</span>
@@ -135,24 +136,24 @@ export function MemeCard({ meme, handleVote, shareMeme, setFlagMemeId, isPosting
                 aria-pressed={userVoteType === InteractionType.DOWNVOTE}
                 onClick={() => handleVote(meme.id, InteractionType.DOWNVOTE)}
                 disabled={isPosting || isDeleting}
-                className={`flex items-center gap-1 px-2 py-0.5 rounded-full hover:bg-gray-200 cursor-pointer disabled:opacity-50 ${userVoteType === InteractionType.DOWNVOTE ? "bg-red-100 text-red-700" : ""}`}
+                className={`flex items-center gap-1 px-2 py-0.5 rounded-full hover:bg-[#7d7d7d] cursor-pointer disabled:opacity-50 ${userVoteType === InteractionType.DOWNVOTE ? "bg-red-100 text-red-700" : ""}`}
               >
                 <ThumbsDown size={16} />
                 <span className="text-[14px]">Down</span>
               </button>
   
-              <div className="text-xs font-medium text-gray-700 px-2 py-0.5 rounded-full border border-gray-200">{netScore}</div>
+              <div className="text-xs font-medium text-white px-2 py-0.5 rounded-full border border-gray-200">{netScore}</div>
             </div>
   
             <div className="flex items-center gap-1">
-              <button onClick={() => shareMeme(meme)} title="Share" className="p-1 rounded-full hover:bg-gray-200 cursor-pointer">
+              <button onClick={() => shareMeme(meme)} title="Share" className="p-1 rounded-full hover:bg-[#7d7d7d] cursor-pointer">
                 <Share2 size={16} />
               </button>
   
               <button
                 onClick={() => setFlagMemeId(meme.id)}
                 title={userHasFlagged ? "Meme flagged" : "Flag"}
-                className={`p-1 rounded-full cursor-pointer transition-colors ${userHasFlagged ? "text-red-600 bg-red-200 hover:bg-red-300" : "hover:bg-gray-200"}`}
+                className={`p-1 rounded-full cursor-pointer transition-colors ${userHasFlagged ? "text-red-600 bg-red-200 hover:bg-red-300" : "hover:bg-[#7d7d7d]"}`}
               >
                 <Flag size={16} fill={userHasFlagged ? "currentColor" : "none"} />
               </button>

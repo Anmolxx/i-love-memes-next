@@ -29,7 +29,7 @@ export default function TagDisplay({ displayedTags, hiddenTags }: TagDisplayProp
                         key={tag.id}
                         href={`/community/?tags=${tag.name}`}
                         target="_blank"
-                        className="text-xs bg-purple-100 text-purple-800 px-2 py-1 rounded-md font-medium hover:bg-purple-200 transition"
+                        className="text-sm bg-purple-100 text-purple-800 px-6 py-1  rounded-xl font-medium hover:bg-purple-200 transition"
                     >
                         #{tag.name}
                     </Link>

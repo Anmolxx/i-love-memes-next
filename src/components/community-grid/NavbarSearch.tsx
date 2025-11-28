@@ -125,7 +125,7 @@ export function NavbarSearch({
             variant="outline"
             onClick={handleReset}
             title="Reset Search and Filters"
-            className="flex items-center gap-1 border-gray-300 hover:bg-gray-50 transition-colors"
+            className="flex items-center gap-1 border-gray-300 hover:bg-gray-50 transition-colors cursor-pointer"
           >
             <RefreshCcw className="h-4 w-4" />
           </Button>

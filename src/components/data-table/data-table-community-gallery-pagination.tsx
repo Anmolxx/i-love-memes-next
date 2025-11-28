@@ -9,7 +9,7 @@ interface CommunityPaginationProps {
 
 export function CommunityPagination({ page, pageCount, onPageChange }: CommunityPaginationProps) {
   return (
-    <div className="flex items-center justify-center space-x-2 mt-4">
+    <div className="flex items-center justify-center space-x-2 ">
       {/* Go to First Page */}
       <Button
         variant="outline"

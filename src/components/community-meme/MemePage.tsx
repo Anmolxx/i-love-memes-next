@@ -1,9 +1,11 @@
+// MemePage.tsx
 "use client";
 
 import React, { useEffect, useCallback, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { useGetMemeBySlugOrIdQuery } from "@/redux/services/meme";
+import { usePostInteractionMutation } from "@/redux/services/interaction";
 import {
   useGetCommentsByMemeQuery,
   useCreateCommentMutation,
@@ -28,19 +30,19 @@ export default function MemePage() {
   const router = useRouter();
 
   const [searchQuery, setSearchQuery] = useState("");
-    const [selectedTags, setSelectedTags] = useState<string[]>([]);
-    const [availableTags, setAvailableTags] = useState<string[]>([]);
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [availableTags, setAvailableTags] = useState<string[]>([]);
 
-    const [isFetching, setIsFetching] = useState(false); 
-  
-    const handleSearch = useCallback(() => {
+  const [isFetching, setIsFetching] = useState(false);
+ 
+  const handleSearch = useCallback(() => {
 
-      let searchPath = `/community?search=${encodeURIComponent(searchQuery)}`;
-      if (selectedTags.length > 0) {
-          searchPath += `&tags=${selectedTags.join(',')}`;
-      }
-      router.push(searchPath);
-    }, [searchQuery, selectedTags, router]);
+    let searchPath = `/community?search=${encodeURIComponent(searchQuery)}`;
+    if (selectedTags.length > 0) {
+        searchPath += `&tags=${selectedTags.join(',')}`;
+    }
+    router.push(searchPath);
+  }, [searchQuery, selectedTags, router]);
 
   const { data, isLoading, error, refetch } = useGetMemeBySlugOrIdQuery(slug as string, { skip: !slug });
   const meme: Meme | null = data?.data ?? null;
@@ -54,6 +56,7 @@ export default function MemePage() {
   const [createComment] = useCreateCommentMutation();
   const [updateComment] = useUpdateCommentMutation();
   const [deleteComment] = useDeleteCommentMutation();
+  const [flagMeme, { isLoading: isFlagging }] = usePostInteractionMutation();
 
   useEffect(() => {
     if (slug) {
@@ -172,10 +175,26 @@ export default function MemePage() {
     setFlagComment("");
   }, []);
 
-  const submitFlag = useCallback(() => {
-    toast.success("Thanks! The moderation team will review this.");
-    resetFlagDialog();
-  }, [resetFlagDialog]);
+  const submitFlag = useCallback(async () => {
+    if (!flagMemeId || !flagReason) return;
+
+    try {
+      await flagMeme({
+        memeId: flagMemeId,
+        type: "FLAG",
+        reason: flagReason,
+        note: flagComment,
+      }).unwrap();
+      toast.success("Thanks! The moderation team will review this.");
+      resetFlagDialog();
+    } catch (err: any) {
+      const apiError = err?.data;
+      if (apiError?.errors && typeof apiError.errors === "object") {
+        Object.values(apiError.errors).forEach((msg: any) => { if (typeof msg === "string") toast.error(msg); });
+      } else if (apiError?.message) toast.error(apiError.message);
+      else toast.error("Failed to submit flag.");
+    }
+  }, [flagMemeId, flagReason, flagComment, flagMeme, resetFlagDialog]);
 
   const handleCaptionClick = useCallback(() => {
     if (!meme?.template) {
@@ -198,22 +217,22 @@ export default function MemePage() {
   return (
     <div className="flex min-h-svh w-full flex-col bg-gray-50">
       <div className="relative">
-          <nav className="w-full sticky top-0 z-50 bg-white/70 backdrop-blur">
-            <div className="max-w-[110rem] px-4 flex items-center gap-6 mx-auto mb-5">
-              <NavbarSearch
-                searchQuery={searchQuery}
-                setSearchQuery={setSearchQuery}
-                handleSearch={handleSearch}
-                isFetching={isFetching}
-                selectedTags={selectedTags}
-                setSelectedTags={setSelectedTags}
-                availableTags={availableTags}
-              />
-              <TagSelector setAvailableTags={setAvailableTags} />
-            </div>
-          </nav>
+        <nav className="w-full sticky top-0 z-50 bg-white/70 backdrop-blur">
+          <div className="max-w-[110rem] px-4 flex items-center gap-6 mx-auto mb-5">
+            <NavbarSearch
+              searchQuery={searchQuery}
+              setSearchQuery={setSearchQuery}
+              handleSearch={handleSearch}
+              isFetching={isFetching}
+              selectedTags={selectedTags}
+              setSelectedTags={setSelectedTags}
+              availableTags={availableTags}
+            />
+            <TagSelector setAvailableTags={setAvailableTags} />
+          </div>
+        </nav>
         </div>
-          <div className="max-w-6xl mx-auto p-4 flex flex-col md:flex-row gap-6 mt-5">
+          <div className="w-full max-w-7xl mx-auto p-4 flex flex-col md:flex-row gap-6 mt-5">
             <CommentActionsProvider actions={commentActions}>
               <MemeContent
                 meme={meme}
@@ -235,6 +254,7 @@ export default function MemePage() {
             setFlagComment={setFlagComment}
             submitFlag={submitFlag}
             resetFlagDialog={resetFlagDialog}
+            isSubmitting={isFlagging}
           />
           <div className="mt-20">
             <Footer />

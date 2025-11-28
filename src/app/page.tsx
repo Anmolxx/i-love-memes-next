@@ -8,6 +8,8 @@ import { Footer } from '@/sections/Footer'
 import { ProSection } from '@/sections/ProSection'
 import { ArrowRight } from 'lucide-react'
 import Link from 'next/link'
+import { Suspense } from 'react'
+import { ImageCarouselSkeleton } from '@/sections/skeletons/ImageCarouselSkeleton'
 
 export default function Page() {
   return (
@@ -37,7 +39,7 @@ export default function Page() {
       />
       <HowItWorks />
       <ProSection />
-      <ImageCarousel />
+      <Suspense fallback={<ImageCarouselSkeleton />}><ImageCarousel /></Suspense>
       <Footer />
     </main>
   )

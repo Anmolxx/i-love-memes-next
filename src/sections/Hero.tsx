@@ -22,31 +22,34 @@ export function Hero() {
         id="hero"
         className="w-full relative flex items-center justify-center"
       >
-        <div className="mx-auto max-w-7xl px-4 pt-12 md:pt-16 pb-20 md:pb-28 grid items-center gap-8 md:gap-50 md:grid-cols-2">
+        <div className="mx-auto max-w-6xl px-4 pt-12 md:pt-16 pb-20 md:pb-28 grid items-center gap-8 md:gap-50 md:grid-cols-2">
           {/* Text content */}
           <div className="space-y-4 md:space-y-6 text-center md:text-left">
-            <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold leading-tight text-[#300458]">
-              Memes Made{" "}
-              <span
-                className={`${notoSerif.className} bg-clip-text text-transparent`}
-                style={{
-                  backgroundImage: "linear-gradient(90deg,#CD01BA,#E20317)",
-                }}
-              >
-                Simple
-              </span>
-              .<br />
-              Fun Made{" "}
-              <span
-                className={`${notoSerif.className} bg-clip-text text-transparent`}
-                style={{
-                  backgroundImage: "linear-gradient(90deg,#CD01BA,#E20317)",
-                }}
-              >
-                Endless
-              </span>
-              .
-            </h1>
+           <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold leading-tight text-[#300458]">
+             <span className="inline-block whitespace-nowrap">
+               Memes Made{" "}
+               <span
+                 className={`${notoSerif.className} bg-clip-text text-transparent`}
+                 style={{
+                   backgroundImage: "linear-gradient(90deg,#CD01BA,#E20317)",
+                 }}
+               >
+                 Simple
+               </span>
+               .
+             </span>
+             <br />
+             Fun Made{" "}
+             <span
+               className={`${notoSerif.className} bg-clip-text text-transparent`}
+               style={{
+                 backgroundImage: "linear-gradient(90deg,#CD01BA,#E20317)",
+               }}
+             >
+               Endless
+             </span>
+             .
+           </h1>
             <p className="text-[#4b087ea5] font-medium text-sm md:text-lg max-w-[450px]">
               Dive into your meme playground—fun starts the moment you click!
             </p>

@@ -13,6 +13,7 @@ import { useGetTemplateByIdOrSlugQuery } from "@/redux/services/template";
 import { v4 as uuidv4 } from "uuid";
 import { useAppDispatch } from "@/redux/store";
 import { setTemplateId } from "@/redux/slices/template";
+import { MemeCarousel } from "@/components/memes/MemeCarousel";
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -572,7 +573,15 @@ export default function MemeLayout({ children }: LayoutProps) {
           </div>
         </div>
       </div>
-
+      <div className="flex justify-center bg-gray-50 py-12">
+        {templateData?.data?.id && (
+          <div className="w-full px-4">
+            <MemeCarousel templateId={templateData.data.id} />
+          </div>
+        )}
+      </div>
+      
+      
       <Footer />
       {children}
     </>

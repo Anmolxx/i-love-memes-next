@@ -248,12 +248,15 @@ export default function CommunityGallery(): JSX.Element {
         }, null as Meme | null)
       : null;
 
+  // ... imports and component definition (assuming it's CommunityPage or similar)
+  
   return (
     <div className="flex flex-col h-full min-h-screen">
       {/* Navbar */}
       <div className="relative">
         <nav className="w-full sticky top-0 z-50 bg-white/70 backdrop-blur">
-          <div className="max-w-[110rem] px-4 flex items-center gap-6 mx-auto mb-5">
+          {/* Adjusted padding: px-4 is too much on very small screens */}
+          <div className="max-w-[110rem] px-2 sm:px-4 flex items-center gap-6 mx-auto mb-5">
             <NavbarSearch
               searchQuery={searchQuery}
               setSearchQuery={setSearchQuery}
@@ -267,15 +270,27 @@ export default function CommunityGallery(): JSX.Element {
           </div>
         </nav>
       </div>
+  
+      {/* Content Container (FIXED: px-2 on mobile) */}
+      <div className="max-w-[110rem] mx-auto px-2 sm:px-4 py-4 flex flex-col gap-4 flex-1 w-full"> 
+        
+        {/* Sidebar at top on mobile, right on md+ */}
+        <div className="md:hidden">
+          <div className="flex flex-col gap-6 mb-6">
+            <CreateMemeCard />
+            {topMeme && <TopMemeSidebar topMeme={topMeme}/>}
+          </div>
+        </div>
 
-      {/* Content */}
-      <div className="max-w-[110rem] mx-auto p-4 flex flex-col gap-4 flex-1">
+        {/* Main Grid: 1 column on mobile, split on md */}
         <div className="grid grid-cols-1 md:grid-cols-[3fr_1fr] gap-6">
-          {/* Scrollable memes */}
-          <div ref={scrollContainerRef} className="pr-2">
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          
+          {/* Scrollable memes container (FIXED: removed pr-2, added w-full) */}
+          <div ref={scrollContainerRef} className="w-full">
+            {/* Meme Card Grid: 1 column on mobile, 2 on sm, 3 on lg */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6"> {/* Reduced gap on mobile */}
               {memes.length === 0 ? (
-                <div className="text-center text-gray-500 mt-10">
+                <div className="text-center text-gray-500 mt-10 sm:col-span-2 lg:col-span-3"> {/* Ensures message spans across grid columns */}
                   <p className="text-xl mb-2">
                     Oops! We couldn’t find any memes
                     {searchQuery ? ` for "${searchQuery}"` : ""}
@@ -299,17 +314,17 @@ export default function CommunityGallery(): JSX.Element {
               )}
             </div>
           </div>
-
-          {/* Sidebar */}
-          <aside className="flex flex-col gap-6 sticky top-0 h-[calc(100vh-250px)]">
+  
+          {/* Sidebar hidden on mobile, visible on md+ */}
+          <aside className="hidden md:flex flex-col gap-6 sticky top-0 h-[calc(100vh-250px)]">
             <CreateMemeCard />
             {topMeme && <TopMemeSidebar topMeme={topMeme}/>}
           </aside>
         </div>
-
+  
         {/* Pagination */}
         {memes.length > 0 && (
-          <div className="bg-white/70 z-20 p-2">
+          <div className="bg-white/70 z-10 p-2 relative">
             <CommunityPagination
               page={currentPage}
               pageCount={data?.meta?.totalPages ?? 0}
@@ -318,7 +333,7 @@ export default function CommunityGallery(): JSX.Element {
           </div>
         )}
       </div>
-
+  
       {/* Flag Dialog */}
       <FlagDialog
         flagMemeId={flagMemeId}
@@ -330,9 +345,9 @@ export default function CommunityGallery(): JSX.Element {
         resetFlagDialog={resetFlagDialog}
         isSubmittingFlag={isSubmittingFlag}
       />
-
+  
       {/* Footer */}
       <Footer />
     </div>
   );
-}
+};

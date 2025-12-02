@@ -31,21 +31,39 @@ export function UserHoverCard() {
     router.push("/admin");
   };
 
-  // Admin HoverCard
+  // Get initials for mobile avatar
+  const getInitials = () => {
+    if (isAdmin) return "AD";
+    if (user?.firstName && user?.lastName) {
+      return `${user.firstName[0]}${user.lastName[0]}`.toUpperCase();
+    }
+    return user?.firstName?.[0]?.toUpperCase() ?? "U";
+  };
+
+  // Admin HoverCard with mobile responsive design
   if (isAdmin) {
     return (
       <HoverCard>
         <HoverCardTrigger asChild>
-          <Button variant="link" className="px-3 py-2 text-base">
-            Welcome, Admin
-          </Button>
+          {/* Desktop: Show text, Mobile: Show initials avatar */}
+          <div className="flex items-center">
+            <Button variant="link" className="hidden md:inline-flex px-3 py-2 text-base text-[#4b087e]">
+              Welcome, Admin
+            </Button>
+            <Avatar className="md:hidden h-9 w-9">
+              <AvatarFallback className="bg-gradient-to-r from-[#CD01BA] to-[#E20317] text-white font-semibold text-xs">
+                {getInitials()}
+              </AvatarFallback>
+            </Avatar>
+          </div>
         </HoverCardTrigger>
 
         <HoverCardContent className="w-64">
           <div className="flex items-center gap-4">
             <Avatar>
-              <AvatarImage src="/brand/ilovememes-logo.png" />
-              <AvatarFallback>IM</AvatarFallback>
+              <AvatarFallback className="bg-gradient-to-r from-[#CD01BA] to-[#E20317] text-white font-semibold">
+                {getInitials()}
+              </AvatarFallback>
             </Avatar>
             <div className="flex flex-col gap-1">
               <span className="text-sm font-semibold">Admin Dashboard</span>
@@ -70,24 +88,33 @@ export function UserHoverCard() {
     );
   }
 
-  // Normal User HoverCard
+  // Normal User HoverCard with mobile responsive design
   return (
     <HoverCard>
       <HoverCardTrigger asChild>
-        <Button
-          variant="outline"
-          size="sm"
-          className="px-4 py-2 rounded-full font-medium text-black border-[#4b087ea5] hover:bg-[#f8f0ff]"
-        >
-          Welcome
-        </Button>
+        {/* Desktop: Show text button, Mobile: Show initials avatar */}
+        <div className="flex items-center">
+          <Button
+            variant="outline"
+            size="sm"
+            className="hidden md:inline-flex px-4 py-2 rounded-full font-medium text-black border-[#4b087ea5] hover:bg-[#f8f0ff]"
+          >
+            Welcome
+          </Button>
+          <Avatar className="md:hidden h-9 w-9">
+            <AvatarFallback className="bg-gradient-to-r from-[#CD01BA] to-[#E20317] text-white font-semibold text-xs">
+              {getInitials()}
+            </AvatarFallback>
+          </Avatar>
+        </div>
       </HoverCardTrigger>
 
       <HoverCardContent className="w-48">
         <div className="flex items-center gap-3">
           <Avatar>
-            <AvatarImage src="/brand/ilovememes-logo.png" />
-            <AvatarFallback>IM</AvatarFallback>
+            <AvatarFallback className="bg-gradient-to-r from-[#CD01BA] to-[#E20317] text-white font-semibold">
+              {getInitials()}
+            </AvatarFallback>
           </Avatar>
           <div className="flex-1 text-sm font-medium">
             <p>Hello, {user?.firstName ?? "User"}</p>

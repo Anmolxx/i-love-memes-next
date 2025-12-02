@@ -92,7 +92,6 @@ export default function MemeLayout({ children }: LayoutProps) {
 
     canvas.on("object:moving", (e) => {
       const obj = e.target;
-      console.log(obj);
       if (!obj) return;
       keepObjectInBounds(obj, canvas);
     });
@@ -576,7 +575,9 @@ export default function MemeLayout({ children }: LayoutProps) {
       <div className="flex justify-center bg-gray-50 py-12">
         {templateData?.data?.id && (
           <div className="w-full px-4">
-            <MemeCarousel templateId={templateData.data.id} />
+            <MemeCarousel
+                templateIds={[templateData.data.id]}
+              />
           </div>
         )}
       </div>

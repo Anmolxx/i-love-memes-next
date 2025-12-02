@@ -67,16 +67,53 @@ export default function MemeCard({ meme, vote, shareMeme, setFlagMemeId }: MemeC
     };
 
     return (
-        <div className="border-1 border-[#D6C2FF] rounded-lg shadow-md p-3 flex flex-col hover:shadow-lg transition-shadow group relative ">
+        <div className="border-1 border-[#D6C2FF] rounded-lg shadow-md p-3 flex flex-col hover:shadow-lg transition-shadow group relative min-w-[300px] w-full overflow-hidden">
             <Link 
                 href={`/community/${meme.slug}`}
-                className="relative w-full h-[500px] overflow-hidden rounded-xl bg-black"
+                className="relative w-full pb-[70%] overflow-hidden rounded-xl bg-black"
             >
                 <img
                     src={meme.file?.path}
                     alt={meme.title}
                     className="absolute inset-0 w-full h-full object-contain"
                 />
+
+                {/* Hover action overlay placed inside image container so it is clipped */}
+                <div className="mt-0 items-center justify-between opacity-0 group-hover:opacity-100 transition-opacity duration-300 absolute left-2 right-2 bottom-2 z-20 flex flex-wrap gap-2 bg-black/70 text-white py-1 rounded-md backdrop-blur-sm px-3 max-w-full">
+                  <div className="flex items-center gap-1">
+                    <button
+                      aria-pressed={localVote === InteractionType.UPVOTE}
+                      onClick={(e) => { e.stopPropagation(); handleVote(InteractionType.UPVOTE); }}
+                      className={`p-2 rounded-full hover:bg-white/30 cursor-pointer disabled:opacity-50 transition-colors ${localVote === InteractionType.UPVOTE ? "bg-green-500 text-white hover:bg-green-600" : ""}`}
+                    >
+                      <ThumbsUp size={16} />
+                    </button>
+
+                    <button
+                      aria-pressed={localVote === InteractionType.DOWNVOTE}
+                      onClick={(e) => { e.stopPropagation(); handleVote(InteractionType.DOWNVOTE); }}
+                      className={`p-2 rounded-full hover:bg-white/30 cursor-pointer disabled:opacity-50 transition-colors ${localVote === InteractionType.DOWNVOTE ? "bg-red-500 text-white hover:bg-red-600" : ""}`}
+                    >
+                      <ThumbsDown size={16} />
+                    </button>
+
+                    <div className="text-xs font-medium text-white px-2 py-0.5 rounded-full border border-white/50">{meme.interactionSummary?.netScore ?? 0}</div>
+                  </div>
+
+                  <div className="flex items-center gap-1">
+                    <button onClick={(e) => { e.stopPropagation(); shareMeme(meme); }} title="Share" className="p-2 rounded-full hover:bg-white/30 cursor-pointer">
+                      <Share2 size={16} />
+                    </button>
+
+                    <button
+                      onClick={(e) => { e.stopPropagation(); handleFlagClick(); setHasFlagged(true); }}
+                      title={hasFlagged ? "Meme flagged" : "Flag"}
+                      className={`p-2 rounded-full cursor-pointer transition-colors ${hasFlagged ? "text-red-600 bg-red-200 hover:bg-red-300" : "hover:bg-white/30"}`}
+                    >
+                      <Flag size={16} fill={hasFlagged ? "currentColor" : "none"} />
+                    </button>
+                  </div>
+                </div>
             </Link>
 
             <div className="mt-3 flex-1 flex flex-col gap-2">
@@ -92,41 +129,6 @@ export default function MemeCard({ meme, vote, shareMeme, setFlagMemeId }: MemeC
                 {meme.tags && meme.tags.length > 0 && (
                     <TagDisplay displayedTags={displayedTags} hiddenTags={hiddenTags} />
                 )}
-
-                <div className="mt-3 flex items-center justify-between opacity-100 transition-opacity duration-300">
-                    <div className="flex items-center gap-2">
-                        <button 
-                            onClick={() => handleVote(InteractionType.UPVOTE)} 
-                            className={`flex items-center gap-1 px-3 py-1 rounded-full cursor-pointer transition-colors ${localVote === InteractionType.UPVOTE ? "bg-green-100 text-green-700 hover:bg-green-200" : "hover:bg-gray-100"}`}
-                        >
-                            <ThumbsUp size={18} /> Up 
-                        </button>
-
-                        <button 
-                            onClick={() => handleVote(InteractionType.DOWNVOTE)} 
-                            className={`flex items-center gap-1 px-3 py-1 rounded-full cursor-pointer transition-colors ${localVote === InteractionType.DOWNVOTE ? "bg-red-100 text-red-700 hover:bg-red-200" : "hover:bg-gray-100"}`}
-                        >
-                            <ThumbsDown size={18} /> Down
-                        </button>
-
-                        <div className="text-sm font-medium text-gray-700 px-3 py-1 rounded-full border border-gray-200">
-                            {meme.interactionSummary?.netScore ?? 0}
-                        </div>
-                    </div>
-
-                    <div className="flex items-center gap-2">
-                        <button onClick={() => shareMeme(meme)} className="p-2 rounded-full hover:bg-gray-100 cursor-pointer">
-                            <Share2 size={18} />
-                        </button>
-
-                        <button 
-                            onClick={handleFlagClick}
-                            className={`p-2 rounded-full cursor-pointer transition-colors ${hasFlagged ? "text-red-600 bg-red-200 hover:bg-red-300" : "hover:bg-gray-100"}`}
-                        >
-                            <Flag size={18} fill={hasFlagged ? "currentColor" : "none"} strokeWidth={hasFlagged ? 1.5 : 2} />
-                        </button>
-                    </div>
-                </div>
             </div>
         </div>
     );

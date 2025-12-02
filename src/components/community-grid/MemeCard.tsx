@@ -43,7 +43,8 @@ export function MemeCard({ meme, handleVote, shareMeme, setFlagMemeId, isPosting
 
   return (
       <article className="border-1 border-[#D6C2FF] rounded-lg shadow-md p-2 flex flex-col 
-hover:shadow-lg transition-shadow group relative ">
+        hover:shadow-lg transition-shadow group relative min-w-[160px] max-w-full w-full overflow-hidden"> {/* Responsive min width and overflow-hidden to prevent hover overflow */}
+        
         {/* Meme Image */}
         <Link
           href={`/community/${meme.slug}`}
@@ -55,16 +56,64 @@ hover:shadow-lg transition-shadow group relative ">
             className="absolute inset-0 w-full h-full object-contain"
             loading="lazy"
           />
+
+          {/* Move action overlay inside image container so it's clipped by overflow-hidden */}
+          <div
+            className="mt-0 items-center justify-between opacity-0 group-hover:opacity-100 transition-opacity duration-300 
+              absolute left-2 right-2 bottom-2 z-20 flex flex-wrap gap-2 
+              bg-black/70 text-white py-1 rounded-md backdrop-blur-sm px-3 max-w-full"
+          >
+            <div className="flex items-center gap-1">
+              <button
+                aria-pressed={userVoteType === InteractionType.UPVOTE}
+                onClick={() => handleVote(meme.id, InteractionType.UPVOTE)}
+                disabled={isPosting || isDeleting}
+                className={`p-2 rounded-full hover:bg-white/30 cursor-pointer disabled:opacity-50 transition-colors ${
+                  userVoteType === InteractionType.UPVOTE ? "bg-green-500 text-white hover:bg-green-600" : ""
+                }`}
+              >
+                <ThumbsUp size={16} />
+              </button>
+
+              <button
+                aria-pressed={userVoteType === InteractionType.DOWNVOTE}
+                onClick={() => handleVote(meme.id, InteractionType.DOWNVOTE)}
+                disabled={isPosting || isDeleting}
+                className={`p-2 rounded-full hover:bg-white/30 cursor-pointer disabled:opacity-50 transition-colors ${
+                  userVoteType === InteractionType.DOWNVOTE ? "bg-red-500 text-white hover:bg-red-600" : ""
+                }`}
+              >
+                <ThumbsDown size={16} />
+              </button>
+
+              <div className="text-xs font-medium text-white px-2 py-0.5 rounded-full border border-white/50">{netScore}</div>
+            </div>
+
+            <div className="flex items-center gap-1">
+              <button onClick={() => shareMeme(meme)} title="Share" className="p-2 rounded-full hover:bg-white/30 cursor-pointer">
+                <Share2 size={16} />
+              </button>
+
+              <button
+                onClick={() => setFlagMemeId(meme.id)}
+                title={userHasFlagged ? "Meme flagged" : "Flag"}
+                className={`p-2 rounded-full cursor-pointer transition-colors ${userHasFlagged ? "text-red-600 bg-red-200 hover:bg-red-300" : "hover:bg-white/30"}`}
+              >
+                <Flag size={16} fill={userHasFlagged ? "currentColor" : "none"} />
+              </button>
+            </div>
+          </div>
         </Link>
-  
+
         {/* Title & Author */}
         <div className="flex-1 flex flex-col px-1 py-2 gap-1 ">
           <Link
               href={`/community/${meme.slug}`}
-               className="inline-block  transition-colors w-fit  text-base sm:text-lg font-semibold text-[#1F1147]    "
+              className="inline-block transition-colors w-fit text-base sm:text-lg font-semibold text-[#1F1147] "
               >
               {meme.title}
             </Link>
+          {/* Adjusted author display to be slightly more compact */}
           <div className="text-gray-600 text-sm line-clamp-2 pb-3">
             by {meme.author ? ((meme.author.firstName || meme.author.lastName) ? `${meme.author.firstName ?? ""} ${meme.author.lastName ?? ""}`.trim() : meme.author.email) : "Anonymous"}
           </div>
@@ -110,48 +159,7 @@ hover:shadow-lg transition-shadow group relative ">
               </TooltipProvider>
             )}
           </div>
-  
-          {/* Actions */}
-          <div className="mt-3 items-center justify-between opacity-0 group-hover:opacity-100 transition-opacity duration-300 absolute top-[55%] left-2 right-2 z-20 flex flex-wrap gap-2 bg-black/50 text-white py-2 rounded-md backdrop-blur-sm     max-w-full box-border px-3">
-            <div className="flex items-center gap-1">
-              <button
-                aria-pressed={userVoteType === InteractionType.UPVOTE}
-                onClick={() => handleVote(meme.id, InteractionType.UPVOTE)}
-                disabled={isPosting || isDeleting}
-                className={`flex items-center gap-1 px-2 py-0.5 rounded-full hover:bg-[#7d7d7d] cursor-pointer disabled:opacity-50 ${userVoteType === InteractionType.UPVOTE ? "bg-green-100 text-green-700" : ""}`}
-              >
-                <ThumbsUp size={16} />
-                <span className="text-[14px]">{userVoteType === InteractionType.UPVOTE ? "You" : "Up"}</span>
-              </button>
-  
-              <button
-                aria-pressed={userVoteType === InteractionType.DOWNVOTE}
-                onClick={() => handleVote(meme.id, InteractionType.DOWNVOTE)}
-                disabled={isPosting || isDeleting}
-                className={`flex items-center gap-1 px-2 py-0.5 rounded-full hover:bg-[#7d7d7d] cursor-pointer disabled:opacity-50 ${userVoteType === InteractionType.DOWNVOTE ? "bg-red-100 text-red-700" : ""}`}
-              >
-                <ThumbsDown size={16} />
-                <span className="text-[14px]">Down</span>
-              </button>
-  
-              <div className="text-xs font-medium text-white px-2 py-0.5 rounded-full border border-gray-200">{netScore}</div>
-            </div>
-  
-            <div className="flex items-center gap-1">
-              <button onClick={() => shareMeme(meme)} title="Share" className="p-1 rounded-full hover:bg-[#7d7d7d] cursor-pointer">
-                <Share2 size={16} />
-              </button>
-  
-              <button
-                onClick={() => setFlagMemeId(meme.id)}
-                title={userHasFlagged ? "Meme flagged" : "Flag"}
-                className={`p-1 rounded-full cursor-pointer transition-colors ${userHasFlagged ? "text-red-600 bg-red-200 hover:bg-red-300" : "hover:bg-[#7d7d7d]"}`}
-              >
-                <Flag size={16} fill={userHasFlagged ? "currentColor" : "none"} />
-              </button>
-            </div>
           </div>
-        </div>
       </article>
     );
   }

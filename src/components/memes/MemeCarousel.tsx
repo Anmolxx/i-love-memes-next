@@ -1,18 +1,12 @@
 "use client";
-import { Noto_Serif } from "@next/font/google";
+
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useGetMemesQuery } from "@/redux/services/meme";
 
-const notoSerif = Noto_Serif({
-  weight: "600",
-  style: "italic",
-  subsets: ["latin"],
-});
-
 interface MemeCarouselProps {
-  templateId: string;
+  templateIds:string[];
 }
 
 function MemeCarouselSkeleton() {
@@ -32,14 +26,14 @@ function MemeCarouselSkeleton() {
   );
 }
 
-export function MemeCarousel({ templateId }: MemeCarouselProps) {
+export function MemeCarousel({ templateIds }: MemeCarouselProps) {
   const [isClient, setIsClient] = useState(false);
 
   const { memes, isLoading } = useGetMemesQuery(
     {
       page: 1,
       limit: 10,
-      templateIds: [templateId],
+      templateIds: templateIds,
       orderBy: "trending",
       order: "DESC",
     },

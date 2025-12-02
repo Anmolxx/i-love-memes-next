@@ -49,7 +49,7 @@ export const memesApi = iLoveMemesApi.injectEndpoints({
           queryParams.set("order", order);
         }
         if (templateIds && templateIds.length > 0) {
-          templateIds.forEach(t => queryParams.append("templateIds[]", t));
+          templateIds.forEach(t => queryParams.append("templateIds", t));
         }
         if (reported !== undefined) {
           queryParams.set("reported", String(reported));

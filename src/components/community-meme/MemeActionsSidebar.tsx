@@ -22,7 +22,7 @@ export default function MemeActionsSidebar({ meme, handleCaptionClick }: MemeAct
             "0 2px 8px rgba(205,1,186,0.5), 0 2px 8px rgba(226,3,23,0.5)",
         }}
       >
-        Edit this Meme
+        Caption this Meme
       </div>
       )}
 

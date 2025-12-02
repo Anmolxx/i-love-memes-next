@@ -16,7 +16,6 @@ import useAuthentication from "@/hooks/use-authentication";
 import { Footer } from "@/sections/Footer";
 import { Meme } from "@/utils/dtos/meme.dto";
 import MemeContent from "./MemeContent";
-import MemeActionsSidebar from "./MemeActionsSidebar";
 import FlagMemeDialog from "./FlagMemeDialog";
 import { CommentDto } from "@/utils/dtos/comment.dto";
 import { CommentActionsProvider } from "@/context/CommentActions";
@@ -232,7 +231,7 @@ export default function MemePage() {
           </div>
         </nav>
         </div>
-          <div className="w-full max-w-7xl mx-auto p-4 flex flex-col md:flex-row gap-6 mt-5">
+          <div className="w-full max-w-7xl mx-auto p-4 flex flex-col md:flex-row gap-6 mt-5 items-stretch">
             <CommentActionsProvider actions={commentActions}>
               <MemeContent
                 meme={meme}
@@ -241,8 +240,8 @@ export default function MemePage() {
                 setFlagMemeId={setFlagMemeId}
                 comments={comments}
                 isLoggedIn={isLoggedIn}
+                handleCaptionClick={handleCaptionClick}
               />
-              <MemeActionsSidebar meme={meme} handleCaptionClick={handleCaptionClick} />
             </CommentActionsProvider>
           </div>
           <FlagMemeDialog

@@ -271,7 +271,7 @@ export default function CommentsSection({ comments, isLoggedIn }: CommentsSectio
   }
 
   return (
-    <div className="flex flex-col gap-4 bg-white p-6 rounded-xl shadow-lg border border-gray-200 w-full">
+    <div className="flex flex-col gap-4 bg-white p-6 rounded-xl shadow-lg border border-gray-200 w-full h-full overflow-auto">
       <h3 className="font-bold text-xl text-gray-800 border-b pb-3 mb-2">Comments ({comments.length})</h3>
 
       {isLoggedIn && (

@@ -5,7 +5,7 @@ export function TopMemeSidebar({ topMeme }: { topMeme: any }) {
   if (!topMeme) return null;
 
   return (
-    <div className=" p-3 rounded-2xl shadow bg-[rgb(249,236,254)] border-2 border-[#F95FFF]" >
+    <div className="p-3 rounded-2xl shadow bg-[rgb(249,236,254)] border-2 border-[#F95FFF] mb-4" >
       <h3 className="text-[20px] sm:text-lg font-semibold text-dark mb-3">Top Meme</h3>
       <Link href={`/community/${topMeme.slug}`}>
         <img

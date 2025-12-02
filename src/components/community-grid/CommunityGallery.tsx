@@ -18,6 +18,7 @@ import { Meme } from "@/utils/dtos/meme.dto";
 import { Footer } from "@/sections/Footer";
 import { TopMemeSidebarSkeleton } from "./skeletons/TopMemeSidebarSkeleton";
 import { CreateMemeSkeleton } from "./skeletons/CreateMemeSkeleton";
+import { FooterSkeleton } from "@/sections/skeletons/FooterSkeleton";
 
 type VoteStatus = InteractionType.UPVOTE | InteractionType.DOWNVOTE | "NONE";
 
@@ -41,11 +42,35 @@ export default function CommunityGallery(): JSX.Element {
   const [postInteraction, { isLoading: isPostingInteraction }] = usePostInteractionMutation();
   const [deleteInteraction, { isLoading: isDeletingInteraction }] = useDeleteInteractionMutation();
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const sidebarRef = useRef<HTMLDivElement>(null);
+  const [sidebarMaxHeight, setSidebarMaxHeight] = useState<string>("calc(100vh - 120px)");
 
   const [flagMemeId, setFlagMemeId] = useState<string | null>(null);
   const [flagReason, setFlagReason] = useState<string>("");
   const [flagComment, setFlagComment] = useState<string>("");
   const [isSubmittingFlag, setIsSubmittingFlag] = useState(false);
+
+  useEffect(() => {
+    const calculateSidebarHeight = () => {
+      if (sidebarRef.current) {
+        const sidebarRect = sidebarRef.current.getBoundingClientRect();
+        const viewportHeight = window.innerHeight;
+        const topPos = sidebarRect.top;
+        const availableHeight = viewportHeight - topPos - 80; 
+        const maxHeight = Math.max(300, availableHeight);
+        setSidebarMaxHeight(`${maxHeight}px`);
+      }
+    };
+
+    calculateSidebarHeight();
+    window.addEventListener("resize", calculateSidebarHeight);
+    window.addEventListener("zoom", calculateSidebarHeight);
+    
+    return () => {
+      window.removeEventListener("resize", calculateSidebarHeight);
+      window.removeEventListener("zoom", calculateSidebarHeight);
+    };
+  }, []);
 
   // Debounce search
   useEffect(() => {
@@ -56,7 +81,7 @@ export default function CommunityGallery(): JSX.Element {
     return () => clearTimeout(handler);
   }, [searchQuery]);
 
-  const { data, isFetching } = useGetMemesQuery({
+  const { data, isFetching, isLoading } = useGetMemesQuery({
     page: currentPage,
     limit: per_page,
     search: debouncedSearch,
@@ -271,7 +296,6 @@ export default function CommunityGallery(): JSX.Element {
     
       <div className="max-w-[110rem] mx-auto px-2 sm:px-4 py-4 flex flex-col gap-4 flex-1 w-full"> 
         
-
         <div className="md:hidden">
           <div className="flex flex-col gap-6 mb-6">
             {isFetching ? <CreateMemeSkeleton /> : <CreateMemeCard />}
@@ -284,11 +308,12 @@ export default function CommunityGallery(): JSX.Element {
           <div ref={scrollContainerRef} className="w-full">
           
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-             {memes.length === 0 ? (
+              {/* Show empty state only when not fetching and user has searched/filtered */}
+              {!isFetching && memes.length === 0 && (debouncedSearch !== "" || selectedTags.length > 0) ? (
                 <div className="text-center text-gray-500 mt-10 sm:col-span-2 lg:col-span-3">
                   <p className="text-xl mb-2">
                     Oops! We couldn’t find any memes
-                    {searchQuery ? ` for "${searchQuery}"` : ""}
+                    {debouncedSearch ? ` for "${debouncedSearch}"` : ""}
                     {selectedTags.length > 0 ? ` with tags: ${selectedTags.join(", ")}` : ""} 😅
                   </p>
                   <p className="text-sm">Try another search or create your own meme!</p>
@@ -311,15 +336,20 @@ export default function CommunityGallery(): JSX.Element {
           </div>
   
          
-         <aside className="hidden md:flex flex-col gap-6 sticky top-0 h-[calc(100vh-250px)]">
+        
+         <aside 
+           ref={sidebarRef}
+           className="hidden md:flex flex-col gap-6 sticky top-20 h-fit overflow-y-auto pr-2"
+           style={{ maxHeight: sidebarMaxHeight }}
+         >
            {isFetching ? <CreateMemeSkeleton /> : <CreateMemeCard />}
            {isFetching ? <TopMemeSidebarSkeleton /> : topMeme && <TopMemeSidebar topMeme={topMeme} />}
          </aside>
         </div>
-  
+
         {/* Pagination */}
         {memes.length > 0 && (
-          <div className="bg-white/70 z-10 p-2 relative">
+          <div className="bg-white/70 z-0 p-2 relative mt-0 mb-4">
             <CommunityPagination
               page={currentPage}
               pageCount={data?.meta?.totalPages ?? 0}
@@ -342,7 +372,7 @@ export default function CommunityGallery(): JSX.Element {
       />
   
       {/* Footer */}
-      <Footer />
+      {isLoading ? <FooterSkeleton /> : <Footer />}
     </div>
   );
 };

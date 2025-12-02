@@ -22,6 +22,7 @@ import { CommentActionsProvider } from "@/context/CommentActions";
 import { NavbarSearch } from "../community-grid/NavbarSearch";
 import { TagSelector } from "../community-grid/TagsSelector";
 import CommunityMemeSkeleton from "./CommunityMemeSkeleton";
+import { FooterSkeleton } from "@/sections/skeletons/FooterSkeleton";
 
 export default function MemePage() {
   const { slug } = useParams();
@@ -256,7 +257,7 @@ export default function MemePage() {
             isSubmitting={isFlagging}
           />
           <div className="mt-20">
-            <Footer />
+           {isLoading ? <FooterSkeleton /> : <Footer />}
           </div>
     </div>
   );

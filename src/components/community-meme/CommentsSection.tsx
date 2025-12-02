@@ -271,44 +271,64 @@ export default function CommentsSection({ comments, isLoggedIn }: CommentsSectio
   }
 
   return (
-    <div className="flex flex-col gap-4 bg-white p-6 rounded-xl shadow-lg border border-gray-200 w-full h-full overflow-auto">
-      <h3 className="font-bold text-xl text-gray-800 border-b pb-3 mb-2">Comments ({comments.length})</h3>
+    <div className="flex flex-col bg-white p-6 rounded-xl shadow-lg border border-gray-200 w-full h-full">
 
-      {isLoggedIn && (
-        <div className="flex gap-2 mb-4 items-start">
-          <Input
-            placeholder="Add a comment"
-            value={newComment}
-            onChange={(e) => setNewComment(e.target.value)}
-            className="flex-grow"
-            onKeyDown={(e) => {
-              if (e.key === "Enter" && newComment.trim()) handleTopLevelSubmit()
-            }}
-          />
-          <Button className="cursor-pointer" onClick={handleTopLevelSubmit} disabled={!newComment.trim()}>
-            <Send className="w-4 h-4 mr-2" />
-            Post
-          </Button>
+      <div className="flex-1 overflow-auto pr-2 pb-2">
+        {comments.length === 0 ? (
+          <div className="flex flex-col items-center justify-center h-full text-center text-gray-500 p-6">
+            
+            <svg xmlns="http://www.w3.org/2000/svg" className="w-28 h-28 mb-4 text-yellow-400" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+              <circle cx="12" cy="12" r="10" strokeWidth="1.5" className="text-yellow-300" />
+              <path d="M8 14s1.5 2 4 2 4-2 4-2" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+              <path d="M9 9h.01M15 9h.01" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+            <h4 className="text-lg font-semibold mb-2">No one has roasted this meme... yet</h4>
+            <p className="text-sm text-gray-500 max-w-xs">Looks like the audience is speechless. Be the first to drop a witty comment — fame awaits.</p>
+          </div>
+        ) : (
+          <div className="flex flex-col gap-4">
+            {commentsToDisplay.map((c) => (
+              <div key={c.id} className="bg-gray-200 rounded-lg border border-gray-100 flex flex-col p-4">
+                <CommentItem comment={c} isLoggedIn={isLoggedIn} actions={actions} isReply={false} />
+              </div>
+            ))}
+
+            {hasMoreComments && (
+              <div className="flex justify-center mt-2">
+                <Button variant="outline" onClick={handleLoadMore} className="w-full max-w-sm">
+                  Load More Comments
+                </Button>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+
+      <div className="mt-4">
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="font-bold text-lg text-gray-800">Comments ({comments.length})</h3>
         </div>
-      )}
 
-      {comments.length === 0 ? (
-        <p className="text-gray-500 text-base ">Be the first to comment!</p>
-      ) : (
-        <div className="flex flex-col gap-4">
-          {commentsToDisplay.map((c) => (
-            <div key={c.id} className="bg-gray-200 rounded-lg border border-gray-100 flex flex-col p-4">
-              <CommentItem comment={c} isLoggedIn={isLoggedIn} actions={actions} isReply={false} />
-            </div>
-          ))}
-
-          {hasMoreComments && (
-            <Button variant="outline" onClick={handleLoadMore} className="mt-2 w-full max-w-sm mx-auto">
-              Load More Comments
+        {isLoggedIn ? (
+          <div className="flex gap-2 items-start">
+            <Input
+              placeholder="Add a comment"
+              value={newComment}
+              onChange={(e) => setNewComment(e.target.value)}
+              className="flex-grow"
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && newComment.trim()) handleTopLevelSubmit()
+              }}
+            />
+            <Button className="cursor-pointer" onClick={handleTopLevelSubmit} disabled={!newComment.trim()}>
+              <Send className="w-4 h-4 mr-2" />
+              Post
             </Button>
-          )}
-        </div>
-      )}
+          </div>
+        ) : (
+          <div className="text-sm text-gray-500">Please sign in to comment.</div>
+        )}
+      </div>
     </div>
   )
 }

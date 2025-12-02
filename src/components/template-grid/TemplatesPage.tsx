@@ -12,6 +12,7 @@ import { useSearchParams } from "next/navigation";
 import { Template } from "@/utils/dtos/template.dto";
 import { TemplateGallerySkeleton } from "./TemplateSkeleton"; 
 import { Footer } from "@/sections/Footer";
+import { FooterSkeleton } from "@/sections/skeletons/FooterSkeleton";
 
 export function TemplateGallery() {
   const searchParams = useSearchParams();
@@ -28,7 +29,7 @@ export function TemplateGallery() {
   const [template, setTemplate] = useState<Template[]>([]);
 
   const debouncedSearch = useDebounce(searchQuery, 600);
-  const { data, isFetching } = useGetTemplatesQuery({
+  const { data, isFetching, isLoading } = useGetTemplatesQuery({
     page: currentPage,
     limit: per_page,
     search: debouncedSearch,
@@ -129,7 +130,7 @@ export function TemplateGallery() {
           </div>
         )}
       </div>
-      <Footer/>
+      {isLoading ? <FooterSkeleton /> : <Footer />}
     </>
   );
 }

@@ -8,12 +8,10 @@ export function MemeCardSkeleton() {
 
   return (
     <article className="border-1 border-[#D6C2FF] rounded-lg shadow-md p-2 flex flex-col animate-pulse min-w-[160px] max-w-full w-full overflow-hidden">
-      {/* Image placeholder */}
       <div className="relative w-full pb-[70%] rounded-lg mb-2 bg-black/10">
         <Skeleton className="absolute inset-0 rounded-lg" />
       </div>
 
-      {/* Action buttons placeholder */}
       <div className="flex justify-between items-center mb-2">
         <div className="flex gap-2">
           <Skeleton className="h-6 w-6 rounded-full" />
@@ -26,13 +24,10 @@ export function MemeCardSkeleton() {
         </div>
       </div>
 
-      {/* Title placeholder */}
       <Skeleton className="h-5 w-3/4 mb-1 rounded-md" />
 
-      {/* Author placeholder */}
       <Skeleton className="h-4 w-1/2 mb-2 rounded-md" />
 
-      {/* Tags placeholder */}
       <div className="flex flex-wrap gap-2">
         {skeletonTags.map((_, idx) => (
           <Skeleton key={idx} className="h-5 w-16 rounded-full" />

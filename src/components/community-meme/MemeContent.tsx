@@ -26,32 +26,34 @@ function MemeContent({
 }: MemeContentProps) {
 
   return (
-    <div className="flex-1 flex flex-col md:flex-row gap-6 md:flex-[3] min-w-0 items-stretch">
-      {/* Mobile order: actions (first), meme card (second), comments (third).
-          Desktop: left column (card + actions stacked with card on top), right column comments. */}
+    <div className="flex-1 flex flex-col md:grid md:grid-cols-[2fr_3fr] gap-6 min-w-0 items-stretch">
+      {/*
+        Mobile DOM order: 1) MemeCard, 2) CommentsSection, 3) MemeActionsSidebar
+        Desktop (md+): layout becomes a 2-col grid where MemeCard + MemeActionsSidebar
+        are placed in the left column (stacked) and CommentsSection occupies the right column.
+      */}
 
-      {/* Left column (desktop): contains card and actions; on mobile we swap their order */}
-      <div className="w-full md:w-2/5 flex flex-col gap-4">
-        <div className="order-2 md:order-1">
-          <MemeCard
-            meme={meme}
-            vote={vote}
-            shareMeme={shareMeme}
-            setFlagMemeId={setFlagMemeId}
-          />
-        </div>
-
-        <div className="order-1 md:order-2 mt-0 md:mt-auto w-full">
-          <MemeActionsSidebar meme={meme} handleCaptionClick={handleCaptionClick} />
-        </div>
+      {/* Meme card — mobile first (order 1). On md it lives in column 1 */}
+      <div className="order-1 md:col-start-1 md:col-end-2">
+        <MemeCard
+          meme={meme}
+          vote={vote}
+          shareMeme={shareMeme}
+          setFlagMemeId={setFlagMemeId}
+        />
       </div>
 
-      {/* Right column: comments section (always after left column on mobile) */}
-      <div className="w-full md:w-3/5 h-full order-3 md:order-2">
+      {/* Comments — mobile order 2. On md it becomes the right column and spans both rows */}
+      <div className="order-2 md:col-start-2 md:col-end-3 md:row-span-2 w-full h-full overflow-auto">
         <CommentsSection
           comments={comments}
           isLoggedIn={isLoggedIn}
         />
+      </div>
+
+      {/* Actions — mobile order 3 (bottom). On md it sits under the card in the left column */}
+      <div className="order-3 md:col-start-1 md:col-end-2 md:row-start-2 mt-0 md:mt-auto w-full">
+        <MemeActionsSidebar meme={meme} handleCaptionClick={handleCaptionClick} />
       </div>
     </div>
   );

@@ -16,6 +16,8 @@ import { CommunityPagination } from "@/components/data-table/data-table-communit
 import { TagSelector } from "./TagsSelector";
 import { Meme } from "@/utils/dtos/meme.dto";
 import { Footer } from "@/sections/Footer";
+import { TopMemeSidebarSkeleton } from "./skeletons/TopMemeSidebarSkeleton";
+import { CreateMemeSkeleton } from "./skeletons/CreateMemeSkeleton";
 
 type VoteStatus = InteractionType.UPVOTE | InteractionType.DOWNVOTE | "NONE";
 
@@ -67,12 +69,10 @@ export default function CommunityGallery(): JSX.Element {
     setMemes(rawMemes);
   }, [data]);
 
-  // Scroll to top on page change
   useEffect(() => {
     scrollContainerRef.current?.scrollTo({ top: 0, behavior: "smooth" });
   }, [currentPage]);
 
-  // Update URL after render whenever page, searchQuery, or selectedTags change
   useEffect(() => {
     const params = new URLSearchParams();
     params.set("page", currentPage.toString());
@@ -82,7 +82,6 @@ export default function CommunityGallery(): JSX.Element {
     router.replace(`/community?${params.toString()}`);
   }, [selectedTags, debouncedSearch, currentPage, router, per_page]);
 
-  // Handle search button click
   const handleSearch = useCallback(() => {
     setCurrentPage(1);
     setDebouncedSearch(searchQuery);
@@ -248,14 +247,12 @@ export default function CommunityGallery(): JSX.Element {
         }, null as Meme | null)
       : null;
 
-  // ... imports and component definition (assuming it's CommunityPage or similar)
   
   return (
     <div className="flex flex-col h-full min-h-screen">
-      {/* Navbar */}
+    
       <div className="relative">
         <nav className="w-full sticky top-0 z-50 bg-white/70 backdrop-blur">
-          {/* Adjusted padding: px-4 is too much on very small screens */}
           <div className="max-w-[110rem] px-2 sm:px-4 flex items-center gap-6 mx-auto mb-5">
             <NavbarSearch
               searchQuery={searchQuery}
@@ -271,26 +268,24 @@ export default function CommunityGallery(): JSX.Element {
         </nav>
       </div>
   
-      {/* Content Container (FIXED: px-2 on mobile) */}
+    
       <div className="max-w-[110rem] mx-auto px-2 sm:px-4 py-4 flex flex-col gap-4 flex-1 w-full"> 
         
-        {/* Sidebar at top on mobile, right on md+ */}
+
         <div className="md:hidden">
           <div className="flex flex-col gap-6 mb-6">
-            <CreateMemeCard />
-            {topMeme && <TopMemeSidebar topMeme={topMeme}/>}
+            {isFetching ? <CreateMemeSkeleton /> : <CreateMemeCard />}
+            {isFetching ? <TopMemeSidebarSkeleton /> : topMeme && <TopMemeSidebar topMeme={topMeme} />}
           </div>
         </div>
 
-        {/* Main Grid: 1 column on mobile, split on md */}
         <div className="grid grid-cols-1 md:grid-cols-[3fr_1fr] gap-6">
           
-          {/* Scrollable memes container (FIXED: removed pr-2, added w-full) */}
           <div ref={scrollContainerRef} className="w-full">
-            {/* Meme Card Grid: 1 column on mobile, 2 on sm, 3 on lg */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6"> {/* Reduced gap on mobile */}
-              {memes.length === 0 ? (
-                <div className="text-center text-gray-500 mt-10 sm:col-span-2 lg:col-span-3"> {/* Ensures message spans across grid columns */}
+          
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+             {memes.length === 0 ? (
+                <div className="text-center text-gray-500 mt-10 sm:col-span-2 lg:col-span-3">
                   <p className="text-xl mb-2">
                     Oops! We couldn’t find any memes
                     {searchQuery ? ` for "${searchQuery}"` : ""}
@@ -315,11 +310,11 @@ export default function CommunityGallery(): JSX.Element {
             </div>
           </div>
   
-          {/* Sidebar hidden on mobile, visible on md+ */}
-          <aside className="hidden md:flex flex-col gap-6 sticky top-0 h-[calc(100vh-250px)]">
-            <CreateMemeCard />
-            {topMeme && <TopMemeSidebar topMeme={topMeme}/>}
-          </aside>
+         
+         <aside className="hidden md:flex flex-col gap-6 sticky top-0 h-[calc(100vh-250px)]">
+           {isFetching ? <CreateMemeSkeleton /> : <CreateMemeCard />}
+           {isFetching ? <TopMemeSidebarSkeleton /> : topMeme && <TopMemeSidebar topMeme={topMeme} />}
+         </aside>
         </div>
   
         {/* Pagination */}

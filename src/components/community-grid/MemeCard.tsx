@@ -28,8 +28,6 @@ export function MemeCard({ meme, handleVote, shareMeme, setFlagMemeId, isPosting
   const activeTags: Tag[] = meme.tags?.filter((tag: Tag) => !tag.deletedAt) ?? [];
   const displayedTags = activeTags.slice(0, 3);
   const hiddenTags = activeTags.slice(3);
-  const router = useRouter();
-  const searchParams = useSearchParams();
   
   const interactions: UserInteraction[] = meme.interactionSummary?.userInteractions ?? [];
   const vote = interactions.find(

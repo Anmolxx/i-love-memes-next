@@ -5,11 +5,9 @@ import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import NextImage from "next/image";
 import { DataTableTagFilter } from "../data-table/data-table-tag-filter";
-import { X, RefreshCcw, Menu, TextSearch } from "lucide-react"; 
-import useAuthentication from "@/hooks/use-authentication";
+import { X, RefreshCcw, Menu, LayoutDashboard } from "lucide-react"; 
 import { UserHoverCard } from "../ui/extension/welcome-handler";
 import { useState } from "react";
-// 🛠️ Importing Shadcn Tooltip components
 import {
   Tooltip,
   TooltipContent,
@@ -107,7 +105,7 @@ export function NavbarSearch({
 
         {/* Mobile menu button (FIXED: Added -ml-2 to push left) */}
         <button
-          className="md:hidden p-0 -ml-2 mt-1" 
+          className="md:hidden p-0 -ml-1" 
           aria-label="Toggle menu"
           onClick={() => setMobileOpen(!mobileOpen)}
         >
@@ -117,15 +115,18 @@ export function NavbarSearch({
 
       {/* CENTER: Logo (Should be inherently centered due to absolute positioning) */}
       <div className="absolute left-1/2 transform -translate-x-1/2 flex-shrink-0">
-        <Link href={logo.href} aria-label={logo.alt}>
-          <NextImage
-            src={logo.src}
-            alt={logo.alt}
-            width={140}
-            height={36}
-            className="object-contain"
-          />
-        </Link>
+       <Link href="/" aria-label="I Love Memes">
+           <div className="relative h-40 w-[140px] md:w-[180px]">
+             <NextImage
+               src="/brand/ilovememes-logo.png"
+               alt="I Love Memes"
+               fill
+               className="object-contain"
+               sizes="(max-width: 768px) 140px, 180px"
+               priority
+             />
+           </div>
+         </Link>
       </div>
 
       {/* RIGHT SIDE: Search Icon + Initials */}
@@ -183,7 +184,7 @@ export function NavbarSearch({
                             onClick={toggleMobilePanel}
                             className={`p-2 rounded hover:bg-gray-100 ${showMobilePanel ? 'bg-gray-200' : ''}`}
                         >
-                            <TextSearch className="w-6 h-6 text-gray-600" /> 
+                            <LayoutDashboard className="w-6 h-6 text-gray-600" /> 
                         </button>
                     </TooltipTrigger>
                     <TooltipContent>

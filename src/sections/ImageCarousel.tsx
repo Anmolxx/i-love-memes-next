@@ -2,7 +2,6 @@
 
 import { CircleChevronRight } from "lucide-react";
 import { Noto_Serif } from "@next/font/google";
-import NextImage from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -14,20 +13,19 @@ const notoSerif = Noto_Serif({
   subsets: ["latin"],
 });
 
-// Skeleton component for carousel
 function ImageCarouselSkeleton() {
   return (
     <div className="flex gap-6 animate-marquee w-[200%]">
       {Array.from({ length: 10 }).map((_, i) => (
-        <div
-          key={i}
-          className="flex-none w-48 sm:w-56 md:w-64 lg:w-72 xl:w-80"
-        >
+        <div key={i} className="flex-none w-48 sm:w-56 md:w-64 lg:w-72 xl:w-80">
           <div className="relative h-64 overflow-hidden rounded-2xl border border-black/10 bg-black/10">
             <Skeleton className="absolute inset-0 rounded-2xl" />
           </div>
         </div>
       ))}
+      <style jsx global>{`
+        .h-64 { height: 16rem; }
+      `}</style>
     </div>
   );
 }
@@ -36,12 +34,7 @@ export function ImageCarousel() {
   const [isClient, setIsClient] = useState(false);
 
   const { templates, isLoading } = useGetTemplatesQuery(
-    {
-      page: 1,
-      limit: 10,
-      orderBy: "updatedAt",
-      order: "DESC",
-    },
+    { page: 1, limit: 10, orderBy: "updatedAt", order: "DESC" },
     {
       selectFromResult: ({ data, isLoading }) => ({
         isLoading,
@@ -59,9 +52,7 @@ export function ImageCarousel() {
     }
   );
 
-  useEffect(() => {
-    setIsClient(true);
-  }, []);
+  useEffect(() => setIsClient(true), []);
 
   return (
     <section className="py-16 mb-10 mt-5">
@@ -80,27 +71,21 @@ export function ImageCarousel() {
         </p>
       </div>
 
-      {/* Carousel */}
       <div className="relative w-full overflow-hidden">
         {isLoading ? (
           <ImageCarouselSkeleton />
         ) : (
           <div className="flex gap-6 animate-marquee w-[200%]">
             {[...templates, ...templates].map((template, idx) => (
-              <div
-                key={idx}
-                className="flex-none w-48 sm:w-56 md:w-64 lg:w-72 xl:w-80"
-              >
+              <div key={idx} className="flex-none w-48 sm:w-56 md:w-64 lg:w-72 xl:w-80">
                 <Link href={`/meme/${template.slug}`} target="_blank">
                   <div className="relative h-64 overflow-hidden rounded-2xl border border-black/10 bg-black shadow-sm hover:shadow-md transition-shadow duration-300">
                     <img
                       src={template.previewUrl}
                       alt={template.title}
-                      className="object-contain"
-                      sizes="(max-width: 768px) 40vw,
-                             (max-width: 1024px) 25vw,
-                             20vw"
-                      onError={(e) => (e.currentTarget.src = "/carousel/placeholder.png")}
+                      className="w-full h-full object-contain"
+                      sizes="(max-width: 768px) 40vw, (max-width: 1024px) 25vw, 20vw"
+                      onError={(e) => (e.currentTarget.src = "/carousel/placeholder-meme.png")}
                     />
                     <div className="absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-black/40 to-transparent" />
                   </div>
@@ -116,8 +101,7 @@ export function ImageCarousel() {
           className="inline-block rounded-full p-[3px]"
           style={{
             background: "linear-gradient(90deg,#CD01BA,#E20317)",
-            boxShadow:
-              "0 2px 8px rgba(205,1,186,0.5), 0 2px 8px rgba(226,3,23,0.5)",
+            boxShadow: "0 2px 8px rgba(205,1,186,0.5), 0 2px 8px rgba(226,3,23,0.5)",
           }}
         >
           <Link
@@ -133,12 +117,8 @@ export function ImageCarousel() {
 
       <style jsx>{`
         @keyframes marquee {
-          0% {
-            transform: translateX(0);
-          }
-          100% {
-            transform: translateX(-50%);
-          }
+          0% { transform: translateX(0); }
+          100% { transform: translateX(-50%); }
         }
         .animate-marquee {
           animation: marquee 30s linear infinite;

@@ -574,10 +574,10 @@ export default function MemeLayout({ children }: LayoutProps) {
       </div>
       <div className="flex justify-center bg-gray-50 py-12">
         {templateData?.data?.id && (
-          <div className="w-full px-4">
-            <MemeCarousel
-                templateIds={[templateData.data.id]}
-              />
+          <div className="w-full px-4 flex justify-center">
+            <div className="w-full max-w-4xl">
+              <MemeCarousel templateIds={[templateData.data.id]} />
+            </div>
           </div>
         )}
       </div>

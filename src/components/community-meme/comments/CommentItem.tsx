@@ -20,6 +20,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"; 
+import { CommentContent } from "./CommentContent";
 
 export interface CommentItemProps {
   comment: CommentEntity;
@@ -68,7 +69,7 @@ const CommentItem: React.FC<CommentItemProps> = ({
     if (!editingContent.trim()) return;
 
     try {
-      await onUpdate(comment.id, editingContent, comment.parentComment?.id);
+      await onUpdate(comment.id, editingContent, comment.parentCommentId);
       setEditingCommentId(null);
     } catch (err: any) {
       handleApiError(err);
@@ -82,7 +83,7 @@ const CommentItem: React.FC<CommentItemProps> = ({
 
   const handleDelete = async () => {
     try {
-      await onDelete(comment.id, comment.parentComment?.id);
+      await onDelete(comment.id, comment.parentCommentId);
     } catch (err: any) {
       handleApiError(err);
     }
@@ -186,7 +187,10 @@ const CommentItem: React.FC<CommentItemProps> = ({
             </Button>
           </div>
         ) : (
-          <p className="text-base text-gray-700 mt-1 pl-9 whitespace-pre-wrap">{comment.content}</p>
+          <div className="mt-1 pl-9">
+            <CommentContent content={comment.content} />
+          </div>
+          
         )}
 
         <div className="flex gap-4 text-xs mt-1 pl-9">

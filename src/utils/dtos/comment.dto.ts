@@ -20,9 +20,7 @@ export interface CommentDto {
     updatedAt: string;
     username?: string;
   };
-  parentComment?: {
-    id: string;
-  }
+  parentCommentId: string;
   replyCount: number;
   depth: number;
   status: "ACTIVE" | "DELETED";

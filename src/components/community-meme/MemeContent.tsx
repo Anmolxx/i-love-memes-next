@@ -28,17 +28,35 @@ function MemeContent({
   const memeId = meme?.slug || meme?.id;
 
   return (
-    <div className="flex-1 flex flex-col md:grid md:grid-cols-[2fr_3fr] gap-6 min-w-0 items-stretch">
-      <div className="order-1 md:col-start-1 md:col-end-2">
+    
+    <div
+      className="
+        flex-1 flex flex-col
+        md:grid 
+        md:grid-cols-[2fr_3fr]
+        gap-6 
+        min-w-0 
+        items-start">
+
+      <div className="
+        order-1 
+        md:col-start-1 
+        w-full 
+        md:sticky md:top-6 md:self-start 
+        flex flex-col 
+        gap-6
+      ">
         <MemeCard
           meme={meme}
           vote={vote}
           shareMeme={shareMeme}
           setFlagMemeId={setFlagMemeId}
         />
+        
+        <MemeActionsSidebar meme={meme} handleCaptionClick={handleCaptionClick} />
       </div>
 
-      <div className="order-2 md:col-start-2 md:col-end-3 md:row-span-2 w-full h-full overflow-auto">
+      <div className="order-2 md:col-start-2 w-full">
         <CommentsSection
           comments={comments}
           isLoggedIn={isLoggedIn}
@@ -46,10 +64,8 @@ function MemeContent({
         />
       </div>
 
-      <div className="order-3 md:col-start-1 md:col-end-2 md:row-start-2 mt-0 md:mt-auto w-full">
-        <MemeActionsSidebar meme={meme} handleCaptionClick={handleCaptionClick} />
-      </div>
     </div>
   );
 }
+
 export default React.memo(MemeContent);

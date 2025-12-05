@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 
 export async function GET() {
   try {
-    const shop = process.env.SHOPIFY_DOMAIN; // yourstore.myshopify.com
+    const shop = process.env.SHOPIFY_DOMAIN; 
     const token = process.env.SHOPIFY_STOREFRONT_TOKEN;
     const graphqlEndpoint = `${shop}/admin/api/2024-01/graphql.json`;
 

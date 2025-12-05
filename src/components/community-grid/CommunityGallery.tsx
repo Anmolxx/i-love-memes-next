@@ -1,8 +1,6 @@
 "use client";
 
 import React, { useState, useEffect, useCallback, useRef, JSX } from "react";
-import NextImage from "next/image";
-import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import useAuthentication from "@/hooks/use-authentication";
 import { useGetMemesQuery } from "@/redux/services/meme";
@@ -18,12 +16,16 @@ import { CommunityPagination } from "@/components/data-table/data-table-communit
 import { TagSelector } from "./TagsSelector";
 import { Meme } from "@/utils/dtos/meme.dto";
 import { Footer } from "@/sections/Footer";
+import { TopMemeSidebarSkeleton } from "./skeletons/TopMemeSidebarSkeleton";
+import { CreateMemeSkeleton } from "./skeletons/CreateMemeSkeleton";
+import { FooterSkeleton } from "@/sections/skeletons/FooterSkeleton";
 
 type VoteStatus = InteractionType.UPVOTE | InteractionType.DOWNVOTE | "NONE";
 
 export default function CommunityGallery(): JSX.Element {
   const searchParams = useSearchParams();
   const router = useRouter();
+
   const initialPage = parseInt(searchParams.get("page") ?? "1");
   const per_page = parseInt(searchParams.get("limit") ?? "9");
   const initialSearch = searchParams.get("search") ?? "";
@@ -40,12 +42,37 @@ export default function CommunityGallery(): JSX.Element {
   const [postInteraction, { isLoading: isPostingInteraction }] = usePostInteractionMutation();
   const [deleteInteraction, { isLoading: isDeletingInteraction }] = useDeleteInteractionMutation();
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const sidebarRef = useRef<HTMLDivElement>(null);
+  const [sidebarMaxHeight, setSidebarMaxHeight] = useState<string>("calc(100vh - 120px)");
 
   const [flagMemeId, setFlagMemeId] = useState<string | null>(null);
   const [flagReason, setFlagReason] = useState<string>("");
   const [flagComment, setFlagComment] = useState<string>("");
   const [isSubmittingFlag, setIsSubmittingFlag] = useState(false);
 
+  useEffect(() => {
+    const calculateSidebarHeight = () => {
+      if (sidebarRef.current) {
+        const sidebarRect = sidebarRef.current.getBoundingClientRect();
+        const viewportHeight = window.innerHeight;
+        const topPos = sidebarRect.top;
+        const availableHeight = viewportHeight - topPos - 80; 
+        const maxHeight = Math.max(300, availableHeight);
+        setSidebarMaxHeight(`${maxHeight}px`);
+      }
+    };
+
+    calculateSidebarHeight();
+    window.addEventListener("resize", calculateSidebarHeight);
+    window.addEventListener("zoom", calculateSidebarHeight);
+    
+    return () => {
+      window.removeEventListener("resize", calculateSidebarHeight);
+      window.removeEventListener("zoom", calculateSidebarHeight);
+    };
+  }, []);
+
+  // Debounce search
   useEffect(() => {
     const handler = setTimeout(() => {
       setCurrentPage(1);
@@ -54,7 +81,7 @@ export default function CommunityGallery(): JSX.Element {
     return () => clearTimeout(handler);
   }, [searchQuery]);
 
-  const { data, isFetching } = useGetMemesQuery({
+  const { data, isFetching, isLoading } = useGetMemesQuery({
     page: currentPage,
     limit: per_page,
     search: debouncedSearch,
@@ -71,30 +98,32 @@ export default function CommunityGallery(): JSX.Element {
     scrollContainerRef.current?.scrollTo({ top: 0, behavior: "smooth" });
   }, [currentPage]);
 
-  const updateUrl = useCallback(
-    (page: number, search?: string, tags?: string[]) => {
-      const params = new URLSearchParams();
-      params.set("page", page.toString());
-      params.set("limit", per_page.toString());
-      if (search) params.set("search", search);
-      tags?.forEach(tag => params.append("tags", tag));
-      router.push(`/community?${params.toString()}`);
-    },
-    [router, per_page]
-  );
+  useEffect(() => {
+    const params = new URLSearchParams();
+    params.set("page", currentPage.toString());
+    params.set("limit", per_page.toString());
+    if (debouncedSearch) params.set("search", debouncedSearch);
+    selectedTags.forEach(tag => params.append("tags", tag));
+    router.replace(`/community?${params.toString()}`);
+  }, [selectedTags, debouncedSearch, currentPage, router, per_page]);
 
   const handleSearch = useCallback(() => {
     setCurrentPage(1);
-    updateUrl(1, searchQuery, selectedTags);
-  }, [searchQuery, selectedTags, updateUrl]);
+    setDebouncedSearch(searchQuery);
+  }, [searchQuery]);
 
-  const handlePageChange = useCallback(
-    (newPage: number) => {
-      setCurrentPage(newPage);
-      updateUrl(newPage, searchQuery, selectedTags);
-    },
-    [searchQuery, selectedTags, updateUrl]
-  );
+  const handlePageChange = useCallback((newPage: number) => {
+    setCurrentPage(newPage);
+  }, []);
+
+  const handleTagClick = useCallback((tagName: string) => {
+    setCurrentPage(1);
+    setSelectedTags(prev =>
+      prev.includes(tagName)
+        ? prev.filter(t => t !== tagName)
+        : [...prev, tagName]
+    );
+  }, []);
 
   const handleVote = useCallback(
     async (memeId: string, targetVoteType: InteractionType.UPVOTE | InteractionType.DOWNVOTE) => {
@@ -112,7 +141,6 @@ export default function CommunityGallery(): JSX.Element {
       try {
         if (currentVote === targetVoteType) {
           await deleteInteraction({ memeId: meme.id, type: targetVoteType });
-
           setMemes(memes.map(m =>
             m.id === memeId
               ? {
@@ -126,22 +154,12 @@ export default function CommunityGallery(): JSX.Element {
               : m
           ));
           toast.info("Vote removed.");
-
         } else {
           const isChangingVote = currentVote && currentVote !== "NONE";
-          let scoreChange = 0;
-
           if (isChangingVote) {
             await deleteInteraction({ memeId: meme.id, type: currentVote });
           }
-
           await postInteraction({ memeId: meme.id, type: targetVoteType });
-
-          if (targetVoteType === InteractionType.UPVOTE) {
-            scoreChange = isChangingVote && currentVote === InteractionType.DOWNVOTE ? 1 : -1;
-          } else {
-            scoreChange = isChangingVote && currentVote === InteractionType.UPVOTE ? 1 : -1;
-          }
 
           setMemes(memes.map(m =>
             m.id === memeId
@@ -152,21 +170,14 @@ export default function CommunityGallery(): JSX.Element {
                     userInteractions: [
                       { type: targetVoteType, createdAt: new Date().toISOString() }
                     ],
-                    netScore: m.interactionSummary!.netScore + scoreChange,
+                    netScore: m.interactionSummary!.netScore + (targetVoteType === InteractionType.UPVOTE ? 1 : -1) - (isChangingVote ? (currentVote === InteractionType.UPVOTE ? 1 : -1) : 0),
                   }
                 } as Meme
               : m
           ));
 
-          if (isChangingVote) {
-            toast.success("Vote updated!");
-          } else if (targetVoteType === InteractionType.UPVOTE) {
-            toast.success("Meme upvoted! 👍");
-          } else {
-            toast.success("Meme downvoted! 👎");
-          }
+          toast.success(isChangingVote ? "Vote updated!" : targetVoteType === InteractionType.UPVOTE ? "Meme upvoted! 👍" : "Meme downvoted! 👎");
         }
-
       } catch (err) {
         console.error(err);
         toast.error("Failed to update vote.");
@@ -175,72 +186,61 @@ export default function CommunityGallery(): JSX.Element {
     [isLoggedIn, isPostingInteraction, isDeletingInteraction, memes, postInteraction, deleteInteraction]
   );
 
-  useEffect(() => {
-    setCurrentPage(1);
-    updateUrl(1, searchQuery, selectedTags);
-  }, [selectedTags, searchQuery, updateUrl]);
-
   const getSharableFile = async (url: string, title: string): Promise<File | undefined> => {
-        try {
-            const response = await fetch(url);
-            if (!response.ok) return undefined;
-            const blob = await response.blob();
-            const extension = url.split('.').pop()?.toLowerCase() || 'jpg';
-            const mimeType = response.headers.get('content-type') || `image/${extension}`;
-            return new File([blob], `${title}.${extension}`, { type: mimeType });
-        } catch (error) {
-            return undefined;
-        }
+    try {
+      const response = await fetch(url);
+      if (!response.ok) return undefined;
+      const blob = await response.blob();
+      const extension = url.split('.').pop()?.toLowerCase() || 'jpg';
+      const mimeType = response.headers.get('content-type') || `image/${extension}`;
+      return new File([blob], `${title}.${extension}`, { type: mimeType });
+    } catch {
+      return undefined;
+    }
+  };
+
+  const shareMeme = async (meme: Meme) => {
+    const fileUrl = meme?.file?.path;
+    const title = meme?.title || meme.title;
+    const shareUrl = `${window.location.origin}/community/${meme.slug}`;
+
+    if (!fileUrl) {
+      toast.error("No meme file found");
+      return;
+    }
+
+    const shareData: ShareData = {
+      title,
+      text: `Check out this meme: ${title}`,
+      url: shareUrl
     };
-    
-    const shareMeme = async (meme: Meme) => {
-        const fileUrl = meme?.file?.path;
-        const title = meme?.title || meme.title;
-        const shareUrl = `${window.location.origin}/community/${meme.slug}`;
-    
-        if (!fileUrl) {
-            toast.error("No meme file found");
-            return;
-        }
-    
-        const shareData: ShareData = {
-            title: title,
-            text: `Check out this meme: ${title}`,
-            url: shareUrl
-        };
-    
-        const copyToClipboard = async (text: string) => {
-            try {
-                await navigator.clipboard.writeText(text);
-                toast.success("Link copied to clipboard! 🔗");
-            } catch (err) {
-                toast.error("Failed to copy link.");
-            }
-        };
-    
-        if (navigator.share) {
-            const file = await getSharableFile(fileUrl, title);
-            try {
-                if (file){ 
-                    await navigator.share({ ...shareData, files: [file] });
-                } else {
-                    await navigator.share(shareData);
-                }
-            } catch (error) {
-                if (error instanceof Error && error.name === 'AbortError') {
-                    return;
-                }
-                await copyToClipboard(shareUrl);
-            }
-        } else {
-            await copyToClipboard(shareUrl);
-        }
+
+    const copyToClipboard = async (text: string) => {
+      try {
+        await navigator.clipboard.writeText(text);
+        toast.success("Link copied to clipboard! 🔗");
+      } catch {
+        toast.error("Failed to copy link.");
+      }
     };
+
+    if (navigator.share) {
+      const file = await getSharableFile(fileUrl, title);
+      try {
+        if (file) await navigator.share({ ...shareData, files: [file] });
+        else await navigator.share(shareData);
+      } catch (error) {
+        if (error instanceof Error && error.name === 'AbortError') return;
+        await copyToClipboard(shareUrl);
+      }
+    } else {
+      await copyToClipboard(shareUrl);
+    }
+  };
 
   const submitFlag = useCallback(async () => {
     if (!flagMemeId || !flagReason || isSubmittingFlag) return;
     setIsSubmittingFlag(true);
-
     try {
       await postInteraction({
         memeId: flagMemeId,
@@ -248,9 +248,8 @@ export default function CommunityGallery(): JSX.Element {
         reason: flagReason,
         note: flagComment || undefined,
       });
-
       resetFlagDialog();
-      toast.success("Meme flagged successfully!");
+      toast.success("Thanks! The moderation team will review this.");
     } catch {
       toast.error("Failed to submit flag.");
     } finally {
@@ -273,90 +272,107 @@ export default function CommunityGallery(): JSX.Element {
         }, null as Meme | null)
       : null;
 
- return (
-     <div className="flex flex-col h-full min-h-screen">
-       {/* Navbar */}
-       <div className="relative">
-         <nav className="w-full sticky top-0 z-50 bg-white/70 backdrop-blur">
-           <div className="max-w-[110rem] px-4 flex items-center gap-6 mx-auto mb-5">
-             <NavbarSearch
-               searchQuery={searchQuery}
-               setSearchQuery={setSearchQuery}
-               handleSearch={handleSearch}
-               isFetching={isFetching}
-               selectedTags={selectedTags}
-               setSelectedTags={setSelectedTags}
-               availableTags={availableTags}
-             />
-             <TagSelector setAvailableTags={setAvailableTags} />
-           </div>
-         </nav>
-       </div>
- 
-       {/* Content */}
-       <div className="max-w-[110rem] mx-auto p-4 flex flex-col gap-6 flex-1">
-         <div className="grid grid-cols-1 md:grid-cols-[3fr_1fr] gap-6 h-[calc(100vh-250px)]">
-           {/* Scrollable memes */}
-           <div ref={scrollContainerRef} className="overflow-y-auto pr-2 hide-scrollbar max-h-[calc(100vh-250px)]">
-             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-               {memes.length === 0 ? (
-                 <div className="text-center text-gray-500 mt-10">
-                   <p className="text-xl mb-2">
-                     Oops! We couldn’t find any memes
-                     {searchQuery ? ` for "${searchQuery}"` : ""}
-                     {selectedTags.length > 0 ? ` with tags: ${selectedTags.join(", ")}` : ""} 😅
-                   </p>
-                   <p className="text-sm">Try another search or create your own meme!</p>
-                 </div>
-               ) : (
-                 memes.map((meme) => (
-                   <MemeCard
-                     key={meme.id}
-                     meme={meme}
-                     handleVote={handleVote}
-                     shareMeme={shareMeme}
-                     setFlagMemeId={setFlagMemeId}
-                     isPosting={isPostingInteraction}
-                     isDeleting={isDeletingInteraction}
-                   />
-                 ))
-               )}
-             </div>
-           </div>
- 
-           {/* Sidebar */}
-           <aside className="flex flex-col gap-6  sticky top-0 h-[calc(100vh-250px)] overflow-y-auto">
-             <CreateMemeCard />
-             {topMeme && <TopMemeSidebar topMeme={topMeme} />}
-           </aside>
-         </div>
- 
-         {/* Static Pagination */}
-         {memes.length > 0 && (
-           <div className="sticky bottom-0 bg-white/70 z-20 px-2 py-2">
-             <CommunityPagination
-               page={currentPage}
-               pageCount={data?.meta?.totalPages ?? 0}
-               onPageChange={handlePageChange}
-             />
-           </div>
-         )}
-       </div>
- 
-       {/* Flag Dialog */}
-       <FlagDialog
-         flagMemeId={flagMemeId}
-         flagReason={flagReason}
-         setFlagReason={setFlagReason}
-         flagComment={flagComment}
-         setFlagComment={setFlagComment}
-         submitFlag={submitFlag}
-         resetFlagDialog={resetFlagDialog}
-         isSubmittingFlag={isSubmittingFlag}
-       />
- 
-       {/* Footer */}
-       <Footer />
-     </div>
-   );
- }
+  
+  return (
+    <div className="flex flex-col h-full min-h-screen">
+    
+      <div className="relative">
+        <nav className="w-full sticky top-0 z-50 bg-white/70 backdrop-blur">
+          <div className="max-w-[110rem] px-2 sm:px-4 flex items-center gap-6 mx-auto mb-5">
+            <NavbarSearch
+              searchQuery={searchQuery}
+              setSearchQuery={setSearchQuery}
+              handleSearch={handleSearch}
+              isFetching={isFetching}
+              selectedTags={selectedTags}
+              setSelectedTags={setSelectedTags}
+              availableTags={availableTags}
+            />
+            <TagSelector setAvailableTags={setAvailableTags} />
+          </div>
+        </nav>
+      </div>
+  
+    
+      <div className="max-w-[110rem] mx-auto px-2 sm:px-4 py-4 flex flex-col gap-4 flex-1 w-full"> 
+        
+        <div className="md:hidden">
+          <div className="flex flex-col gap-6 mb-6">
+            {isFetching ? <CreateMemeSkeleton /> : <CreateMemeCard />}
+            {isFetching ? <TopMemeSidebarSkeleton /> : topMeme && <TopMemeSidebar topMeme={topMeme} />}
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-[3fr_1fr] gap-6">
+          
+          <div ref={scrollContainerRef} className="w-full">
+          
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+              {/* Show empty state only when not fetching and user has searched/filtered */}
+              {!isFetching && memes.length === 0 && (debouncedSearch !== "" || selectedTags.length > 0) ? (
+                <div className="text-center text-gray-500 mt-10 sm:col-span-2 lg:col-span-3">
+                  <p className="text-xl mb-2">
+                    Oops! We couldn’t find any memes
+                    {debouncedSearch ? ` for "${debouncedSearch}"` : ""}
+                    {selectedTags.length > 0 ? ` with tags: ${selectedTags.join(", ")}` : ""} 😅
+                  </p>
+                  <p className="text-sm">Try another search or create your own meme!</p>
+                </div>
+              ) : (
+                memes.map((meme) => (
+                  <MemeCard
+                    key={meme.id}
+                    meme={meme}
+                    handleVote={handleVote}
+                    shareMeme={shareMeme}
+                    setFlagMemeId={setFlagMemeId}
+                    isPosting={isPostingInteraction}
+                    isDeleting={isDeletingInteraction}
+                    handleTagClick={handleTagClick}
+                  />
+                ))
+              )}
+            </div>
+          </div>
+  
+         
+        
+         <aside 
+           ref={sidebarRef}
+           className="hidden md:flex flex-col gap-6 sticky top-20 h-fit overflow-y-auto pr-2"
+           style={{ maxHeight: sidebarMaxHeight }}
+         >
+           {isFetching ? <CreateMemeSkeleton /> : <CreateMemeCard />}
+           {isFetching ? <TopMemeSidebarSkeleton /> : topMeme && <TopMemeSidebar topMeme={topMeme} />}
+         </aside>
+        </div>
+
+        {/* Pagination */}
+        {memes.length > 0 && (
+          <div className="bg-white/70 z-0 p-2 relative mt-0 mb-4">
+            <CommunityPagination
+              page={currentPage}
+              pageCount={data?.meta?.totalPages ?? 0}
+              onPageChange={handlePageChange}
+            />
+          </div>
+        )}
+      </div>
+  
+      {/* Flag Dialog */}
+      <FlagDialog
+        flagMemeId={flagMemeId}
+        flagReason={flagReason}
+        setFlagReason={setFlagReason}
+        flagComment={flagComment}
+        setFlagComment={setFlagComment}
+        submitFlag={submitFlag}
+        resetFlagDialog={resetFlagDialog}
+        isSubmittingFlag={isSubmittingFlag}
+      />
+  
+      {/* Footer */}
+      {isLoading ? <FooterSkeleton /> : <Footer />}
+    </div>
+  );
+};

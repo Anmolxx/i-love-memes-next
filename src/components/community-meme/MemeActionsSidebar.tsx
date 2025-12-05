@@ -11,7 +11,7 @@ interface MemeActionsSidebarProps {
 export default function MemeActionsSidebar({ meme, handleCaptionClick }: MemeActionsSidebarProps) {
   const istemplate= meme?.template;
   return (
-    <div className="flex flex-col gap-4 w-full md:flex-[1]">
+    <div className="bg-white rounded-2xl shadow-lg p-4 flex flex-col gap-4  h-fit">
       {istemplate && (
       <div
         onClick={handleCaptionClick}
@@ -26,9 +26,9 @@ export default function MemeActionsSidebar({ meme, handleCaptionClick }: MemeAct
       </div>
       )}
 
-      <div className="bg-white p-4 rounded-xl shadow-md border border-gray-200 text-sm">
+      <div className="bg-white p-4 rounded-xl  border border-gray-200 text-sm">
         <div className="flex flex-col gap-1">
-          <p className="text-gray-700 text-base">
+          <p className="bg-gray-50 rounded-xl p-4 border text-sm leading-relaxed">
             Created with{" "}
             <Link
               href="/meme"
@@ -37,10 +37,10 @@ export default function MemeActionsSidebar({ meme, handleCaptionClick }: MemeAct
               ILoveMemes Meme Generator
             </Link>
           </p>
-          <span className="font-semibold text-gray-800">
-            IMAGE DESCRIPTION:
+          <span className="mt-3 text-base font-semibold text-gray-700 ">
+            Image Description:
           </span>
-          <p className="text-gray-700 text-base">{meme.description}</p>
+          <p className="text-sm font-mono text-gray-800">{meme.description}</p>
         </div>
       </div>
     </div>

@@ -20,7 +20,7 @@ export interface CommentDto {
     updatedAt: string;
     username?: string;
   };
-  parentComment?: CommentDto | null;
+  parentCommentId: string;
   replyCount: number;
   depth: number;
   status: "ACTIVE" | "DELETED";
@@ -28,3 +28,20 @@ export interface CommentDto {
   updatedAt: string;
   editedAt: string | null;
 }
+
+export interface CommentEntity extends CommentDto {
+  parentId: string | null;    
+  replyIds: string[];       
+  loadedPages: number;         
+  hasMoreReplies: boolean;    
+}
+
+export interface NestedComment extends CommentEntity {
+  replies: NestedComment[];
+}
+
+//delete comment
+export type DeleteCommentResponse = void;
+
+//get comments (by memeId)
+export type CommentSortOptions = 'newest' | 'oldest' | 'popular';

@@ -67,7 +67,7 @@ export type InteractionReason =
   | "VIOLENCE" 
   | "OTHER";
 
-  //get memes
+//get memes
 export interface GetMemesArgs {
   page?: number;
   limit?: number;
@@ -75,6 +75,7 @@ export interface GetMemesArgs {
   tags?: string[];
   order?: SortOrder;
   orderBy?: MemeOrderBy;
+  templateIds?: string[];
   reported?: boolean;
   interactionType?: InteractionType; 
   reasons?: InteractionReason;        

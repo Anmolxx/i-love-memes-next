@@ -21,8 +21,9 @@ export function CreateMemeCard() {
         <div className="flex flex-col gap-3 text-center">
           <p className="text-base sm:text-lg font-semibold text-white">Create your own meme!</p>
           <Link href="/meme">
-            <Button variant="default" className="w-full cursor-pointer rounded-full bg-white text-[#E20317] hover:bg-white ">
-              <Plus className="w-4 h-4 mr-2" /> Create Meme
+            <Button variant="default" className="w-full cursor-pointer rounded-full bg-white text-[#E20317] hover:bg-white flex items-center justify-center gap-2">
+              <Plus className="w-4 h-4" />
+              <span className="hidden sm:inline">Create Meme</span>
             </Button>
           </Link>
         </div>

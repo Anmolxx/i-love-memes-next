@@ -42,8 +42,17 @@ export default function Navbar({
 
   return (
     <nav className={cn("sticky top-0 z-50 bg-white/70 backdrop-blur-md", className)}>
-      <div className="mx-auto max-w-7xl px-4 py-4 flex items-center justify-between relative">
+     <div className="mx-auto max-w-6xl px-4 py-5 flex items-center justify-between relative">
         
+        {/* Hamburger for Mobile (Left) */}
+        <button
+          className="md:hidden p-2 rounded-md hover:bg-gray-100"
+          onClick={() => setIsMenuOpen(!isMenuOpen)}
+          aria-label="Toggle menu"
+        >
+          {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
+        </button>
+
         {/* Left Links (Desktop) */}
         <div className="hidden md:flex items-center gap-6 font-medium text-base font-serif">
           {links.map((link) => (
@@ -86,15 +95,6 @@ export default function Navbar({
               {ctaButton.label}
             </Link>
           )}
-
-          {/* Hamburger for Mobile */}
-          <button
-            className="md:hidden p-2 rounded-md hover:bg-gray-100"
-            onClick={() => setIsMenuOpen(!isMenuOpen)}
-            aria-label="Toggle menu"
-          >
-            {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
-          </button>
         </div>
       </div>
 

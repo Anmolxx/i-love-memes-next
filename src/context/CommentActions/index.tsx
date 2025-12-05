@@ -1,9 +1,6 @@
 import React, { createContext, useContext } from 'react';
 
 interface CommentActionsContextType {
-  onAddComment: (content: string) => void;
-  onUpdateComment: (id: string, content: string) => void;
-  onDeleteComment: (id: string) => void;
   memeId: string;
 }
 

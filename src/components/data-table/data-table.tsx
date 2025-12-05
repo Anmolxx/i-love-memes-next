@@ -79,7 +79,7 @@ export function DataTable<TData>({
 }: DataTableProps<TData>) {
   const rows = table.getRowModel().rows;
   const pageSize = 10;
-  const tableHeight = (pageSize / 10) * 70; 
+  const tableHeight = (pageSize / 10) * 75; 
   
   return (
     <div

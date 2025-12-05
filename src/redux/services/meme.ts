@@ -19,6 +19,7 @@ export const memesApi = iLoveMemesApi.injectEndpoints({
           tags, 
           order, 
           orderBy,
+          templateIds,
           reported,
           interactionType, 
           reasons,  
@@ -46,6 +47,9 @@ export const memesApi = iLoveMemesApi.injectEndpoints({
         }
         if (order) {
           queryParams.set("order", order);
+        }
+        if (templateIds && templateIds.length > 0) {
+          templateIds.forEach(t => queryParams.append("templateIds", t));
         }
         if (reported !== undefined) {
           queryParams.set("reported", String(reported));

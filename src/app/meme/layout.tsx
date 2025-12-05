@@ -13,6 +13,7 @@ import { useGetTemplateByIdOrSlugQuery } from "@/redux/services/template";
 import { v4 as uuidv4 } from "uuid";
 import { useAppDispatch } from "@/redux/store";
 import { setTemplateId } from "@/redux/slices/template";
+import { MemeCarousel } from "@/components/memes/MemeCarousel";
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -24,14 +25,14 @@ interface MemeObject extends FabricObject {
 type LayerItem = { id: string; type: string; object: FabricObject };
 
 const getCanvasLayers = (canvas: Canvas): LayerItem[] => {
-    return canvas.getObjects()
-      .filter((obj): obj is FabricObject & { id: string } => {
-          return !!obj.id && obj.id !== "background-image";
-      })
-      .map((obj) => ({
-        id: obj.id,
-        type: obj.type || "unknown",
-        object: obj,
+  return canvas.getObjects()
+    .filter((obj): obj is FabricObject & { id: string } => {
+      return 'id' in obj && typeof (obj as any).id === 'string' && (obj as any).id !== 'background-image';
+    })
+    .map((obj) => ({
+      id: (obj as any).id,
+      type: obj.type || 'unknown',
+      object: obj,
     }));
 };
 
@@ -91,7 +92,6 @@ export default function MemeLayout({ children }: LayoutProps) {
 
     canvas.on("object:moving", (e) => {
       const obj = e.target;
-      console.log(obj);
       if (!obj) return;
       keepObjectInBounds(obj, canvas);
     });
@@ -572,7 +572,17 @@ export default function MemeLayout({ children }: LayoutProps) {
           </div>
         </div>
       </div>
-
+      <div className="flex justify-center bg-gray-50 py-12">
+        {templateData?.data?.id && (
+          <div className="w-full px-4 flex justify-center">
+            <div className="w-full max-w-4xl">
+              <MemeCarousel templateIds={[templateData.data.id]} />
+            </div>
+          </div>
+        )}
+      </div>
+      
+      
       <Footer />
       {children}
     </>

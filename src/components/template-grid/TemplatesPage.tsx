@@ -12,6 +12,7 @@ import { useSearchParams } from "next/navigation";
 import { Template } from "@/utils/dtos/template.dto";
 import { TemplateGallerySkeleton } from "./TemplateSkeleton"; 
 import { Footer } from "@/sections/Footer";
+import { FooterSkeleton } from "@/sections/skeletons/FooterSkeleton";
 
 export function TemplateGallery() {
   const searchParams = useSearchParams();
@@ -28,7 +29,7 @@ export function TemplateGallery() {
   const [template, setTemplate] = useState<Template[]>([]);
 
   const debouncedSearch = useDebounce(searchQuery, 600);
-  const { data, isFetching } = useGetTemplatesQuery({
+  const { data, isFetching, isLoading } = useGetTemplatesQuery({
     page: currentPage,
     limit: per_page,
     search: debouncedSearch,
@@ -91,14 +92,14 @@ export function TemplateGallery() {
               return (
                 <div
                   key={template.id}
-                  className="rounded-lg shadow-sm overflow-hidden flex flex-col border-1 border-[#D6C2FF] hover:shadow-lg transition-shadow"
+                  className="border-1 border-[#D6C2FF] rounded-xl shadow-md p-2 flex flex-col hover:shadow-lg transition-shadow group"
                 >
                   {bgImage ? (
                     <div className="w-full h-56 relative">
                       <img
                         src={bgImage}
                         alt={template.title}
-                        className="w-full h-full object-contain bg-gray-10 bg-black"
+                        className="w-full h-full object-contain bg-gray-10 bg-black rounded-lg"
                       />
                     </div>
                   ) : (
@@ -107,9 +108,9 @@ export function TemplateGallery() {
                     </div>
                   )}
       
-                  <div className="p-4 flex flex-col gap-2 flex-1">
+                  <div className="py-4 px-2 flex flex-col gap-1 flex-1">
                     <h3 className="text-base sm:text-lg font-semibold text-[#1F1147]   ">{template.title}</h3>
-                    <p className="text-gray-600 text-sm line-clamp-2 pb-3">
+                    <p className="text-gray-600 text-sm line-clamp-2 pb-4">
                       {template.description}
                     </p>
       
@@ -129,7 +130,7 @@ export function TemplateGallery() {
           </div>
         )}
       </div>
-      <Footer/>
+      {isLoading ? <FooterSkeleton /> : <Footer />}
     </>
   );
 }

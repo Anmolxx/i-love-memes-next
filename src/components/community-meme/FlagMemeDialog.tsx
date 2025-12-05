@@ -1,4 +1,4 @@
-// src/components/MemePage/FlagMemeDialog.tsx
+// FlagMemeDialog.tsx
 import React from 'react';
 import {
   Dialog,
@@ -21,6 +21,7 @@ interface FlagMemeDialogProps {
   setFlagComment: (comment: string) => void;
   submitFlag: () => void;
   resetFlagDialog: () => void;
+  isSubmitting: boolean;
 }
 
 export default function FlagMemeDialog({
@@ -32,7 +33,9 @@ export default function FlagMemeDialog({
   setFlagComment,
   submitFlag,
   resetFlagDialog,
+  isSubmitting,
 }: FlagMemeDialogProps) {
+  
   return (
     <Dialog open={flagMemeId === memeId} onOpenChange={resetFlagDialog}>
       <DialogContent className="sm:max-w-[425px]">
@@ -46,11 +49,14 @@ export default function FlagMemeDialog({
               <SelectValue placeholder="Select reason" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="nsfw">NSFW: Content contains nudity.</SelectItem>
-              <SelectItem value="nsfl">NSFL: Highly disturbing.</SelectItem>
-              <SelectItem value="tw">Trigger Warning.</SelectItem>
-              <SelectItem value="red_flag">Red Flag Emoji (🚩).</SelectItem>
-            </SelectContent>
+                <SelectItem value="SPAM">Spam: Unwanted or repetitive content</SelectItem>
+                <SelectItem value="INAPPROPRIATE">Inappropriate: Offensive or harmful content</SelectItem>
+                <SelectItem value="COPYRIGHT">Copyright: Violates intellectual property</SelectItem>
+                <SelectItem value="NSFW">NSFW: Content contains nudity or sexual material</SelectItem>
+                <SelectItem value="HARASSMENT">Harassment: Bullying or targeted abuse</SelectItem>
+                <SelectItem value="VIOLENCE">Violence: Graphic or violent content</SelectItem>
+                <SelectItem value="OTHER">Other: Any other issue</SelectItem>
+              </SelectContent>
           </Select>
 
           <Input
@@ -61,11 +67,11 @@ export default function FlagMemeDialog({
           />
 
           <DialogFooter className="flex justify-end gap-2 cursor-pointer">
-            <Button variant="outline" onClick={resetFlagDialog}>
+            <Button variant="outline" onClick={resetFlagDialog} disabled={isSubmitting}>
               Cancel
             </Button>
-            <Button onClick={submitFlag} disabled={!flagReason}>
-              Submit
+            <Button onClick={submitFlag} disabled={!flagReason || isSubmitting}>
+              {isSubmitting ? "Submitting..." : "Submit"}
             </Button>
           </DialogFooter>
         </div>

@@ -1,4 +1,3 @@
-// MemePage.tsx
 "use client";
 
 import React, { useEffect, useCallback, useState } from "react";
@@ -8,21 +7,19 @@ import { useGetMemeBySlugOrIdQuery } from "@/redux/services/meme";
 import { usePostInteractionMutation } from "@/redux/services/interaction";
 import {
   useGetCommentsByMemeQuery,
-  useCreateCommentMutation,
-  useUpdateCommentMutation,
-  useDeleteCommentMutation,
 } from "@/redux/services/comment";
 import useAuthentication from "@/hooks/use-authentication";
 import { Footer } from "@/sections/Footer";
 import { Meme } from "@/utils/dtos/meme.dto";
 import MemeContent from "./MemeContent";
 import FlagMemeDialog from "./FlagMemeDialog";
-import { CommentDto } from "@/utils/dtos/comment.dto";
+import { CommentEntity, CommentSortOptions } from "@/utils/dtos/comment.dto"; 
 import { CommentActionsProvider } from "@/context/CommentActions";
 import { NavbarSearch } from "../community-grid/NavbarSearch";
 import { TagSelector } from "../community-grid/TagsSelector";
 import CommunityMemeSkeleton from "./CommunityMemeSkeleton";
 import { FooterSkeleton } from "@/sections/skeletons/FooterSkeleton";
+import { rootCommentsAdapter } from "@/redux/adapters/commentAdapters";
 
 export default function MemePage() {
   const { slug } = useParams();
@@ -34,7 +31,11 @@ export default function MemePage() {
   const [availableTags, setAvailableTags] = useState<string[]>([]);
 
   const [isFetching, setIsFetching] = useState(false);
+  const [commentPage, setCommentPage] = useState(1);
+  const [commentLimit, setCommentLimit] = useState(20);
  
+  const [commentSortOptions, setCommentSortOptions] = useState<CommentSortOptions>('newest'); 
+  
   const handleSearch = useCallback(() => {
 
     let searchPath = `/community?search=${encodeURIComponent(searchQuery)}`;
@@ -47,15 +48,20 @@ export default function MemePage() {
   const { data, isLoading, error, refetch } = useGetMemeBySlugOrIdQuery(slug as string, { skip: !slug });
   const meme: Meme | null = data?.data ?? null;
 
-  const { data: commentsData, refetch: refetchComments } = useGetCommentsByMemeQuery(
-    { slugOrId: slug as string },
+  const { data: commentsState, refetch: refetchComments } = useGetCommentsByMemeQuery(
+    { 
+      slugOrId: slug as string,
+      page: commentPage,
+      limit: commentLimit,
+      sortOptions: commentSortOptions,
+    },
     { skip: !slug }
   );
-  const comments: CommentDto[] = commentsData?.items ?? [];
-
-  const [createComment] = useCreateCommentMutation();
-  const [updateComment] = useUpdateCommentMutation();
-  const [deleteComment] = useDeleteCommentMutation();
+  
+  const comments: CommentEntity[] = commentsState
+    ? rootCommentsAdapter.getSelectors().selectAll(commentsState)
+    : [];
+    
   const [flagMeme, { isLoading: isFlagging }] = usePostInteractionMutation();
 
   useEffect(() => {
@@ -64,55 +70,6 @@ export default function MemePage() {
       refetchComments();
     }
   }, [slug, refetch, refetchComments]);
-
-  const handleAddComment = useCallback(async (content: string, parentCommentId?: string) => {
-    if (!content.trim()) return;
-    
-    if (!meme || !meme.id) {
-      toast.error("Meme data is not fully loaded. Please wait.");
-      return;
-    }
-    
-    try {
-      await createComment({ content, memeId: meme.id, parentCommentId }).unwrap();
-      refetchComments();
-      toast.success(parentCommentId ? "Reply added!" : "Comment added!");
-    } catch (err: any) {
-      const apiError = err?.data;
-      if (apiError?.errors && typeof apiError.errors === "object") {
-        Object.values(apiError.errors).forEach((msg: any) => { if (typeof msg === "string") toast.error(msg); });
-      } else if (apiError?.message) toast.error(apiError.message);
-      else toast.error("Failed to update user");
-    }
-  }, [meme, createComment, refetchComments]);
-
-  const handleUpdateComment = useCallback(async (id: string, content: string) => {
-    if (!content.trim()) return;
-    try {
-      await updateComment({ id, content }).unwrap();
-      refetchComments();
-      toast.success("Comment updated!");
-    } catch (err: any) {
-      const apiError = err?.data;
-      if (apiError?.errors && typeof apiError.errors === "object") {
-        Object.values(apiError.errors).forEach((msg: any) => { if (typeof msg === "string") toast.error(msg); });
-      } else if (apiError?.message) toast.error(apiError.message);
-      else toast.error("Failed to update user");
-    }
-  }, [updateComment, refetchComments]);
-
-  const handleDeleteComment = useCallback(async (id: string) => {
-    try {
-      await deleteComment({ id }).unwrap();
-      refetchComments();
-    } catch (err: any) {
-      const apiError = err?.data;
-      if (apiError?.errors && typeof apiError.errors === "object") {
-        Object.values(apiError.errors).forEach((msg: any) => { if (typeof msg === "string") toast.error(msg); });
-      } else if (apiError?.message) toast.error(apiError.message);
-      else toast.error("Failed to update user");
-    }
-  }, [deleteComment, refetchComments]);
 
   const [flagMemeId, setFlagMemeId] = useState<string | null>(null);
   const [flagReason, setFlagReason] = useState<string>("");
@@ -208,9 +165,6 @@ export default function MemePage() {
   if (error || !meme) return <div className="text-center mt-10">Meme not found</div>;
 
   const commentActions = {
-    onAddComment: handleAddComment,
-    onUpdateComment: handleUpdateComment,
-    onDeleteComment: handleDeleteComment,
     memeId: meme.id,
   };
 
@@ -257,7 +211,7 @@ export default function MemePage() {
             isSubmitting={isFlagging}
           />
           <div className="mt-20">
-           {isLoading ? <FooterSkeleton /> : <Footer />}
+            {isLoading ? <FooterSkeleton /> : <Footer />}
           </div>
     </div>
   );

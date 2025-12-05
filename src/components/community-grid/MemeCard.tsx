@@ -141,9 +141,9 @@ export function MemeCard({
         </div>
 
         <div className="flex flex-wrap items-center gap-1">
-          {displayedTags.map(tag => (
+          {displayedTags.map((tag, index)=> (
             <span
-              key={tag.id}
+              key={`${tag.id}-${index}`}
               onClick={() => handleTagClick(tag.name)}
               className="text-sm bg-purple-100 text-purple-800 px-3 py-1 rounded-xl font-medium hover:bg-purple-200 cursor-pointer transition"
             >

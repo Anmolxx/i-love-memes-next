@@ -75,7 +75,8 @@ export function NavbarSearch({
     const removeTag = (tag: string) => {
         setSelectedTags(selectedTags.filter(t => t !== tag));
     };
-    
+    const isMeme = true;
+
   return (
     <div className="relative flex items-center justify-between w-full h-20 px-4 md:px-8 border-b bg-white">
       {/* LEFT SIDE: Menu Button + Desktop Links */}
@@ -196,7 +197,7 @@ export function NavbarSearch({
 
         {/* Always show user hover card (mobile shows initials) */}
         <div>
-          <UserHoverCard />
+          <UserHoverCard meme={isMeme}/>
         </div>
       </div>
 

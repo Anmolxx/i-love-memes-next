@@ -6,6 +6,7 @@ import { iLoveMemesApi } from "./services";
 import authSliceReducer from "./slices/auth/index";
 import authModalReducer from "./slices/authModal/index"
 import templateReducer from "./slices/template/index"
+
 export const store = configureStore({
   reducer: {
     auth: authSliceReducer,

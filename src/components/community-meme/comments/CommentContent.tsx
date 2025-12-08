@@ -41,7 +41,7 @@ export const CommentContent: React.FC<CommentContentProps> = ({ content }) => {
             href={emailHref}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-green-600 underline hover:text-green-800 transition"
+            className="text-pink-600 underline hover:text-pink-800 transition"
           >
             {matchText}
           </a>

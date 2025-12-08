@@ -358,6 +358,10 @@ function updateOverlay(url) {
 
   document.addEventListener("DOMContentLoaded", () => {
     console.log("[MemeWidget] DOM Ready. Starting init...");
-    init();
+    
+    setTimeout(() => {
+        console.log("[MemeWidget] Delay completed. Initializing now...");
+        init();
+      }, 2000); // 1.5 sec delay
   });
 })();

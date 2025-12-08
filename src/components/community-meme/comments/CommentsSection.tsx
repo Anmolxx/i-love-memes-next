@@ -8,7 +8,7 @@ import { toast } from "sonner";
 import CommentItem from "./CommentItem";
 import ReplyList from "./ReplyList";
 import { useCreateCommentMutation, useUpdateCommentMutation, useDeleteCommentMutation } from "@/redux/services/comment";
-import { CommentEntity } from "@/utils/dtos/comment.dto";
+import { CommentDto, CommentEntity } from "@/utils/dtos/comment.dto";
 
 const COMMENTS_PER_LOAD = 5;
 
@@ -39,6 +39,7 @@ export default function CommentsSection({
   const [newComment, setNewComment] = useState("");
   const [visibleCommentCount, setVisibleCommentCount] = useState(COMMENTS_PER_LOAD);
   const [showingReplies, setShowingReplies] = useState(new Set<string>());
+  const [newlyCreatedReply, setNewlyCreatedReply] = useState<CommentEntity | null>(null);
 
   const [createCommentApi] = useCreateCommentMutation();
   const [updateCommentApi] = useUpdateCommentMutation();
@@ -58,6 +59,12 @@ export default function CommentsSection({
     if (show) newSet.add(commentId);
     else newSet.delete(commentId);
     setShowingReplies(newSet);
+
+    if (!show) {
+      if (newlyCreatedReply && newlyCreatedReply.parentCommentId === commentId) {
+        setNewlyCreatedReply(null);
+      }
+    }
   };
 
   const handleTopLevelSubmit = async () => {
@@ -93,11 +100,13 @@ export default function CommentsSection({
 
   const handleReply = async (content: string, parentCommentId: string) => {
     try {
-      await createCommentApi({ content, memeId: MEME_ID, parentCommentId }).unwrap();
+      const newReply = await createCommentApi({ content, memeId: MEME_ID, parentCommentId }).unwrap();
+      setNewlyCreatedReply(newReply);
       toast.success("Reply added successfully");
       handleToggleReplies(parentCommentId, true);
     } catch (err) {
       handleApiError(err);
+      setNewlyCreatedReply(null);
     }
   };
 
@@ -148,6 +157,10 @@ export default function CommentsSection({
                   onReply={handleReply}
                   onToggleReplies={handleToggleReplies}
                   showingReplies={showingReplies}
+                  newLocalReply={
+                    newlyCreatedReply?.parentCommentId === comment.id
+                    ? newlyCreatedReply : null
+                  }
                 />
               </div>
             ))}

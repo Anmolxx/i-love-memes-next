@@ -7,7 +7,7 @@ import { rootCommentsAdapter, repliesAdapter } from "../adapters/commentAdapters
 export const commentsApi = iLoveMemesApi.injectEndpoints({
   endpoints: (builder) => ({
 
-    createComment: builder.mutation<CommentDto & { parent?: CommentDto }, { content: string; memeId: string; parentCommentId?: string }>({
+    createComment: builder.mutation<CommentEntity & { parent?: CommentEntity }, { content: string; memeId: string; parentCommentId?: string }>({
       query: (body) => ({
         url: "/comments",
         method: "POST",
@@ -83,7 +83,7 @@ export const commentsApi = iLoveMemesApi.injectEndpoints({
           const finalLimit = Math.min(requestedLimit, 120);
           return `/comments/memes/${slugOrId}?page=${page}&limit=${finalLimit}&sortOptions=${sortOptions}`;
         },
-        transformResponse: (response: { items: CommentDto[] }) => {
+        transformResponse: (response: { items: CommentEntity[] }) => {
           const comments: CommentEntity[] = (response.items ?? []).map((c) => ({
             ...c,
             parentId: null,
@@ -107,7 +107,7 @@ export const commentsApi = iLoveMemesApi.injectEndpoints({
     >({
       query: ({ parentCommentId, page = 1, limit }) =>
         `/comments/${parentCommentId}/replies?page=${page}&limit=${limit}`,
-      transformResponse: (response: { items: CommentDto[] }, meta, { parentCommentId }) => {
+      transformResponse: (response: { items: CommentEntity[] }, meta, { parentCommentId }) => {
         const replies = (response.items ?? []).map((r) => ({
           ...r,
           parentId: parentCommentId,

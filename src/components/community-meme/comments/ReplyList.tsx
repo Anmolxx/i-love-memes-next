@@ -63,7 +63,7 @@ const ReplyList: React.FC<ReplyListProps> = ({
     } else if (allReplies.length > 0) {
       setReplyCount(allReplies.length);
     }
-  }, [allReplies.length, newLocalReply, initialReplyCount]);
+  }, [allReplies.length, newLocalReply, initialReplyCount, replyCount ]);
 
   useEffect(() => {
     if (isShowing) {
@@ -74,7 +74,7 @@ const ReplyList: React.FC<ReplyListProps> = ({
       }
     }
     prevAllRepliesLengthRef.current = currentAllRepliesLength;
-  }, [currentAllRepliesLength, isShowing, pageSize]);
+  }, [currentAllRepliesLength, isShowing, pageSize, visibleCount]);
 
   const loadMore = () => {
     const newVisibleCount = visibleCount + pageSize;

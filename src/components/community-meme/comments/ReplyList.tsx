@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { CommentEntity } from "@/utils/dtos/comment.dto";
 import { useGetCommentRepliesQuery } from "@/redux/services/comment";
 import { Loader2 } from "lucide-react";
@@ -20,35 +20,53 @@ const ReplyList: React.FC<ReplyListProps> = ({
   onToggleReplies,
   showingReplies,
   initialReplyCount,
+  pageSize = 5,
 }) => {
   const isShowing = showingReplies.has(parentCommentId);
-  const [page, setPage] = useState(1);
+  const [batchPage, setBatchPage] = useState(1);
+  const [visibleCount, setVisibleCount] = useState(0);
+  const BATCH_LIMIT = 50;
+  const MAX_REPLIES = 120;
 
-  const { data: repliesData, isLoading, isFetching } = useGetCommentRepliesQuery(
-    { parentCommentId, page },
-    {
-      skip:!isShowing,
-      selectFromResult: ({ data, isLoading, isFetching }) => {
-        const repliesArr = data ? Object.values(data.entities).filter(Boolean) : [];
-        return {
-          data: repliesArr.sort(
-            (a, b) => new Date(a!.createdAt).getTime() - new Date(b!.createdAt).getTime()
-          ) as CommentEntity[],
-          isLoading,
-          isFetching,
-        };
-      },
-    }
+  const { data: batchData, isLoading, isFetching } = useGetCommentRepliesQuery(
+    { parentCommentId, page: batchPage, limit: BATCH_LIMIT },
+    { skip: !isShowing }
   );
 
-  const directReplies: CommentEntity[] = repliesData || [];
+  const allReplies = batchData
+    ? Object.values(batchData.entities).filter(Boolean) as CommentEntity[]
+    : [];
+
   const showLoading = isLoading || isFetching;
 
-  const loadMoreReplies = () => setPage((prev) => prev + 1);
+  useEffect(() => {
+    if (isShowing && visibleCount === 0 && allReplies.length > 0) {
+      setVisibleCount(Math.min(pageSize, allReplies.length));
+    }
+  }, [allReplies.length, isShowing, pageSize, visibleCount]);
+
+  const loadMore = () => {
+    if (visibleCount < allReplies.length && visibleCount < MAX_REPLIES) {
+      setVisibleCount((prev) => prev + pageSize);
+    } else if (allReplies.length < MAX_REPLIES && batchData && batchData.ids.length === BATCH_LIMIT) {
+      setBatchPage((prev) => prev + 1);
+    }
+  };
+
+  const handleToggleReplies = (show: boolean) => {
+    onToggleReplies(parentCommentId, show);
+    if (!show) {
+      setVisibleCount(0);
+      setBatchPage(1);
+    }
+  };
+
+  const displayedReplies = allReplies.slice(0, visibleCount);
+  const hasMore = visibleCount > 0 && visibleCount < allReplies.length && displayedReplies.length < MAX_REPLIES;
 
   return (
     <div className="flex flex-col mt-2">
-      {initialReplyCount > 0 && !isShowing && (
+      {!isShowing && initialReplyCount > 0 && (
         <Button
           variant="link"
           size="sm"
@@ -66,41 +84,37 @@ const ReplyList: React.FC<ReplyListProps> = ({
         </div>
       )}
 
-      {isShowing &&
-        directReplies.map((reply) => (
-          <CommentItem
-            key={reply.id}
-            comment={reply}
-            isLoggedIn={isLoggedIn}
-            onDelete={onDelete}
-            onUpdate={onUpdate}
-            onReply={onReply}
-            onToggleReplies={onToggleReplies}
-            showingReplies={showingReplies}
-          />
-        ))}
-{/* 
-      {isShowing && directReplies.length === pageSize && (
+      {displayedReplies.map((reply) => (
+        <CommentItem
+          key={reply.id}
+          comment={reply}
+          isLoggedIn={isLoggedIn}
+          onDelete={onDelete}
+          onUpdate={onUpdate}
+          onReply={onReply}
+          onToggleReplies={onToggleReplies}
+          showingReplies={showingReplies}
+        />
+      ))}
+
+      {isShowing && hasMore && (
         <Button
           variant="link"
           size="sm"
           className="text-sm text-blue-600 hover:text-blue-800 p-0 h-auto self-start pl-11 mt-1"
-          onClick={loadMoreReplies}
+          onClick={loadMore}
           disabled={showLoading}
         >
           {showLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : "Load more replies"}
         </Button>
-      )} */}
+      )}
 
-      {isShowing && directReplies.length > 0 && (
+      {isShowing && displayedReplies.length > 0 && (
         <Button
           variant="link"
           size="sm"
           className="text-sm text-gray-600 hover:text-gray-800 p-0 h-auto self-start pl-11 mt-1"
-          onClick={() => {
-            onToggleReplies(parentCommentId, false);
-            setPage(1);
-          }}
+          onClick={() => handleToggleReplies(false)}
         >
           Hide Replies
         </Button>

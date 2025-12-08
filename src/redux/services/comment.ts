@@ -49,7 +49,7 @@ export const commentsApi = iLoveMemesApi.injectEndpoints({
      DeleteCommentResponse, 
      { 
        id: string; 
-       parentCommentId?: string; 
+       parentId?: string; 
        memeId: string; 
      }
    >({
@@ -58,13 +58,13 @@ export const commentsApi = iLoveMemesApi.injectEndpoints({
        method: "DELETE",
        responseHandler: async (res) => (res.status === 204 ? { success: true } : res.json()),
      }),
-     invalidatesTags: (result, error, { parentCommentId, memeId }) => {
+     invalidatesTags: (result, error, { parentId, memeId }) => {
        const tagsToInvalidate = [];
-       if (!parentCommentId) {
-         tagsToInvalidate.push({ type: TAG_GET_COMMENTS, id: memeId });
+       if (parentId) {
+         tagsToInvalidate.push({ type: TAG_COMMENT_REPLIES, id: parentId });
        } 
        else {
-         tagsToInvalidate.push({ type: TAG_COMMENT_REPLIES, id: parentCommentId });
+         tagsToInvalidate.push({ type: TAG_GET_COMMENTS, id: memeId });
        }
        return tagsToInvalidate;
      },
@@ -101,10 +101,14 @@ export const commentsApi = iLoveMemesApi.injectEndpoints({
         ],
     }),
     
-    getCommentReplies: builder.query<EntityState<CommentEntity, string>, { parentCommentId: string; page?: number; limit?: number }>({
-      query: ({ parentCommentId, page = 1, limit = 5 }) => `/comments/${parentCommentId}/replies?page=${page}&limit=${limit}`,
+    getCommentReplies: builder.query<
+      EntityState<CommentEntity, string>,
+      { parentCommentId: string; page?: number; limit?: number }
+    >({
+      query: ({ parentCommentId, page = 1, limit }) =>
+        `/comments/${parentCommentId}/replies?page=${page}&limit=${limit}`,
       transformResponse: (response: { items: CommentDto[] }, meta, { parentCommentId }) => {
-        const replies: CommentEntity[] = (response.items ?? []).map((r) => ({
+        const replies = (response.items ?? []).map((r) => ({
           ...r,
           parentId: parentCommentId,
           replyIds: [],
@@ -113,12 +117,15 @@ export const commentsApi = iLoveMemesApi.injectEndpoints({
         }));
         return repliesAdapter.setAll(repliesAdapter.getInitialState(), replies);
       },
-      serializeQueryArgs: ({ queryArgs }) => queryArgs.parentCommentId,
+      serializeQueryArgs: ({ queryArgs }) =>
+        `${queryArgs.parentCommentId}-${queryArgs.page}-${queryArgs.limit}`,   
       merge: (currentCache, newItems) => {
         repliesAdapter.setMany(currentCache, newItems.entities);
         currentCache.ids = [...currentCache.ids, ...newItems.ids];
       },
-      providesTags: (result, error, { parentCommentId }) => [{ type: TAG_COMMENT_REPLIES, id: parentCommentId }],
+      providesTags: (result, error, { parentCommentId }) => [
+        { type: TAG_COMMENT_REPLIES, id: parentCommentId },
+      ],
     }),
   }),
   overrideExisting: true,

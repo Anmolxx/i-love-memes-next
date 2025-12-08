@@ -72,9 +72,9 @@ export default function CommentsSection({
     }
   };
 
-  const handleDelete = async (commentId: string, parentCommentId?: string) => {
+  const handleDelete = async (commentId: string, parentId?: string) => {
     try {
-      await deleteCommentApi({ id: commentId, parentCommentId, memeId:MEME_ID }).unwrap();
+      await deleteCommentApi({ id: commentId, parentId, memeId:MEME_ID }).unwrap();
       toast.success("Comment deleted successfully");
     } catch (err) {
       handleApiError(err);
@@ -106,7 +106,7 @@ export default function CommentsSection({
   },[comments.length]);
   
   return (
-    <div className="flex flex-col gap-4 bg-white p-6 rounded-xl shadow-lg border border-gray-200 w-full h-full">
+    <div className="flex flex-col gap-4 bg-white p-10 rounded-xl shadow-lg border border-gray-200 w-full h-full">
       <div className="flex-1 overflow-auto pr-2 pb-2">
         {comments.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full text-center text-gray-500 p-6">

@@ -115,7 +115,7 @@ const CommentItem: React.FC<CommentItemProps> = ({
         <div className="absolute top-0 left-4 w-[2px] h-full bg-gray-300 rounded-full"></div>
       )}
 
-      <div className="p-3 bg-white rounded-lg border border-gray-100 shadow-sm relative z-10">
+      <div className={`p-3 bg-white rounded-lg border border-gray-100 shadow-sm relative z-10 ${comment.parentCommentId? "mb-2 mt-2":""}`}>
         
         {isLoggedIn && isOwner && (
           <div className="absolute top-3 right-3 z-20">
@@ -172,7 +172,7 @@ const CommentItem: React.FC<CommentItemProps> = ({
               onClick={handleEditSubmit} 
               disabled={!editingContent.trim()} 
               size="icon" 
-              className="bg-green-500 hover:bg-green-600"
+              className="bg-green-500 hover:bg-green-600 cursor-pointer"
               title="Save Edit"
             >
               <CircleCheck className="w-4 h-4" />
@@ -181,9 +181,10 @@ const CommentItem: React.FC<CommentItemProps> = ({
               variant="outline" 
               size="icon" 
               onClick={handleCancelEdit}
+              className="bg-red-500 hover:bg-red-600 cursor-pointer"
               title="Cancel Edit"
             >
-              <CircleX className="w-4 h-4 text-red-500" />
+              <CircleX className="w-4 h-4 text-white" />
             </Button>
           </div>
         ) : (
@@ -193,6 +194,7 @@ const CommentItem: React.FC<CommentItemProps> = ({
           
         )}
 
+        {!comment.parentCommentId && (
         <div className="flex gap-4 text-xs mt-1 pl-9">
           <Button
             variant="link"
@@ -207,6 +209,7 @@ const CommentItem: React.FC<CommentItemProps> = ({
             Reply
           </Button>
         </div>
+        )}
 
         {replyingToCommentId === comment.id && isLoggedIn && (
           <div className="flex gap-2 items-start mt-2 pl-9">

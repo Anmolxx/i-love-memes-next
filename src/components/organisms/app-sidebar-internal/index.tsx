@@ -34,7 +34,7 @@ const USER = { name: "shadcn", email: "m@example.com", avatar: "/avatars/demo.pn
 export default function AppSidebar() {
   const pathname = usePathname();
   const { state, setOpenMobile } = useSidebar();
-  const { user, isAdmin } = useAuthentication(); // ✅ from your auth hook
+  const { user, isAdmin } = useAuthentication(); 
 
   const isOpen = state === "expanded";
   const toggleSidebar = () => {

@@ -1,13 +1,13 @@
 import { ChevronLeftIcon, ChevronRightIcon, ChevronsLeftIcon, ChevronsRightIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-interface CommunityPaginationProps {
+interface PaginationProps {
   page: number;
   pageCount: number;
   onPageChange: (newPage: number) => void;
 }
 
-export function CommunityPagination({ page, pageCount, onPageChange }: CommunityPaginationProps) {
+export function Pagination({ page, pageCount, onPageChange }: PaginationProps) {
   return (
     <div className="flex items-center justify-center space-x-2 ">
       {/* Go to First Page */}

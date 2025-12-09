@@ -149,7 +149,7 @@ export function adminMemeColumns(): ColumnDef<Meme>[] {
                "text-xs px-2 py-1.5 rounded-lg font-medium dark:bg-[#28282B] dark:text-white border dark:border-gray-200 border-gray-900 bg-gray-200";
              return hasName ? (
                <Link
-                 key={tag.id}
+                 key={tag.slug}
                  href={`/community/?tags=${tag.name}`}
                  target="_blank"
                  className="hover:opacity-80 transition-opacity"
@@ -176,7 +176,7 @@ export function adminMemeColumns(): ColumnDef<Meme>[] {
                       const hasName = tag.name && tag.name.length > 0;
 
                       return hasName ? (
-                        <Link key={tag.id}
+                        <Link key={tag.slug}
                             href={`/community/?tags=${tag.name}`}
                             target="_blank"
                             className="hover:opacity-80 transition-opacity py-2"

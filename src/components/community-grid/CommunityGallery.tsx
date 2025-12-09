@@ -12,7 +12,7 @@ import { NavbarSearch } from "./NavbarSearch";
 import { MemeCard } from "./MemeCard";
 import { TopMemeSidebar } from "./TopMemeSidebar";
 import { FlagDialog } from "./FlagDialog";
-import { CommunityPagination } from "@/components/data-table/data-table-community-gallery-pagination";
+import { Pagination } from "@/components/ui/extension/Pagination";
 import { TagSelector } from "./TagsSelector";
 import { Meme } from "@/utils/dtos/meme.dto";
 import { Footer } from "@/sections/Footer";
@@ -350,7 +350,7 @@ export default function CommunityGallery(): JSX.Element {
         {/* Pagination */}
         {memes.length > 0 && (
           <div className="bg-white/70 z-0 p-2 relative mt-0 mb-4">
-            <CommunityPagination
+            <Pagination
               page={currentPage}
               pageCount={data?.meta?.totalPages ?? 0}
               onPageChange={handlePageChange}

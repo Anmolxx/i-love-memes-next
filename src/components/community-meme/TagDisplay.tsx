@@ -9,6 +9,7 @@ import {
 
 interface Tag {
   id: string;
+  slug: string;
   name: string;
   deletedAt: string | null;
 }
@@ -23,9 +24,9 @@ export default function TagDisplay({ displayedTags, hiddenTags }: TagDisplayProp
     <TooltipProvider>
       <div className="flex flex-wrap items-center gap-2 mt-2 relative">
 
-        {displayedTags.map((tag, index) => (
+        {displayedTags.map((tag) => (
           <Link
-            key={`${tag.id}-${index}`}
+            key={tag.slug}
             href={`/community/?tags=${tag.name}`}
             target="_blank"
             className="text-sm bg-purple-100 text-purple-800 px-6 py-1 rounded-xl font-medium hover:bg-purple-200 transition"
@@ -49,8 +50,8 @@ export default function TagDisplay({ displayedTags, hiddenTags }: TagDisplayProp
               className="bg-white text-black shadow-lg p-2 rounded-md border border-gray-200"
             >
               <div className="flex flex-wrap gap-2 max-w-[200px]">
-                {hiddenTags.map((tag, index) => {
-                  const key = `${tag.id}-hidden-${index}`;
+                {hiddenTags.map((tag) => {
+                  const key = `${tag.slug}`;
                   const hasName = tag.name && tag.name.length > 0;
 
                   return hasName ? (

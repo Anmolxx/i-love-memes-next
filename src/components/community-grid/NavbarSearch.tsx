@@ -14,6 +14,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { is } from "zod/v4/locales";
 
 
 interface NavbarSearchProps {
@@ -47,6 +48,8 @@ export function NavbarSearch({
   };
 
   const showReset = searchQuery.length > 0 || selectedTags.length > 0;
+  const isCommunity = true;
+  const isTop = true;
 
   const links = [
         { id: 1, label: "Home", href: "/" },
@@ -160,6 +163,7 @@ export function NavbarSearch({
             selectedTags={selectedTags}
             setSelectedTags={setSelectedTags}
             className="h-10"
+            isLeft={isCommunity}
           />
         </div>
         
@@ -267,6 +271,7 @@ export function NavbarSearch({
                 selectedTags={selectedTags}
                 setSelectedTags={setSelectedTags}
                 className="w-full"
+                isTop = {isTop}
              />
           </div>
 

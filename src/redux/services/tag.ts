@@ -2,7 +2,6 @@ import { iLoveMemesApi } from ".";
 import { TAGS_API } from "@/contracts/iLoveMemesApiTags";
 export const tagsApi = iLoveMemesApi.injectEndpoints({
     endpoints: (builder) => ({
-
         getAllTags: builder.query<any, { search?: string; page?: number; limit?: number } | void>({
           query: (params) => {
             const searchParam = params?.search ? `search=${encodeURIComponent(params.search)}` : "";

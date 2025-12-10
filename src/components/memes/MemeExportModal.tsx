@@ -32,6 +32,7 @@ import { Textarea } from "@/components/ui/textarea";
 import useAuthentication from "@/hooks/use-authentication";
 import { DataTableTagFilter } from "@/components/data-table/data-table-tag-filter";
 import { clearTemplateId } from "@/redux/slices/template";
+import { useCreateTagMutation } from "@/redux/services/tag";
 
 interface MemeExportModalProps {
   canvasRef: React.RefObject<Canvas | null>;
@@ -63,6 +64,7 @@ const MemeExportModal: React.FC<MemeExportModalProps> = ({
   const [selectedTags, setSelectedTags] = useState<string[]>([]); 
   const dispatch = useAppDispatch();
   
+  const [createTag] = useCreateTagMutation();
   const memeForm = useForm<MemeFormData>({
     defaultValues: {
       title: "",
@@ -361,13 +363,14 @@ const MemeExportModal: React.FC<MemeExportModalProps> = ({
                 {/* Tag Selection using DataTableTagFilter */}
                 <FormItem>
                   <FormLabel>
-                    Tags { !isAdmin && <span className="text-xs text-muted-foreground">(Max 2)</span> }
+                    Tags { !isAdmin && (<span className="text-xs text-muted-foreground">(Max 2)</span>) }
                   </FormLabel>
                   <FormControl>
                     <DataTableTagFilter
                       selectedTags={selectedTags}
                       setSelectedTags={handleSetSelectedTags} 
                       variant='dialog'
+                      createTagMutation={createTag}
                     />
                   </FormControl>
                   <FormMessage />

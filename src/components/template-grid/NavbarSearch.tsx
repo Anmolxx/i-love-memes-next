@@ -76,6 +76,7 @@ export function NavbarSearch({
         setSelectedTags(selectedTags.filter(t => t !== tag));
     };
     const isTemplate = true;
+    const isTop = true;
 
   return (
     <div className="relative flex items-center justify-between w-full h-20 px-4 md:px-8 border-b bg-white">
@@ -160,6 +161,7 @@ export function NavbarSearch({
             selectedTags={selectedTags}
             setSelectedTags={setSelectedTags}
             className="h-10"
+            isLeft={isTemplate}
           />
         </div>
         
@@ -266,6 +268,7 @@ export function NavbarSearch({
                 selectedTags={selectedTags}
                 setSelectedTags={setSelectedTags}
                 className="w-full"
+                isTop={isTop}
              />
           </div>
 

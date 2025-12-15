@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { ThumbsUp, ThumbsDown, Flag, Share2 } from "lucide-react";
-import { Meme } from "@/utils/dtos/meme.dto"; 
+import { Meme } from "@/utils/types/meme"; 
 import TagDisplay from './TagDisplay'; 
 import { usePostInteractionMutation, useDeleteInteractionMutation } from '@/redux/services/interaction';
 import { toast } from 'sonner';

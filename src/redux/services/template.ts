@@ -1,7 +1,7 @@
 import { TAG_GET_DELETED_TEMPLATES, TAG_GET_TEMPLATES_ADMIN } from "@/contracts/iLoveMemesApiTags";
 import { iLoveMemesApi } from ".";
-import { DeleteTemplateArgs, DeleteTemplateResponse, EmptyResponse, GetTemplatesArgs, GetTemplatesResponse, TemplateMutationArg } from "@/utils/dtos/template.dto";
-import { Template } from "@/utils/dtos/template.dto";
+import { DeleteTemplateArgs, DeleteTemplateResponse, EmptyResponse, GetTemplatesArgs, GetTemplatesResponse, TemplateMutationArg } from "@/utils/types/template";
+import { Template } from "@/utils/types/template";
 
 export const templatesApi = iLoveMemesApi.injectEndpoints({
   endpoints: (builder) => ({

@@ -2,8 +2,8 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { ThumbsUp, ThumbsDown, Flag, Share2 } from "lucide-react";
-import { InteractionType } from "@/utils/dtos/interaction.dto";
-import { Tag } from "@/utils/dtos/tag.dto";
+import { InteractionType } from "@/utils/types/interaction";
+import { Tag } from "@/utils/types/tag";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "../ui/tooltip";
 import { MemeCardSkeleton } from "./skeletons/MemeCardSkeleton"; 
 

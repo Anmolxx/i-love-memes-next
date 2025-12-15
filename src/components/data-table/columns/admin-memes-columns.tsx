@@ -16,7 +16,7 @@ import { ConfirmationDialog } from "@/components/dialog/confirmation-dialog";
 import { EditDialog } from "@/components/dialog/edit-dialog";
 import { useDeleteMemeMutation, usePermanentDeleteMemeMutation, useRestoreMemeMutation, useUpdateMemeMutation } from "@/redux/services/meme";
 import { toast } from "sonner";
-import { Meme } from "@/utils/dtos/meme.dto";
+import { Meme } from "@/utils/types/meme";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Popover, PopoverTrigger } from "@/components/ui/popover";
 import { ImagePopover } from "@/components/ui/extension/image-popover";

@@ -1,6 +1,6 @@
 import { useTypedSelector } from "@/redux/store";
 import useAuthentication from "./use-authentication";
-import { CommentEntity, NestedComment } from "@/utils/dtos/comment.dto";
+import { CommentEntity, NestedComment } from "@/utils/types/comment";
 import { selectReplyEntities, selectCommentRepliesNested } from "@/redux/selectors/commentSelectors";
 
 export const useCommentManagement = (memeId?: string) => {

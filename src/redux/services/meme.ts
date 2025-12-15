@@ -1,7 +1,7 @@
 import { iLoveMemesApi } from ".";
 import { TAG_GET_MEMES, TAG_GET_DELETED_MEMES } from "@/contracts/iLoveMemesApiTags";
-import { GetMemesArgs, GetMemesResponse, DeleteMemeArgs, DeleteMemeResponse, EmptyResponse, MemeMutationArg} from "@/utils/dtos/meme.dto";
-import { Meme } from "@/utils/dtos/meme.dto";
+import { GetMemesArgs, GetMemesResponse, DeleteMemeArgs, DeleteMemeResponse, EmptyResponse, MemeMutationArg} from "@/utils/types/meme";
+import { Meme } from "@/utils/types/meme";
 
 export const memesApi = iLoveMemesApi.injectEndpoints({
   endpoints: (builder) => ({

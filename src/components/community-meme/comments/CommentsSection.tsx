@@ -8,7 +8,7 @@ import { toast } from "sonner";
 import CommentItem from "./CommentItem";
 import ReplyList from "./ReplyList";
 import { useCreateCommentMutation, useUpdateCommentMutation, useDeleteCommentMutation } from "@/redux/services/comment";
-import { CommentDto, CommentEntity } from "@/utils/dtos/comment.dto";
+import { CommentDto, CommentEntity } from "@/utils/types/comment";
 
 const COMMENTS_PER_LOAD = 5;
 

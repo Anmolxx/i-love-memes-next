@@ -15,7 +15,7 @@ import { useCallback, useState } from "react";
 import { ConfirmationDialog } from "@/components/dialog/confirmation-dialog";
 import { useDeleteTemplateMutation, usePermanentDeleteTemplateMutation, useRestoreTemplateMutation } from "@/redux/services/template";
 import { toast } from "sonner";
-import { Template } from "@/utils/dtos/template.dto";
+import { Template } from "@/utils/types/template";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Popover, PopoverTrigger } from "@/components/ui/popover";
 import { ImagePopover } from "@/components/ui/extension/image-popover";

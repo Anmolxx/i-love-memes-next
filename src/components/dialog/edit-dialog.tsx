@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Tag } from "@/utils/dtos/tag.dto";
+import { Tag } from "@/utils/types/tag";
 import { toast } from "sonner";
 import { DataTableTagFilter } from "@/components/data-table/data-table-tag-filter";
 import { useGetAllTagsQuery } from "@/redux/services/tag";

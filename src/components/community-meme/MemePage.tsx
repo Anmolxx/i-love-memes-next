@@ -10,10 +10,10 @@ import {
 } from "@/redux/services/comment";
 import useAuthentication from "@/hooks/use-authentication";
 import { Footer } from "@/sections/Footer";
-import { Meme } from "@/utils/dtos/meme.dto";
+import { Meme } from "@/utils/types/meme";
 import MemeContent from "./MemeContent";
 import FlagMemeDialog from "./FlagMemeDialog";
-import { CommentEntity, CommentSortOptions } from "@/utils/dtos/comment.dto"; 
+import { CommentEntity, CommentSortOptions } from "@/utils/types/comment"; 
 import { CommentActionsProvider } from "@/context/CommentActions";
 import { NavbarSearch } from "../community-grid/NavbarSearch";
 import { TagSelector } from "../community-grid/TagsSelector";

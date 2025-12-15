@@ -9,7 +9,7 @@ import { TagSelector } from "./TagSelector";
 import { useDebounce } from "@/hooks/use-debounce";
 import { useRouter } from "next/navigation";
 import { useSearchParams } from "next/navigation";
-import { Template } from "@/utils/dtos/template.dto";
+import { Template } from "@/utils/types/template";
 import { TemplateGallerySkeleton } from "./TemplateSkeleton"; 
 import { Footer } from "@/sections/Footer";
 import { FooterSkeleton } from "@/sections/skeletons/FooterSkeleton";

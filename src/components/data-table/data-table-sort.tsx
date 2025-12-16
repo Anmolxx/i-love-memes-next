@@ -57,7 +57,7 @@ export function DataTableSort<TOrderBy extends string>({
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
-  const DEFAULT_ORDER_BY = sortableFields[0];
+  const DEFAULT_ORDER_BY = sortableFields[1];
   const DEFAULT_ORDER: "ASC" | "DESC" = "DESC";
 
   const currentOrderBy =

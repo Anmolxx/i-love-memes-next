@@ -53,7 +53,7 @@ function MemesContent() {
   const orderBy: MemeOrderByKey =
     rawOrderBy && VALID_ORDER_BY.includes(rawOrderBy as MemeOrderByKey)
       ? (rawOrderBy as MemeOrderByKey)
-      : "createdAt";
+      : "updatedAt";
 
   const rawOrder = searchParams.get("order");
   const order: SortOrder =
@@ -171,7 +171,7 @@ function MemesContent() {
       interactionType: "", 
       reasons: "",
       reported: false,
-      orderBy: "createdAt",
+      orderBy: "updatedAt",
       order: "DESC", 
     });
     table.resetColumnFilters();

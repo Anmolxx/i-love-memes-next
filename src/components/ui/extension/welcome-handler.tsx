@@ -5,7 +5,7 @@ import useAuthentication from "@/hooks/use-authentication";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
-import { LayoutDashboard, LogOut, LogIn } from "lucide-react"; 
+import { LayoutDashboard, LogOut, LogIn } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useAppDispatch } from "@/redux/store";
 import { logout } from "@/redux/slices/auth";
@@ -28,7 +28,7 @@ export function UserHoverCard({ meme, template }: UserHoverCardProps) {
   if (!mounted) return null;
 
   const handleLoginClick = () => {
-    router.push("/login");
+    router.push("/auth/login");
   };
 
   if (!isLoggedIn) {
@@ -43,8 +43,8 @@ export function UserHoverCard({ meme, template }: UserHoverCardProps) {
             >
               Welcome
             </Button>
-            <LogIn 
-                className="md:hidden h-6 w-6 text-[#4b087e] cursor-pointer" 
+            <LogIn
+                className="md:hidden h-6 w-6 text-[#4b087e] cursor-pointer"
                 onClick={handleLoginClick}
             />
           </div>

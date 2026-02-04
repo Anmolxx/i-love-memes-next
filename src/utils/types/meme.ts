@@ -1,5 +1,5 @@
-import { Tag } from "./tag.dto"
-import { InteractionSummary } from "./interaction.dto";
+import { Tag } from "./tag"
+import { InteractionSummary } from "./interaction";
 
 interface Template {
   id: string;

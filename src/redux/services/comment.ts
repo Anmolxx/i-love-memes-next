@@ -1,6 +1,6 @@
 import { iLoveMemesApi } from ".";
 import { TAG_COMMENT_REPLIES, TAG_GET_COMMENTS } from "@/contracts/iLoveMemesApiTags";
-import { CommentDto, CommentEntity, DeleteCommentResponse, CommentSortOptions } from "@/utils/dtos/comment.dto";
+import { CommentDto, CommentEntity, DeleteCommentResponse, CommentSortOptions } from "@/utils/types/comment";
 import { EntityState } from "@reduxjs/toolkit";
 import { rootCommentsAdapter, repliesAdapter } from "../adapters/commentAdapters";
 

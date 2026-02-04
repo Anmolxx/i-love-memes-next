@@ -17,7 +17,7 @@ import {
 } from "@/components/data-table/data-table-toolbar";
 import { TemplatesTableSkeleton } from "@/components/data-table/skeletons/template-skeleton";
 import { useGetTemplatesQuery, useGetDeletedTemplatesQuery } from "@/redux/services/template";
-import { Template } from "@/utils/dtos/template.dto";
+import { Template } from "@/utils/types/template";
 import { useDebounce } from "@/hooks/use-debounce";
 
 const VALID_ORDER_BY = ["createdAt", "updatedAt", "title"] as const;

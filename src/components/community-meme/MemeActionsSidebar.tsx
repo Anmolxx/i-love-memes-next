@@ -1,7 +1,7 @@
 // src/components/MemePage/MemeActionsSidebar.tsx
 import React from 'react';
 import Link from "next/link";
-import { Meme } from "@/utils/dtos/meme.dto";
+import { Meme } from "@/utils/types/meme";
 
 interface MemeActionsSidebarProps {
   meme: Meme;

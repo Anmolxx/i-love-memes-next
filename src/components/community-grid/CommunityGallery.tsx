@@ -5,16 +5,16 @@ import { useRouter, useSearchParams } from "next/navigation";
 import useAuthentication from "@/hooks/use-authentication";
 import { useGetMemesQuery } from "@/redux/services/meme";
 import { usePostInteractionMutation, useDeleteInteractionMutation } from "@/redux/services/interaction";
-import { InteractionType } from "@/utils/dtos/interaction.dto";
+import { InteractionType } from "@/utils/types/interaction";
 import { toast } from "sonner";
 import { CreateMemeCard } from "./CreateMeme";
 import { NavbarSearch } from "./NavbarSearch";
 import { MemeCard } from "./MemeCard";
 import { TopMemeSidebar } from "./TopMemeSidebar";
 import { FlagDialog } from "./FlagDialog";
-import { CommunityPagination } from "@/components/data-table/data-table-community-gallery-pagination";
+import { Pagination } from "@/components/ui/extension/Pagination";
 import { TagSelector } from "./TagsSelector";
-import { Meme } from "@/utils/dtos/meme.dto";
+import { Meme } from "@/utils/types/meme";
 import { Footer } from "@/sections/Footer";
 import { TopMemeSidebarSkeleton } from "./skeletons/TopMemeSidebarSkeleton";
 import { CreateMemeSkeleton } from "./skeletons/CreateMemeSkeleton";
@@ -350,7 +350,7 @@ export default function CommunityGallery(): JSX.Element {
         {/* Pagination */}
         {memes.length > 0 && (
           <div className="bg-white/70 z-0 p-2 relative mt-0 mb-4">
-            <CommunityPagination
+            <Pagination
               page={currentPage}
               pageCount={data?.meta?.totalPages ?? 0}
               onPageChange={handlePageChange}

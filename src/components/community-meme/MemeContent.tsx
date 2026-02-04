@@ -1,9 +1,9 @@
 import React, { ReactNode } from 'react';
-import { Meme } from "@/utils/dtos/meme.dto";
+import { Meme } from "@/utils/types/meme";
 import MemeCard from './MemeCard';
 import CommentsSection from './comments/CommentsSection';
 import MemeActionsSidebar from './MemeActionsSidebar';
-import { CommentEntity } from "@/utils/dtos/comment.dto";
+import { CommentEntity } from "@/utils/types/comment";
 
 interface MemeContentProps {
   meme: Meme;

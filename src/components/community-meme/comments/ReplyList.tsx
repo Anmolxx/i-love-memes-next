@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { CommentEntity } from "@/utils/dtos/comment.dto";
+import { CommentEntity } from "@/utils/types/comment";
 import { useGetCommentRepliesQuery } from "@/redux/services/comment";
 import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";

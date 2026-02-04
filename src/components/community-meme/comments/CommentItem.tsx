@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { CommentEntity } from "@/utils/dtos/comment.dto";
+import { CommentEntity } from "@/utils/types/comment";
 import {
   Edit,
   Trash2,

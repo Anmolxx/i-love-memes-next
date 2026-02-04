@@ -15,7 +15,7 @@ import { useCallback, useState } from "react";
 import { ConfirmationDialog } from "@/components/dialog/confirmation-dialog";
 import { useDeleteTemplateMutation, usePermanentDeleteTemplateMutation, useRestoreTemplateMutation } from "@/redux/services/template";
 import { toast } from "sonner";
-import { Template } from "@/utils/dtos/template.dto";
+import { Template } from "@/utils/types/template";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Popover, PopoverTrigger } from "@/components/ui/popover";
 import { ImagePopover } from "@/components/ui/extension/image-popover";
@@ -93,7 +93,7 @@ export function adminTemplateColumns(): ColumnDef<Template>[] {
                       "text-xs px-2 py-1.5 rounded-lg font-medium dark:bg-[#28282B] dark:text-white border dark:border-gray-200 border-gray-900 bg-gray-200";
                     return hasName ? (
                       <Link
-                        key={tag.id}
+                        key={tag.slug}
                         href={`/templates/?tags=${tag.name}`}
                         target="_blank"
                         className="hover:opacity-80 transition-opacity"
@@ -118,14 +118,12 @@ export function adminTemplateColumns(): ColumnDef<Template>[] {
                          <div className="flex flex-wrap gap-2 max-w-[200px]">
                            {hiddenTags.map(tag => {
                              const hasName = tag.name && tag.name.length > 0;
-          
                              return hasName ? (
-                               <Link key={tag.id}
+                               <Link key={tag.slug}
                                    href={`/templates/?tags=${tag.name}`}
                                    target="_blank"
                                    className="hover:opacity-80 transition-opacity py-2"
                                  ><span
-                               key={tag.id}
                                className="text-xs px-2 py-1 rounded-lg font-medium border border-transparent bg-gray-200 text-gray-800 dark:bg-black dark:text-white"
                              >#{tag.name}
                              </span></Link>

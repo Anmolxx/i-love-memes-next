@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Check, PlusCircle } from "lucide-react";
+import { Check, PlusCircle, ChevronRight, ListPlus } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -15,10 +15,21 @@ import {
   CommandSeparator,
 } from "@/components/ui/command";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { useForm } from "react-hook-form";
+import { toast } from "sonner";
 import { useGetAllTagsQuery } from "@/redux/services/tag";
 import { useDebounce } from "@/hooks/use-debounce";
+import useAuthentication from "@/hooks/use-authentication";
 
 type TagFilterVariant = 'filter' | 'dialog';
+
+interface NewTagFormData {
+  name: string;
+  category: string;
+  description: string;
+}
 
 interface MemeTag {
   id: string;
@@ -26,22 +37,13 @@ interface MemeTag {
   deletedAt: string | null;
 }
 
-interface GetAllTagsResponse {
-  items: MemeTag[];
-  meta: { totalItems: number; totalPages: number; currentPage: number; limit: number };
-  success: boolean;
-  message: string;
-}
-
-interface TagOption {
-  value: string;
-  label: string;
-}
-
 interface DataTableTagFilterProps extends React.HTMLAttributes<HTMLButtonElement>{
   selectedTags?: string[];
   setSelectedTags?: (tags: string[]) => void;
   variant?: TagFilterVariant;
+  createTagMutation?: (body: any) => any;
+  isLeft?: boolean;
+  isTop?: boolean;
 }
 
 export function DataTableTagFilter({
@@ -49,13 +51,17 @@ export function DataTableTagFilter({
   setSelectedTags: setExternalSelectedTags,
   variant = 'filter',
   className,
+  createTagMutation,
+  isLeft = false,
+  isTop = false,
   ...props
 }: DataTableTagFilterProps) {
   const isControlled = !!setExternalSelectedTags;
   
   const [internalSelectedTags, setInternalSelectedTags] = React.useState<string[]>(initialSelectedTags);
-  
+  const [isMainPopoverOpen, setIsMainPopoverOpen] = React.useState(false);
   const tags = isControlled ? initialSelectedTags : internalSelectedTags;
+  const { isLoggedIn, isAdmin } = useAuthentication();
   const setTags = React.useCallback((newTags: string[]) => {
     if (isControlled && setExternalSelectedTags) {
       setExternalSelectedTags(newTags);
@@ -77,7 +83,43 @@ export function DataTableTagFilter({
 
   const [allKnownTags, setAllKnownTags] = React.useState<Map<string, string>>(new Map());
 
-  const availableTags: TagOption[] = React.useMemo(() => {
+  const [isNewTagPopoverOpen, setIsNewTagPopoverOpen] = React.useState(false);
+
+  const newTagForm = useForm<NewTagFormData>({
+    defaultValues: {
+      name: "",
+      category: "",
+      description: "",
+    },
+  });
+
+  const handleCreateTag = newTagForm.handleSubmit(async (data) => {
+    if (!createTagMutation) {
+      toast.error("Tag creation service not available.");
+      return;
+    }
+
+    try {
+      const postBody = {
+        name: data.name.trim(),
+        category: data.category.trim(),
+        description: data.description.trim(),
+        status: "ACTIVE",
+      };
+
+      await createTagMutation(postBody).unwrap();
+      
+      toast.success(`Tag "${data.name}" created successfully!`);
+      setIsNewTagPopoverOpen(false);
+      newTagForm.reset();
+
+    } catch (error: any) {
+      console.error("Error creating tag:", error);
+      toast.error(error.data?.message || "Failed to create tag. Please try again.");
+    }
+  });
+
+  const availableTags: { value: string; label: string }[] = React.useMemo(() => {
     if (!tagsData?.items) return [];
     return tagsData.items.map((tag: MemeTag) => ({
       value: tag.name,
@@ -105,11 +147,11 @@ export function DataTableTagFilter({
   }, [tagsData]);
 
   const allDisplayTags = React.useMemo(() => {
-    const combinedTags = new Map<string, TagOption>();
+    const combinedTags = new Map<string, { value: string; label: string }>();
     selectedTagOptions.forEach(tag => combinedTags.set(tag.value, tag));
     availableTags.forEach(tag => {
         if (!combinedTags.has(tag.value)) {
-            combinedTags.set(tag.value, tag);
+          combinedTags.set(tag.value, tag);
         }
     });
     return Array.from(combinedTags.values());
@@ -125,7 +167,7 @@ export function DataTableTagFilter({
     }
 
   return (
-    <Popover>
+    <Popover open={isMainPopoverOpen} onOpenChange={setIsMainPopoverOpen}>
       <PopoverTrigger asChild>
         <Button variant="outline" size="sm" 
         className={cn("h-8 border-dashed cursor-pointer", className,
@@ -160,8 +202,8 @@ export function DataTableTagFilter({
         </Button>
       </PopoverTrigger>
 
-      <PopoverContent className="w-[200px] p-0" align="start">
-        <Command>
+      <PopoverContent className="w-[200px] p-0 flex flex-col" align="start">
+        <Command className="flex-grow">
           <CommandInput
             placeholder="Search tags..."
             value={search}
@@ -176,13 +218,13 @@ export function DataTableTagFilter({
                 return (
                   <CommandItem
                     key={tag.value}
-                    value={tag.label} 
+                    value={tag.label}
                     onSelect={() => {
                       const newTags = isSelected
                         ? tags.filter((t) => t !== tag.value)
                         : [...tags, tag.value];
                       setTags(newTags);
-                      setSearch(""); 
+                      setSearch("");
                     }}
                   >
                     <div
@@ -216,6 +258,85 @@ export function DataTableTagFilter({
             )}
           </CommandList>
         </Command>
+        
+        {/* The 'Add Tag' component is moved OUTSIDE the Command component */}
+        {isAdmin && (
+            <div className="p-1 border-t">
+              <Popover open={isNewTagPopoverOpen} onOpenChange={setIsNewTagPopoverOpen}>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="w-full justify-start h-8 text-sm"
+                    onClick={() => {
+                        setIsNewTagPopoverOpen(true);
+                        setIsMainPopoverOpen(true); 
+                    }}
+                  >
+                    <ListPlus className="mr-2 h-4 w-4" />
+                    <span className="flex items-center justify-between w-full">
+                      Add Tag
+                      <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                    </span>
+                  </Button>
+                </PopoverTrigger>
+
+              <PopoverContent
+                className={cn(
+                  "p-3 absolute w-[250px] shadow-lg border bg-popover z-50",
+                  isTop ? "top-10" : "-top-70",
+                  isLeft
+                    ? "right-[calc(100%+8px)]" 
+                    : isTop ? "left-[calc(100%-200px)]" : "left-[calc(100%+8px)]"  
+                )}
+                align="start"
+                side={isLeft ? "left" : "right"}   
+                sideOffset={6}
+              >
+                  <form onSubmit={handleCreateTag} className="space-y-3">
+                    <h4 className="text-sm font-semibold mb-2">Create New Tag</h4>
+                    
+                    <div className="space-y-1">
+                      <label className="text-xs font-medium">Tag Name</label>
+                      <Input
+                        {...newTagForm.register("name", { required: true, maxLength: 50 })}
+                        placeholder="e.g., Funny Cat"
+                        autoFocus
+                        className="h-8"
+                      />
+                    </div>
+
+                    <div className="space-y-1">
+                      <label className="text-xs font-medium">Category</label>
+                      <Input
+                        {...newTagForm.register("category", { required: true, maxLength: 50 })}
+                        placeholder="e.g., humor"
+                        className="h-8"
+                      />
+                    </div>
+
+                    <div className="space-y-1">
+                      <label className="text-xs font-medium">Description</label>
+                      <Textarea
+                        {...newTagForm.register("description", { maxLength: 255 })}
+                        placeholder="Tags related to funny cat memes"
+                        rows={2}
+                      />
+                    </div>
+                    
+                    <Button 
+                      type="submit" 
+                      size="sm" 
+                      className="w-full"
+                      disabled={!newTagForm.formState.isValid || newTagForm.formState.isSubmitting}
+                    >
+                      {newTagForm.formState.isSubmitting ? "Creating..." : "Create Tag"}
+                    </Button>
+                  </form>
+                </PopoverContent>
+              </Popover>
+            </div>
+          )}
       </PopoverContent>
     </Popover>
   );

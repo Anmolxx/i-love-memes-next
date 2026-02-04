@@ -1,6 +1,6 @@
 import { createSelector } from '@reduxjs/toolkit';
 import { RootState, useTypedSelector } from '@/redux/store';
-import { CommentEntity, NestedComment } from '@/utils/dtos/comment.dto';
+import { CommentEntity, NestedComment } from '@/utils/types/comment';
 import { repliesAdapter } from '../adapters/commentAdapters';
 
 const selectRepliesState = (state: RootState) =>

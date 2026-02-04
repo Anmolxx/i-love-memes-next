@@ -7,7 +7,7 @@ import { Canvas } from "fabric";
 import { toast } from "sonner";
 import { EditDialog } from "@/components/dialog/edit-dialog";
 import {  useGetTemplateByIdOrSlugQuery, useUpdateTemplateMutation } from "@/redux/services/template";
-import { Template } from "@/utils/dtos/template.dto";
+import { Template } from "@/utils/types/template";
 
 interface UpdateTemplateButtonProps {
   canvasRef: React.RefObject<Canvas | null>;

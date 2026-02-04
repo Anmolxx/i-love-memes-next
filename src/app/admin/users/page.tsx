@@ -18,7 +18,7 @@ import {
     DataTableToolbarFilters,
 } from "@/components/data-table/data-table-toolbar";
 import { useDebounce } from "@/hooks/use-debounce";
-import { User } from "@/utils/dtos/user.dto";
+import { User } from "@/utils/types/user";
 
 type UserOrderBy = "createdAt" | "updatedAt" | "firstName" | "lastName" | "email";
 const VALID_ORDER_BY = ["createdAt", "updatedAt", "firstName", "lastName", "email"] as const;

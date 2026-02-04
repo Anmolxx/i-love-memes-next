@@ -2,8 +2,8 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { ThumbsUp, ThumbsDown, Flag, Share2 } from "lucide-react";
-import { InteractionType } from "@/utils/dtos/interaction.dto";
-import { Tag } from "@/utils/dtos/tag.dto";
+import { InteractionType } from "@/utils/types/interaction";
+import { Tag } from "@/utils/types/tag";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "../ui/tooltip";
 import { MemeCardSkeleton } from "./skeletons/MemeCardSkeleton"; 
 
@@ -141,9 +141,9 @@ export function MemeCard({
         </div>
 
         <div className="flex flex-wrap items-center gap-1">
-          {displayedTags.map((tag, index)=> (
+          {displayedTags.map((tag)=> (
             <span
-              key={`${tag.id}-${index}`}
+              key={tag.slug}
               onClick={() => handleTagClick(tag.name)}
               className="text-sm bg-purple-100 text-purple-800 px-3 py-1 rounded-xl font-medium hover:bg-purple-200 cursor-pointer transition"
             >
@@ -166,7 +166,7 @@ export function MemeCard({
                   <div className="flex flex-wrap gap-2 max-w-[200px]">
                     {hiddenTags.map(tag => (
                       <span
-                        key={tag.id}
+                        key={tag.slug}
                         onClick={() => handleTagClick(tag.name)}
                         className="text-xs px-2 py-1 rounded-lg font-medium border border-transparent bg-gray-200 text-gray-800 cursor-pointer hover:bg-gray-300 transition"
                       >

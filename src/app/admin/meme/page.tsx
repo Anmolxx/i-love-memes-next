@@ -13,7 +13,7 @@ import { useDataTable } from "@/hooks/use-data-table";
 import { useGetMemesQuery, useGetDeletedMemesQuery } from "@/redux/services/meme";
 import { adminMemeColumns } from "@/components/data-table/columns/admin-memes-columns";
 import { CreateMemeDialog } from "@/components/molecules/primary-buttons/creation-primary-buttons/create-meme";
-import { Meme } from "@/utils/dtos/meme.dto";
+import { Meme } from "@/utils/types/meme";
 import { MemesTableSkeleton } from "@/components/data-table/skeletons/meme-skeleton";
 import {
   DataTableToolbar,
@@ -53,7 +53,7 @@ function MemesContent() {
   const orderBy: MemeOrderByKey =
     rawOrderBy && VALID_ORDER_BY.includes(rawOrderBy as MemeOrderByKey)
       ? (rawOrderBy as MemeOrderByKey)
-      : "createdAt";
+      : "updatedAt";
 
   const rawOrder = searchParams.get("order");
   const order: SortOrder =
@@ -171,7 +171,7 @@ function MemesContent() {
       interactionType: "", 
       reasons: "",
       reported: false,
-      orderBy: "createdAt",
+      orderBy: "updatedAt",
       order: "DESC", 
     });
     table.resetColumnFilters();

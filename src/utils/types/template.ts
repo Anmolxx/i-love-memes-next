@@ -1,4 +1,4 @@
-import { Tag } from "./tag.dto";
+import { Tag } from "./tag";
 
 //api-response
 export interface Template{

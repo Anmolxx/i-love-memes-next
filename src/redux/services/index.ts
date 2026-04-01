@@ -1,11 +1,13 @@
 import { I_LOVE_MEMES_API_REDUCER_KEY } from "@/contracts/reduxResourceTags";
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 import { RootState } from "@/redux/store";
-import { TAG_GET_USERS, TAG_GET_TEMPLATES_ADMIN, COMMUNITY_MEMES, TAG_MEME_INTERACTION_SUMMARY, TAGS_API } from "@/contracts/iLoveMemesApiTags";
+import { TAG_GET_USERS, TAG_GET_TEMPLATES_ADMIN, TAG_GET_MEMES, TAG_GET_DELETED_MEMES, TAG_MEME_INTERACTION_SUMMARY, TAGS_API, 
+  TAG_GET_UPLOADED_FILES, TAG_GET_COMMENTS, TAG_COMMENT_REPLIES,
+  TAG_GET_DELETED_TEMPLATES} from "@/contracts/iLoveMemesApiTags";
 
 export const iLoveMemesApi = createApi({
   reducerPath: I_LOVE_MEMES_API_REDUCER_KEY,
-  tagTypes: [TAG_GET_USERS, TAG_GET_TEMPLATES_ADMIN, COMMUNITY_MEMES, TAG_MEME_INTERACTION_SUMMARY, TAGS_API],
+  tagTypes: [TAG_GET_USERS, TAG_GET_TEMPLATES_ADMIN, TAG_GET_MEMES, TAG_GET_DELETED_MEMES,  TAG_GET_DELETED_TEMPLATES, TAG_MEME_INTERACTION_SUMMARY, TAGS_API, TAG_GET_UPLOADED_FILES, TAG_GET_COMMENTS, TAG_COMMENT_REPLIES],
   baseQuery: fetchBaseQuery({
     baseUrl: `${process.env.NEXT_PUBLIC_API_SERVER}/api/v1`,
     credentials: "include",

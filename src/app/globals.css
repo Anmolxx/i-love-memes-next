@@ -129,6 +129,7 @@
   .hide-scrollbar::-webkit-scrollbar {
       display: none;
   }
+
   @keyframes carousel-scroll {
     0% {
       transform: translateX(0);

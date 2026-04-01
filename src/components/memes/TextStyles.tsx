@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useState, useRef, useEffect } from "react";
 import {
   AlignLeft,
@@ -50,24 +52,15 @@ const TextStyles: React.FC<Props> = ({
 
   const [mode, setMode] = useState<"shadow" | "outline">("shadow");
 
-  // Separate states for shadow and outline
-  const [shadowColor, setShadowColor] = useState("#FFD700"); // yellow default
+  const [shadowColor, setShadowColor] = useState("#FFD700");
   const [shadowBlur, setShadowBlur] = useState(2);
   const [shadowOffsetX, setShadowOffsetX] = useState(2);
   const [shadowOffsetY, setShadowOffsetY] = useState(2);
 
-  const [outlineColor, setOutlineColor] = useState("#FF0000"); // red default
+  const [outlineColor, setOutlineColor] = useState("#FF0000");
   const [outlineWidth, setOutlineWidth] = useState(1);
-
-  const [textFields, setTextFields] = useState<{ id: string; text: string }[]>([]);
-
-  useEffect(() => {
-    const newFields = allTextObjects.map(({ id, object }) => ({
-      id,
-      text: object?.text || "",
-    }));
-    setTextFields(newFields);
-  }, [allTextObjects]);
+    
+    // Removed textFields state and related useEffect
 
   useEffect(() => {
     if (!activeTextObject) return;
@@ -82,7 +75,6 @@ const TextStyles: React.FC<Props> = ({
     else if (obj.fontStyle === "italic") setFontStyle("italic");
     else setFontStyle("normal");
 
-    // Load shadow values if exist
     if (obj.shadow) {
       setShadowColor(obj.shadow.color ?? "#FFD700");
       setShadowBlur(obj.shadow.blur ?? 2);
@@ -90,7 +82,6 @@ const TextStyles: React.FC<Props> = ({
       setShadowOffsetY(obj.shadow.offsetY ?? 2);
     }
 
-    // Load outline values if exist
     if (obj.strokeWidth && obj.strokeWidth > 0) {
       setOutlineColor(obj.stroke ?? "#FF0000");
       setOutlineWidth(obj.strokeWidth);
@@ -99,7 +90,6 @@ const TextStyles: React.FC<Props> = ({
     setMode(obj.shadow ? "shadow" : obj.strokeWidth ? "outline" : "shadow");
   }, [activeTextObject]);
 
-  // --- Apply effects to the active object ---
   const updateEffects = () => {
     if (!activeTextObject) return;
 
@@ -119,15 +109,14 @@ const TextStyles: React.FC<Props> = ({
   };
 
   const handleTextChange = (id: string, value: string) => {
-    setTextFields((prev) => prev.map((t) => (t.id === id ? { ...t, text: value } : t)));
-    if (activeTextObject?.id === id) {
-      onTextStyleChange({ text: value });
-    } else {
-      const found = allTextObjects.find((t) => t.id === id);
-      if (found) {
-        found.object.set({ text: value });
-        found.object.canvas?.requestRenderAll();
+    const found = allTextObjects.find((t) => t.id === id);
+
+    if (found) {
+      found.object.set({ text: value });
+      if (activeTextObject?.id === id) {
+        onTextStyleChange({ text: value });
       }
+      found.object.canvas?.requestRenderAll();
     }
   };
 
@@ -168,27 +157,27 @@ const TextStyles: React.FC<Props> = ({
       <Separator />
 
       <div className="space-y-3">
-        {textFields.length === 0 && (
+        {allTextObjects.length === 0 && (
           <div className="text-sm text-gray-500">No text fields yet — press + to add.</div>
         )}
 
-        {textFields.map((field, index) => (
-          <div key={field.id} className="space-y-1">
+        {allTextObjects.map(({ id, object }, index) => (
+          <div key={id} className="space-y-1">
             <Label
               className={`text-sm font-medium ${
-                activeTextObject?.id === field.id ? "text-blue-600" : "text-gray-700"
+                activeTextObject?.id === id ? "text-blue-600" : "text-gray-700"
               }`}
             >
               Text {index + 1}
             </Label>
 
             <Input
-              value={field.text}
-              onChange={(e) => handleTextChange(field.id, e.target.value)}
-              onFocus={() => handleFocusSelect(field.id)}
+              value={object?.text || ""}
+              onChange={(e) => handleTextChange(id, e.target.value)}
+              onFocus={() => handleFocusSelect(id)}
               placeholder="Enter text"
               className={`w-full ${
-                activeTextObject?.id === field.id ? "border-blue-400 bg-blue-50" : "border-gray-200 bg-gray-50"
+                activeTextObject?.id === id ? "border-blue-400 bg-blue-50" : "border-gray-200 bg-gray-50"
               }`}
             />
           </div>
@@ -386,7 +375,7 @@ const TextStyles: React.FC<Props> = ({
                 className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
               />
             </div>
-          </div>
+            </div>
 
           {/* Shadow / Outline sliders */}
           <div className="space-y-3">

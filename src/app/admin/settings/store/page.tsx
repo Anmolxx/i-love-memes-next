@@ -12,8 +12,7 @@ export default function StoreSettingsPage() {
       title="Store"
       desc="This is the store and website settings."
     >
-      <></>
-      {/* <StoreSettingsForm /> */}
+      <h1 className="font-sans">UPCOMING CHANGES TO INTEGRATE TO THE SHOPIFY STORE.</h1>
     </SubSettingsPageLayout>
   )
 }

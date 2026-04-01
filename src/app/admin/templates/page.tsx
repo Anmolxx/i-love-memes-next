@@ -1,70 +1,157 @@
 "use client";
 
-import { useState, useMemo, useEffect, Suspense } from "react";
+import { useMemo, useState, useEffect, Suspense, useCallback } from "react";
 import {
   DashboardHeader,
   DashboardLayout,
   DashboardTitle,
 } from "@/components/layout/dashboard/layout";
-import { DataTablePagination } from "@/components/data-table/data-table-pagination";
 import { DataTable } from "@/components/data-table/data-table";
 import { useDataTable } from "@/hooks/use-data-table";
 import { adminTemplateColumns } from "@/components/data-table/columns/admin-template-columns";
 import { useSearchParams, useRouter } from "next/navigation";
-import { AddTemplateDialog } from "@/components/dialog/add-template";
-import { useGetTemplatesQuery } from "@/redux/services/template"; // ✅ updated hook name
-import { AdminSearchBar } from "@/components/molecules/search-bar/search";
-import { TagSelector } from "@/components/community/TagsSelector";
+import { AddTemplateDialog } from "@/components/molecules/primary-buttons/creation-primary-buttons/add-template";
+import {
+  DataTableToolbar,
+  DataTableToolbarFilters,
+} from "@/components/data-table/data-table-toolbar";
+import { TemplatesTableSkeleton } from "@/components/data-table/skeletons/template-skeleton";
+import { useGetTemplatesQuery, useGetDeletedTemplatesQuery } from "@/redux/services/template";
+import { Template } from "@/utils/types/template";
+import { useDebounce } from "@/hooks/use-debounce";
+
+const VALID_ORDER_BY = ["createdAt", "updatedAt", "title"] as const;
+type TemplateOrderBy = typeof VALID_ORDER_BY[number];
+type SortOrder = "ASC" | "DESC";
 
 function TemplatesContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
+  const page = Number(searchParams.get("page") ?? "1");
+  const tags = searchParams.getAll("tags");
+  const rawLimit = Number(searchParams.get("limit") ?? "10");
+  const limit = rawLimit > 50 ? 10 : rawLimit;
+  const initialSearch = searchParams.get("search") ?? "";
 
-  // --- Extract URL params ---
-  const per_page = parseInt(searchParams.get("per_page") ?? "10");
-  const page = parseInt(searchParams.get("page") ?? "1");
-  const searchFromUrl = searchParams.get("search") ?? "";
+  const rawOrderBy = searchParams.get("orderBy") as TemplateOrderBy | null;
+  const orderBy: TemplateOrderBy =
+    rawOrderBy && VALID_ORDER_BY.includes(rawOrderBy)
+      ? rawOrderBy
+      : "createdAt";
 
-  // --- Local States ---
-  const [searchQuery, setSearchQuery] = useState(searchFromUrl);
-  const [debouncedSearch, setDebouncedSearch] = useState(searchQuery);
-  const [selectedTags, setSelectedTags] = useState<string[]>([]);
-  const [availableTags, setAvailableTags] = useState<string[]>([]);
+  const rawOrder = searchParams.get("order");
+  const order: SortOrder =
+    rawOrder === "ASC" || rawOrder === "DESC" ? rawOrder : "DESC";
 
-  // --- Debounce search ---
-  useEffect(() => {
-    const handler = setTimeout(() => setDebouncedSearch(searchQuery), 600);
-    return () => clearTimeout(handler);
-  }, [searchQuery]);
+  const [searchQuery, setSearchQuery] = useState(initialSearch);
+  const debouncedSearch = useDebounce(searchQuery, 600);
+  const [showDeleted, setShowDeleted] = useState<boolean>(false);
 
-  // --- Update URL when search or pagination changes ---
-  useEffect(() => {
-    const params = new URLSearchParams();
-    params.set("page", page.toString());
-    params.set("per_page", per_page.toString());
-    if (debouncedSearch) params.set("search", debouncedSearch);
-    if (selectedTags.length) params.set("tags", selectedTags.join(","));
-    router.push(`?${params.toString()}`);
-  }, [debouncedSearch, selectedTags, page, per_page, router]);
+  const updateUrl = useCallback(
+    (
+    newParams: Partial<{
+      page: number;
+      limit: number;
+      search: string;
+      tags: string[];
+      orderBy: TemplateOrderBy;
+      order: SortOrder;
+    }>,
+    resetPage = true
+  ) => {
+    const params = new URLSearchParams(searchParams.toString());
+    if (resetPage) params.set("page", "1");
 
-  // --- API Query ---
-  const { data, isFetching } = useGetTemplatesQuery({
+    Object.entries(newParams).forEach(([key, value]) => {
+      if (
+        value === undefined ||
+        value === null ||
+        value === "" ||
+        (Array.isArray(value) && value.length === 0)
+      ) {
+        params.delete(key);
+      }  else if (Array.isArray(value)) {
+        params.delete(key);
+        value.forEach((v) => params.append(key, v as string));
+      } else {
+        params.set(key, String(value));
+      }
+    });
+
+    router.replace(`?${params.toString()}`, { scroll: false });
+  }, [searchParams, router]
+)
+
+useEffect(() => {
+  if (debouncedSearch !== initialSearch) {
+    updateUrl({ search: debouncedSearch });
+  }
+}, [debouncedSearch, initialSearch, updateUrl]);
+
+  const queryArgs = {
     page,
-    limit: per_page,
-    orderBy: "createdAt",
-    search: debouncedSearch,
-  });
+    limit,
+    search: debouncedSearch || undefined,
+    tags: tags.length ? tags : undefined,
+    orderBy,
+    order,
+  };
 
-  // --- Data & Table setup ---
+  const { data: activeData, isLoading } = useGetTemplatesQuery(queryArgs, {
+        skip: showDeleted, 
+    });
+    const { data: deletedData } = useGetDeletedTemplatesQuery(queryArgs, {
+        skip: !showDeleted, 
+    });
+    const data = showDeleted ? deletedData : activeData;
+  
   const tableData = data?.items ?? [];
   const pageCount = data?.meta?.totalPages ?? 0;
-  const tableColumns = useMemo(() => adminTemplateColumns(), []);
+  const columns = useMemo(() => adminTemplateColumns(), []);
   const { table } = useDataTable({
     data: tableData,
-    columns: tableColumns,
-    defaultPerPage: per_page,
-    pageCount: pageCount,
+    columns,
+    defaultPerPage: limit,
+    pageCount,
   });
+
+  const handleReset = useCallback(() => {
+      setSearchQuery("");
+      updateUrl({
+        page: 1, 
+        search: "",
+        tags: [],
+        orderBy: "createdAt",
+        order: "DESC", 
+      });
+      table.resetColumnFilters();
+    },[table, updateUrl]);
+  
+    const toggleDeletedView = useCallback(() => {
+      setShowDeleted(prev => !prev);
+      handleReset(); 
+    }, [handleReset]);
+
+  const filters: DataTableToolbarFilters[] = [];
+
+  const TemplateToolbar = (
+    <DataTableToolbar<Template, TemplateOrderBy>
+      table={table}
+      searchPlaceholder="Filter Templates"
+      filters={filters}
+      serverSearchQuery={searchQuery}
+      setServerSearchQuery={setSearchQuery}
+      selectedTags={tags}
+      setSelectedTags={(newTags) => updateUrl({ tags: newTags })}
+      order={order}
+      setOrder={(o) => updateUrl({ order: o })}
+      orderBy={orderBy}
+      setOrderBy={(ob) => updateUrl({ orderBy: ob })}
+      sortableFields={VALID_ORDER_BY}
+      showDeleted={showDeleted}
+      toggleDeletedView={toggleDeletedView}
+    />
+  );
 
   return (
     <DashboardLayout>
@@ -73,26 +160,17 @@ function TemplatesContent() {
           title="Templates"
           description="Manage all your meme templates here."
         />
-
-        {/* --- Search & Actions --- */}
-        <div className="flex items-center gap-3 ml-auto mt-2">
-          <AdminSearchBar
-            searchQuery={searchQuery}
-            setSearchQuery={setSearchQuery}
-            handleSearch={() => {}}
-            isFetching={isFetching}
-            selectedTags={selectedTags}
-            setSelectedTags={setSelectedTags}
-            availableTags={availableTags}
-            inputWidth="w-80"
-          />
-          <TagSelector setAvailableTags={setAvailableTags} />
-          <AddTemplateDialog />
-        </div>
+        <AddTemplateDialog />
       </DashboardHeader>
 
-      <DataTable table={table} />
-      <DataTablePagination table={table} />
+      {isLoading ? (
+        <TemplatesTableSkeleton/>
+      ) : (
+        <>
+          <div className="mb-6">{TemplateToolbar}</div>
+          <DataTable table={table} />
+        </>
+      )}
     </DashboardLayout>
   );
 }

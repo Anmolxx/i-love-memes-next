@@ -18,13 +18,14 @@ import { NavUser } from "./nav-user";
 import { usePathname } from "next/navigation";
 import { isActivePath } from "@/lib/utils";
 import Link from "next/link";
-import useAuthentication from "@/hooks/use-authentication"; 
+import useAuthentication from "@/hooks/use-authentication";
 
 // Sidebar base links (visible to all)
 const SIDEBAR_LINKS = [
   { title: "Home", url: "/", icon: Home },
   { title: "Community", url: "/community", icon: Users },
-  { title: "Templates", url: "/meme", icon: FileText },
+  { title: "Generate Memes", url: "/meme", icon: FileText },
+  { title: "Templates", url: "/templates", icon: FileText },
   { title: "Meme Merch", url: "/meme-merch", icon: ShoppingBag },
 ];
 
@@ -33,7 +34,7 @@ const USER = { name: "shadcn", email: "m@example.com", avatar: "/avatars/demo.pn
 export default function AppSidebar() {
   const pathname = usePathname();
   const { state, setOpenMobile } = useSidebar();
-  const { user, isAdmin } = useAuthentication(); // ✅ from your auth hook
+  const { user, isAdmin } = useAuthentication(); 
 
   const isOpen = state === "expanded";
   const toggleSidebar = () => {

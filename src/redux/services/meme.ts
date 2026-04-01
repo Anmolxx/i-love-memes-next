@@ -1,24 +1,78 @@
 import { iLoveMemesApi } from ".";
-import { COMMUNITY_MEMES } from "@/contracts/iLoveMemesApiTags";
+import { TAG_GET_MEMES, TAG_GET_DELETED_MEMES } from "@/contracts/iLoveMemesApiTags";
+import { GetMemesArgs, GetMemesResponse, DeleteMemeArgs, DeleteMemeResponse, EmptyResponse, MemeMutationArg} from "@/utils/types/meme";
+import { Meme } from "@/utils/types/meme";
+
 export const memesApi = iLoveMemesApi.injectEndpoints({
   endpoints: (builder) => ({
     
-    getMemes: builder.query<any, { page?: number; per_page?: number; search?: string; tags?: string } | void>({
-      query: (params) => {
-        const { page = 1, per_page = 20, search, tags } = params || {};
-        let url = `/memes?page=${page}&limit=${per_page}`;
-        if (search) url += `&search=${encodeURIComponent(search)}`;
-        if (tags) url += `&tags=${encodeURIComponent(tags)}`;
-        return { url, method: "GET" };
+    getMemes: builder.query<
+      GetMemesResponse,
+      GetMemesArgs
+    >({
+      providesTags: [TAG_GET_MEMES],
+      query: (params = {}) => {
+        const { 
+          page = 1, 
+          limit = 10,
+          search, 
+          tags, 
+          order, 
+          orderBy,
+          templateIds,
+          reported,
+          interactionType, 
+          reasons,  
+        } = params;
+    
+        const queryParams = new URLSearchParams();
+    
+        const finalPage = Math.max(1, Math.floor(page));
+        queryParams.set("page", String(finalPage));
+    
+        const MAX_LIMIT = 50;
+        const finalLimit = Math.min(MAX_LIMIT, Math.max(1, Math.floor(limit)));
+        queryParams.set("limit", String(finalLimit));
+    
+        if (search && search.trim().length > 0) {
+          queryParams.set("search", search.trim());
+        }
+    
+        if (tags && tags.length > 0) {
+          tags.forEach(t => queryParams.append("tags", t));
+        }
+    
+        if (orderBy) {
+          queryParams.set("orderBy", orderBy);
+        }
+        if (order) {
+          queryParams.set("order", order);
+        }
+        if (templateIds && templateIds.length > 0) {
+          templateIds.forEach(t => queryParams.append("templateIds", t));
+        }
+        if (reported !== undefined) {
+          queryParams.set("reported", String(reported));
+        }
+        if (interactionType) {
+          queryParams.set("interactionType", interactionType);
+        }
+        if (reasons) {
+          queryParams.set("reasons", reasons);
+        }
+        return { 
+          url: `/memes?${queryParams.toString()}`, 
+          method: "GET" 
+        };
       },
     }),
     
-    getMemeBySlugOrId: builder.query<any, string>({
+    getMemeBySlugOrId: builder.query<{data: Meme}, string>({
+      providesTags: [TAG_GET_MEMES],
         query: (slugOrId) => ({
           url: `/memes/${slugOrId}`,
           method: "GET",
         }),
-        providesTags: [COMMUNITY_MEMES],
       }),
 
     postMeme: builder.mutation<any, any>({
@@ -29,23 +83,97 @@ export const memesApi = iLoveMemesApi.injectEndpoints({
       }),
     }),
 
-    deleteMeme: builder.mutation<any, string>({
+    deleteMeme: builder.mutation<DeleteMemeResponse, DeleteMemeArgs>({
+      invalidatesTags:[TAG_GET_MEMES, TAG_GET_DELETED_MEMES],
       query: (slugOrId) => ({
         url: `/memes/${slugOrId}`,
         method: "DELETE",
       }),
-      invalidatesTags: [{ type: COMMUNITY_MEMES, id: "LIST" }],
     }),
 
     updateMeme: builder.mutation<any, { slugOrId: string; body: Partial<any> }>({
+      invalidatesTags:[TAG_GET_MEMES],
         query: ({ slugOrId, body }) => ({
           url: `/memes/${slugOrId}`,
           method: "PATCH",
           body,
         }),
-        invalidatesTags: [{ type: COMMUNITY_MEMES, id: "LIST" }],
     }),
+
+    getDeletedMemes: builder.query<
+        GetMemesResponse,
+        GetMemesArgs
+      >({
+        providesTags: [TAG_GET_DELETED_MEMES],
+        query: (params = {}) => {
+          const { 
+            page = 1, 
+            limit = 10,
+            search, 
+            tags, 
+            order, 
+            orderBy,
+            reported,
+            interactionType, 
+            reasons,  
+          } = params;
+      
+          const queryParams = new URLSearchParams();
+      
+          const finalPage = Math.max(1, Math.floor(page));
+          queryParams.set("page", String(finalPage));
+      
+          const MAX_LIMIT = 50;
+          const finalLimit = Math.min(MAX_LIMIT, Math.max(1, Math.floor(limit)));
+          queryParams.set("limit", String(finalLimit));
+      
+          if (search && search.trim().length > 0) {
+            queryParams.set("search", search.trim());
+          }
+      
+          if (tags && tags.length > 0) {
+            tags.forEach(t => queryParams.append("tags", t));
+          }
+      
+          if (orderBy) {
+            queryParams.set("orderBy", orderBy);
+          }
+          if (order) {
+            queryParams.set("order", order);
+          }
+          if (reported !== undefined) {
+            queryParams.set("reported", String(reported));
+          }
+          if (interactionType) {
+            queryParams.set("interactionType", interactionType);
+          }
+          if (reasons) {
+            queryParams.set("reason", reasons);
+          }
+          return { 
+            url: `/memes/deleted?${queryParams.toString()}`, 
+            method: "GET" 
+          };
+        },
+      }),
+
+      restoreMeme: builder.mutation<EmptyResponse, MemeMutationArg>({
+        query: (slugOrId) => ({
+          url: `/memes/${slugOrId}/restore`,
+          method: "PATCH",
+        }),
+        invalidatesTags: [TAG_GET_MEMES, TAG_GET_DELETED_MEMES], 
+      }),
+
+      permanentDeleteMeme: builder.mutation<EmptyResponse, MemeMutationArg>({
+        query: (slugOrId) => ({
+          url: `/memes/${slugOrId}/permanent`,
+          method: "DELETE", 
+        }),
+        invalidatesTags: [TAG_GET_DELETED_MEMES], 
+      }),
   }),
+  overrideExisting: true
 });
 
-export const { useGetMemesQuery, useGetMemeBySlugOrIdQuery, usePostMemeMutation, useDeleteMemeMutation,useUpdateMemeMutation } = memesApi;
+export const { useGetMemesQuery, useGetMemeBySlugOrIdQuery, usePostMemeMutation, useDeleteMemeMutation,useUpdateMemeMutation, useGetDeletedMemesQuery, useRestoreMemeMutation, usePermanentDeleteMemeMutation, } = memesApi;

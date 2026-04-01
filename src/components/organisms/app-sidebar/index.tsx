@@ -5,34 +5,38 @@ import {
   SidebarFooter,
   SidebarGroup,
   SidebarGroupContent,
-  SidebarGroupLabel,
   SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
-import {ShoppingBag, Inbox, Users, Settings} from "lucide-react"
-import { NavUser } from "./nav-user";
-import { usePathname } from "next/navigation";
-import { isActivePath } from "@/lib/utils";
+import {isActivePath} from "@/lib/utils";
+import {FileChartColumnIncreasing, Laugh, LayoutTemplate, Settings, Users} from "lucide-react"
 import Link from "next/link";
+import {usePathname} from "next/navigation";
+import {NavUser} from "./nav-user";
 
 // Menu items.
 const SIDEBAR_LINKS = [
   {
     title: "Meme",
     url: "/admin/meme",
-    icon: ShoppingBag,
+    icon: Laugh,
   },
   {
     title: "Template",
     url: "/admin/templates",
-    icon: Inbox,
+    icon: LayoutTemplate,
   },
   {
     title: "Users",
     url: "/admin/users",
     icon: Users,
+  },
+ {
+    title: "Media",
+    url: "/admin/media",
+    icon: FileChartColumnIncreasing,
   },
   {
     title: "Settings",
@@ -49,7 +53,7 @@ const USER =  {
 
 export default function AppSidebar() {
   const pathname = usePathname();
-  
+
   return (
     <Sidebar collapsible="icon">
       {/* Header */}
@@ -60,7 +64,7 @@ export default function AppSidebar() {
               asChild
               className="data-[slot=sidebar-menu-button]:!p-1.5"
             >
-              <a href="#">
+              <a href="/">
                 <span className="text-base font-semibold">I ❤️ Memes</span>
               </a>
             </SidebarMenuButton>
@@ -75,7 +79,7 @@ export default function AppSidebar() {
             <SidebarMenu>
               {SIDEBAR_LINKS.map((item) => {
                 const isActive = isActivePath(item.url, pathname);
-                
+
                 return <SidebarMenuItem key={item.url}>
                   <SidebarMenuButton asChild isActive={isActive}>
                     <Link href={item.url} className={isActive ? "opacity-100" : "opacity-80"}>

@@ -123,7 +123,7 @@ interface UseDataTableProps<TData, TValue> {
 
 type TSearchKeys =
   | "page"
-  | "per_page"
+  | "limit"
   | "firstName"
   | "status"
   | "name"
@@ -133,7 +133,7 @@ type TSearchKeys =
 
 const schema = z.object({
   page: z.coerce.number().default(1),
-  per_page: z.coerce.number().optional(),
+  limit: z.coerce.number().optional(),
   sort: z.string().optional(),
 });
 
@@ -153,7 +153,7 @@ export function useDataTable<TData, TValue>({
   // Search params
   const search = schema.parse(Object.fromEntries(searchParams));
   const page = search.page;
-  const perPage = search.per_page ?? defaultPerPage;
+  const perPage = search.limit ?? defaultPerPage;
   const sort = search.sort ?? defaultSort;
   const [column, order] = sort?.split(".") ?? [];
 
@@ -238,7 +238,7 @@ export function useDataTable<TData, TValue>({
     router.push(
       `${pathname}?${createQueryString({
         page: pageIndex + 1,
-        per_page: pageSize,
+        limit: pageSize,
       })}`,
       {
         scroll: false,

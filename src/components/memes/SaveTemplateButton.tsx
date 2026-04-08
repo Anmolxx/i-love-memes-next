@@ -7,6 +7,7 @@ import { Canvas } from "fabric";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { useSaveAsTemplateMutation } from "@/redux/services/template";
+import { useCreateTagMutation } from "@/redux/services/tag";
 import {
   Dialog,
   DialogContent,
@@ -45,7 +46,7 @@ const SaveTemplateButton: React.FC<SaveTemplateButtonProps> = ({
   const [isSaveTemplateOpen, setIsSaveTemplateOpen] = useState(false);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [saveAsTemplateTrigger] = useSaveAsTemplateMutation();
-
+  const [createTag] = useCreateTagMutation();
   const form = useForm<Omit<TemplateFormData, 'tags'>>({ 
     defaultValues: {
       title: "",
@@ -167,7 +168,8 @@ const SaveTemplateButton: React.FC<SaveTemplateButtonProps> = ({
                 <DataTableTagFilter
                   selectedTags={selectedTags}
                   setSelectedTags={setSelectedTags}
-                  variant='dialog' // Use the 'dialog' variant for full width and better display in the dialog
+                  variant='dialog'
+                  createTagMutation={createTag} // Use the 'dialog' variant for full width and better display in the dialog
                 />
               </FormControl>
             </FormItem>

@@ -19,7 +19,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
-import { useGetAllTagsQuery } from "@/redux/services/tag";
+import { useGetAllTagsQuery, useCreateTagMutation } from "@/redux/services/tag";
 import { useDebounce } from "@/hooks/use-debounce";
 import useAuthentication from "@/hooks/use-authentication";
 
@@ -41,7 +41,6 @@ interface DataTableTagFilterProps extends React.HTMLAttributes<HTMLButtonElement
   selectedTags?: string[];
   setSelectedTags?: (tags: string[]) => void;
   variant?: TagFilterVariant;
-  createTagMutation?: (body: any) => any;
   isLeft?: boolean;
   isTop?: boolean;
 }
@@ -51,7 +50,6 @@ export function DataTableTagFilter({
   setSelectedTags: setExternalSelectedTags,
   variant = 'filter',
   className,
-  createTagMutation,
   isLeft = false,
   isTop = false,
   ...props
@@ -61,7 +59,10 @@ export function DataTableTagFilter({
   const [internalSelectedTags, setInternalSelectedTags] = React.useState<string[]>(initialSelectedTags);
   const [isMainPopoverOpen, setIsMainPopoverOpen] = React.useState(false);
   const tags = isControlled ? initialSelectedTags : internalSelectedTags;
-  const { isLoggedIn, isAdmin } = useAuthentication();
+  const { isAdmin } = useAuthentication();
+
+  const [createTag, { isLoading: isCreating }] = useCreateTagMutation();
+
   const setTags = React.useCallback((newTags: string[]) => {
     if (isControlled && setExternalSelectedTags) {
       setExternalSelectedTags(newTags);
@@ -94,11 +95,6 @@ export function DataTableTagFilter({
   });
 
   const handleCreateTag = newTagForm.handleSubmit(async (data) => {
-    if (!createTagMutation) {
-      toast.error("Tag creation service not available.");
-      return;
-    }
-
     try {
       const postBody = {
         name: data.name.trim(),
@@ -107,7 +103,7 @@ export function DataTableTagFilter({
         status: "ACTIVE",
       };
 
-      await createTagMutation(postBody).unwrap();
+      await createTag(postBody).unwrap();
       
       toast.success(`Tag "${data.name}" created successfully!`);
       setIsNewTagPopoverOpen(false);
@@ -259,7 +255,6 @@ export function DataTableTagFilter({
           </CommandList>
         </Command>
         
-        {/* The 'Add Tag' component is moved OUTSIDE the Command component */}
         {isAdmin && (
             <div className="p-1 border-t">
               <Popover open={isNewTagPopoverOpen} onOpenChange={setIsNewTagPopoverOpen}>
@@ -328,9 +323,9 @@ export function DataTableTagFilter({
                       type="submit" 
                       size="sm" 
                       className="w-full"
-                      disabled={!newTagForm.formState.isValid || newTagForm.formState.isSubmitting}
+                      disabled={!newTagForm.formState.isValid || isCreating}
                     >
-                      {newTagForm.formState.isSubmitting ? "Creating..." : "Create Tag"}
+                      {isCreating ? "Creating..." : "Create Tag"}
                     </Button>
                   </form>
                 </PopoverContent>

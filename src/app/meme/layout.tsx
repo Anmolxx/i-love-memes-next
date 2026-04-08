@@ -146,83 +146,33 @@ export default function MemeLayout({ children }: LayoutProps) {
       setLayers([]);
       setActiveObject(null);
 
-      FabricImage.fromURL(
-        imageUrl,
-        (img) => {
-          const scaleX = canvasWidth / img.width!;
-          const scaleY = canvasHeight / img.height!;
-          const scale = Math.min(scaleX, scaleY) * currentZoom;
+      FabricImage.fromURL(imageUrl, { crossOrigin: "anonymous" }).then((img) => {
+    const scaleX = canvasWidth / img.width!;
+    const scaleY = canvasHeight / img.height!;
+    const scale = Math.min(scaleX, scaleY) * currentZoom;
 
-          img.set({
-            scaleX: scale,
-            scaleY: scale,
-            left: canvasWidth / 2,
-            top: canvasHeight / 2,
-            angle: currentRotation,
-            selectable: false,
-            originX: "center",
-            originY: "center",
-          });
+    img.set({
+      scaleX: scale,
+      scaleY: scale,
+      left: canvasWidth / 2,
+      top: canvasHeight / 2,
+      angle: currentRotation,
+      selectable: false,
+      originX: "center",
+      originY: "center",
+    });
 
-          backgroundImageRef.current = img;
-          canvas.backgroundImage = img;
-          canvas.backgroundColor = config?.background || "black";
+    backgroundImageRef.current = img;
+    canvas.backgroundImage = img;
+    canvas.backgroundColor = config?.background || "black";
 
-          (config?.objects || []).forEach((obj: any) => {
-            if (obj.type === "Textbox") {
-              const defaultProps = {
-                text: obj.text || "Text",
-                left: obj.left || canvasWidth / 2,
-                top: obj.top || canvasHeight / 2,
-                width: obj.width || 200,
-                fontSize: obj.fontSize || 40,
-                fontWeight: obj.fontWeight || "bold",
-                fontFamily: obj.fontFamily || "Impact",
-                fill: obj.fill || "#FFD700",
-                stroke: obj.stroke || "#FF0000",
-                strokeWidth: obj.strokeWidth || 1,
-                textAlign: obj.textAlign || "center",
-                shadow: obj.shadow
-                  ? new Shadow(obj.shadow)
-                  : new Shadow({ color: "rgba(0,0,0,1)", blur: 2, offsetX: 2, offsetY: 2 }),
-                editable: true,
-                lockUniScaling: true,
-                originX: "center",
-                originY: "center",
-              };
-
-              const textContent = obj.text;
-              const { type, text, ...savedProps } = obj;
-              const finalProps = { ...defaultProps, ...savedProps };
-              const textObject = new Textbox(textContent || "Text", finalProps);
-
-              textObject.set("id", uuidv4());
-
-              canvas.add(textObject);
-              canvas.bringObjectToFront(textObject);
-            }
-          });
-
-          const finalLayers = getCanvasLayers(canvas);
-          setLayers(finalLayers);
-
-          if (finalLayers.length > 0) {
-            const firstTextbox = finalLayers.find((l) => l.type === "textbox")?.object as Textbox;
-            if (firstTextbox) {
-              setActiveObject(firstTextbox);
-              canvas.setActiveObject(firstTextbox);
-            }
-          }
-
-          canvas.renderAll();
-          setBackgroundImageLoaded(true);
-        })
-        .catch((error) => {
-          console.error("Failed to load Fabric background image:", error);
-          setBackgroundImageLoaded(false);
-        },
-        { crossOrigin: "anonymous" }
-      );
+    canvas.renderAll();
+    setBackgroundImageLoaded(true);
+  })
+  .catch((error) => {
+    console.error("Failed to load Fabric background image:", error);
+    setBackgroundImageLoaded(false);
+  });
     },
     [canvasReady]
   );

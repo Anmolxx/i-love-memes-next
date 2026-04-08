@@ -370,7 +370,7 @@ const MemeExportModal: React.FC<MemeExportModalProps> = ({
                       selectedTags={selectedTags}
                       setSelectedTags={handleSetSelectedTags} 
                       variant='dialog'
-                      
+                      createTagMutation={createTag}
                     />
                   </FormControl>
                   <FormMessage />

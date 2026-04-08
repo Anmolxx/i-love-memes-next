@@ -169,7 +169,7 @@ const SaveTemplateButton: React.FC<SaveTemplateButtonProps> = ({
                   selectedTags={selectedTags}
                   setSelectedTags={setSelectedTags}
                   variant='dialog'
-                // Use the 'dialog' variant for full width and better display in the dialog
+                  createTagMutation={createTag} // Use the 'dialog' variant for full width and better display in the dialog
                 />
               </FormControl>
             </FormItem>
